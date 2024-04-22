@@ -17,7 +17,10 @@ class PaymentFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'user_id' => rand(1,11),
+            'operation_id' => rand(2,5),
+            'amount' => rand(200, 10000),
+            'created_at' => fake()->dateTimeThisYear(now()),
         ];
     }
 }

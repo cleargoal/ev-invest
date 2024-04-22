@@ -2,20 +2,17 @@
 
 namespace Database\Seeders;
 
-use App\Models\Payment;
-use App\Services\TotalCalculator;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class PaymentSeeder extends Seeder
+class UserSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        Payment::factory(200)->create();
-
-        (new TotalCalculator())->seeding();
+         User::factory(10)->create();
     }
 }
