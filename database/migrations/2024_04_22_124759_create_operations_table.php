@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->string('description');
-            $table->string('mark')->comment('values: (plus) - inc, (minus) - dec');
             $table->boolean('car')->default(false)->comment('Indicator for only car operations');
             $table->timestamps();
         });
