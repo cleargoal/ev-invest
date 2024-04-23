@@ -12,15 +12,17 @@ class TotalCalculator
 
     /**
      * Get any change of total pool from 'payments' and recalculate it
-     * @param $income
+     * @param $payment
      * @return bool
      */
-    public function calculate($income): bool
+    public function calculate($payment): bool
     {
-        $lastRecord = Total::latest()->first();
-        $newAmount = $lastRecord->amount + $income;
+        $lastRecord = Total::orderBy('id', 'desc')->first();
+        $newAmount = $lastRecord ? $lastRecord->amount + $payment->amount : $payment->amount;
         $newRecord = new Total();
+        $newRecord->payment_id = $payment->id;
         $newRecord->amount = $newAmount;
+        $newRecord->created_at = $payment->created_at;
         return $newRecord->save();
     }
 
@@ -39,22 +41,42 @@ class TotalCalculator
             $lastContribution = $user->lastContribution;
 
             if ($lastContribution && $totalAmount > 0) {
-                $userContributionPercent = ($lastContribution->amount / $totalAmount) * 100;
+                $userContributionPercent = ($lastContribution->amount / $totalAmount) * 1000000;
                 $newContribution = new Contribution();
                 $newContribution->user_id = $lastContribution->user_id;
                 $newContribution->payment_id = $paymentId;
                 $newContribution->percents = $userContributionPercent;
+                $newContribution->amount = $lastContribution->amount;
                 $newContribution->save();
             }
         }
         return $totalAmount;
     }
 
+    public function processing($payment): true
+    {
+        $lastContrib = Contribution::where('user_id', $payment->user_id )->orderBy('id', 'desc')->first();
+
+        $newContribution = new Contribution();
+        $newContribution->payment_id = $payment->id;
+        $newContribution->user_id = $payment->user_id;
+        $newContribution->percents = $lastContrib ? $lastContrib->percents : 0;
+        $newContribution->amount = $lastContrib ? $lastContrib->amount + $payment->amount : $payment->amount;
+        $newContribution->save();
+
+        $this->calculate($payment);
+        $this->contributions($payment->id);
+        return true;
+    }
+
+    /**
+     * Just for seeding
+     */
     public function seeding(): true
     {
         $payments = Payment::all();
         foreach ($payments as $payment) {
-            $this->contributions($payment->id);
+            $this->processing($payment);
         }
         return true;
     }
