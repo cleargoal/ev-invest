@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('contributions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('payment_id');
+            $table->unsignedBigInteger('user_id')->index();
+            $table->unsignedBigInteger('payment_id')->index();
             $table->integer('amount');
             $table->integer('percents')->comment('ATTENTION: 4 digits after period dot');
             $table->timestamps();

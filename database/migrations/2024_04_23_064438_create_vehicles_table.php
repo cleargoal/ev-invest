@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('mileage')->nullable();
             $table->integer('cost')->comment('Cost in cents');
             $table->integer('price')->comment('Price in cents');
+            $table->timestamp('sale_date')->nullable();
             $table->timestamps();
         });
     }
