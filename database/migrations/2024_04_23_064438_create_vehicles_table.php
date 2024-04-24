@@ -20,6 +20,7 @@ return new class extends Migration
             $table->integer('cost')->comment('Cost in cents');
             $table->integer('price')->comment('Price in cents');
             $table->timestamp('sale_date')->nullable();
+            $table->integer('profit')->nullable();
             $table->timestamps();
         });
     }
