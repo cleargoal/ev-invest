@@ -14,4 +14,9 @@ class Contribution extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function payment(): BelongsTo
+    {
+        return $this->belongsTo(Payment::class);
+    }
 }
