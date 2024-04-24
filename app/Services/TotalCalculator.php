@@ -110,19 +110,24 @@ class TotalCalculator
         $vehicle->mileage = $vehData['mileage'];
         $vehicle->cost = $vehData['cost'];
         $vehicle->save();
-        // TODO: add processing()
+        // TODO: add createPayment()
 
         return true;
     }
 
     public function sellVehicle($vehicle, $currentDate, $actPrice): true
     {
-        $vehicle->sell_date = $currentDate;
+        $vehicle->sale_date = $currentDate;
         $vehicle->price = $actPrice;
         $vehicle->profit = $vehicle->price - $vehicle->cost;
         $vehicle->save();
 
-        $this->processing($vehicle->toArray());
+        $paymentData = $vehicle->toArray();
+        $paymentData['operation_id'] = 3;
+        $paymentData['amount'] = $paymentData['price'];
+        $paymentData['created_at'] = $paymentData['sale_date'];
+
+        $this->createPayment($paymentData);
         return true;
     }
 

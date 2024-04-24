@@ -44,18 +44,21 @@ class VehicleSeeder extends Seeder
 
             if ($isBuyVehicle) {
                 $vehicle = Vehicle::factory()->create(['created_at' => $currentDate,]);
-                $vehicle->toArray();
-                $vehicle['operation_id'] = 2;
-                $vehicle['amount'] = $vehicle['cost'];
-                $this->calc->createPayment($vehicle);
+                $vehicleData = $vehicle->toArray();
+                $vehicleData['operation_id'] = 2;
+                $vehicleData['amount'] = $vehicle['cost'];
+                $this->calc->createPayment($vehicleData);
             }
 
-            $isSaturday = ($currentDate->dayOfWeek === Carbon::SATURDAY);
+            $isSaturday = (Carbon::parse($currentDate)->dayOfWeek === Carbon::SATURDAY);
             $isSellVehicle = !$isInvestment && Arr::random($sellVehicles);
             if ($isSaturday && $isSellVehicle) {
-                $sellVehicle = Vehicle::where('sale_date', null)->get()->random();
-                $price = $sellVehicle->cost + rand(5, 20) * 10000;
-                $this->calc->sellVehicle($sellVehicle, $currentDate, $price);
+                $available = Vehicle::where('sale_date', null)->get();
+                $sellVehicle = $available->count() > 0 ? $available->random() : null;
+                if ($sellVehicle) {
+                    $price = $sellVehicle->cost + rand(5, 20) * 10000;
+                    $this->calc->sellVehicle($sellVehicle, $currentDate, $price);
+                }
             }
 
             $startDay->addDay();
