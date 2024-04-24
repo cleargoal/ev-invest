@@ -16,15 +16,14 @@ class PaymentFactory extends Factory
      */
     public function definition(): array
     {
-        $userId = rand(1,10);
-        $operationId = $userId === 1 ? rand(2,3) : 4; // only User #1 can add/remove cars. Rest users just add money
-        $multiplier = $operationId === 3 ? -100000 : 100000;
-        $amount = $userId === 1 ? rand(5, 20) * $multiplier : rand(2000, 300000);
+        $userId = rand(2,10);
+        $operationId = rand(4,5);
+        $amount = $operationId === 4 ? rand(2500, 20000) : rand(-2000, -10000);
         return [
             'user_id' => $userId,
             'operation_id' => $operationId,
             'amount' => $amount,
-            'created_at' => fake()->dateTimeThisYear(now()),
+            'created_at' => '',
         ];
     }
 }

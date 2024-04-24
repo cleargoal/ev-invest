@@ -6,6 +6,7 @@ use App\Models\Contribution;
 use App\Models\Payment;
 use App\Models\Total;
 use App\Models\User;
+use App\Models\Vehicle;
 
 class TotalCalculator
 {
@@ -41,7 +42,7 @@ class TotalCalculator
             $lastContribution = $user->lastContribution;
 
             if ($lastContribution && $totalAmount > 0) {
-                $userContributionPercent = ($lastContribution->amount / $totalAmount) * 1000000;
+                $userContributionPercent = ($lastContribution->amount / $totalAmount) * 1000000; // Percents have precision 99.9999
                 $newContribution = new Contribution();
                 $newContribution->user_id = $lastContribution->user_id;
                 $newContribution->payment_id = $paymentId;
@@ -80,4 +81,49 @@ class TotalCalculator
         }
         return true;
     }
+
+    /**
+     *  Create Payment
+     * @param array $payData
+     * @return void
+     */
+    public function createPayment(array $payData): void
+    {
+        $newPay = new Payment();
+        $newPay->user_id = $payData['user_id'];
+        $newPay->operation_id = $payData['operation_id'];
+        $newPay->amount = $payData['amount'];
+        if (isset($payData['created_at'])) {
+            $newPay->created_at = $payData['created_at'];
+        }
+
+        $newPay->save();
+        $this->processing($newPay);
+    }
+
+    public function buyVehicle(array $vehData): true
+    {
+        $vehicle = new Vehicle();
+        $vehicle->title = $vehData['title'];
+        $vehicle->user_id = $vehData['user_id'];
+        $vehicle->produced = $vehData['produced'];
+        $vehicle->mileage = $vehData['mileage'];
+        $vehicle->cost = $vehData['cost'];
+        $vehicle->save();
+        // TODO: add processing()
+
+        return true;
+    }
+
+    public function sellVehicle($vehicle, $currentDate, $actPrice): true
+    {
+        $vehicle->sell_date = $currentDate;
+        $vehicle->price = $actPrice;
+        $vehicle->profit = $vehicle->price - $vehicle->cost;
+        $vehicle->save();
+
+        $this->processing($vehicle->toArray());
+        return true;
+    }
+
 }
