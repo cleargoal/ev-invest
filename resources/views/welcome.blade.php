@@ -11,7 +11,7 @@
                         dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:text-white/70 dark:hover:ring-zinc-700 dark:focus-visible:ring-[#FF2D20]"
                     >
                         <div class="w-full h-28 flex justify-center items-center">
-                            <x-primary-button class="text-3xl">Вхід</x-primary-button>
+                            <x-primary-button class="md:text-3xl">Вхід</x-primary-button>
                         </div>
 
                         <div id="screenshot-container" class="relative flex w-full flex-1 items-stretch">
