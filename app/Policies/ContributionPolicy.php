@@ -13,7 +13,7 @@ class ContributionPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
