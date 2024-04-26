@@ -21,7 +21,7 @@ class ContributionPolicy
      */
     public function view(User $user, Contribution $contribution): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -29,7 +29,7 @@ class ContributionPolicy
      */
     public function create(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -37,7 +37,7 @@ class ContributionPolicy
      */
     public function update(User $user, Contribution $contribution): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -45,7 +45,7 @@ class ContributionPolicy
      */
     public function delete(User $user, Contribution $contribution): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -53,7 +53,7 @@ class ContributionPolicy
      */
     public function restore(User $user, Contribution $contribution): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -61,6 +61,6 @@ class ContributionPolicy
      */
     public function forceDelete(User $user, Contribution $contribution): bool
     {
-        //
+        return true;
     }
 }
