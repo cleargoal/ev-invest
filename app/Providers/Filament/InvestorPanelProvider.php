@@ -52,6 +52,7 @@ class InvestorPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+            ->favicon(asset('images/ev-logo.webp'));
     }
 }
