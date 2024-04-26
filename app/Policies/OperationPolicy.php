@@ -21,7 +21,7 @@ class OperationPolicy
      */
     public function view(User $user, Operation $operation): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -29,7 +29,7 @@ class OperationPolicy
      */
     public function create(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -37,7 +37,7 @@ class OperationPolicy
      */
     public function update(User $user, Operation $operation): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -45,7 +45,7 @@ class OperationPolicy
      */
     public function delete(User $user, Operation $operation): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -53,7 +53,7 @@ class OperationPolicy
      */
     public function restore(User $user, Operation $operation): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -61,6 +61,6 @@ class OperationPolicy
      */
     public function forceDelete(User $user, Operation $operation): bool
     {
-        //
+        return true;
     }
 }
