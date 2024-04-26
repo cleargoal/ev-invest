@@ -124,7 +124,7 @@ class TotalCalculator
 
         $paymentData = $vehicle->toArray();
         $paymentData['operation_id'] = 3;
-        $paymentData['amount'] = $paymentData['price'];
+        $paymentData['amount'] = -($paymentData['price']);
         $paymentData['created_at'] = $paymentData['sale_date'];
 
         $this->createPayment($paymentData);
