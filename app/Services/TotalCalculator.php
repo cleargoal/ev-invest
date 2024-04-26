@@ -16,7 +16,7 @@ class TotalCalculator
      * @param $payment
      * @return bool
      */
-    public function calculate($payment): bool
+    public function calculateTotal($payment): bool
     {
         $lastRecord = Total::orderBy('id', 'desc')->first();
         $newAmount = $lastRecord ? $lastRecord->amount + $payment->amount : $payment->amount;
@@ -65,29 +65,18 @@ class TotalCalculator
         $newContribution->amount = $lastContrib ? $lastContrib->amount + $payment->amount : $payment->amount;
         $newContribution->save();
 
-        $this->calculate($payment);
+        $this->calculateTotal($payment);
         $this->contributions($payment->id);
-        return true;
-    }
-
-    /**
-     * Just for seeding
-     */
-    public function seeding(): true
-    {
-        $payments = Payment::all();
-        foreach ($payments as $payment) {
-            $this->processing($payment);
-        }
         return true;
     }
 
     /**
      *  Create Payment
      * @param array $payData
+     * @param bool $addIncome
      * @return void
      */
-    public function createPayment(array $payData): void
+    public function createPayment(array $payData, $addIncome = false): void
     {
         $newPay = new Payment();
         $newPay->user_id = $payData['user_id'];
@@ -98,7 +87,9 @@ class TotalCalculator
         }
 
         $newPay->save();
-        $this->processing($newPay);
+        if (!$addIncome) {
+            $this->processing($newPay);
+        }
     }
 
     public function buyVehicle(array $vehData): true
@@ -110,7 +101,7 @@ class TotalCalculator
         $vehicle->mileage = $vehData['mileage'];
         $vehicle->cost = $vehData['cost'];
         $vehicle->save();
-        // TODO: add createPayment()
+        // TODO: add createPayment();;; set correct mechanic of Total change
 
         return true;
     }
@@ -122,13 +113,31 @@ class TotalCalculator
         $vehicle->profit = $vehicle->price - $vehicle->cost;
         $vehicle->save();
 
+        $this->investIncome($vehicle);
+
         $paymentData = $vehicle->toArray();
         $paymentData['operation_id'] = 3;
         $paymentData['amount'] = -($paymentData['price']);
         $paymentData['created_at'] = $paymentData['sale_date'];
 
-        $this->createPayment($paymentData);
+        $this->createPayment($paymentData); // data of sold car only
         return true;
     }
+
+    public function investIncome($vehicle): void
+    {
+        $investors = User::with('lastContribution')->get();
+        foreach ($investors as $investor) {
+            if (isset($investor->lastContribution)) {
+                $payData = [
+                    'user_id' => $investor->lastContribution->user_id,
+                    'operation_id' => 6,
+                    'amount' => $vehicle->profit * $investor->lastContribution->percents / 1000000,
+                    'created_at' => $vehicle->sale_date,
+                ];
+                $this->createPayment($payData, true);
+            }        }
+    }
+
 
 }
