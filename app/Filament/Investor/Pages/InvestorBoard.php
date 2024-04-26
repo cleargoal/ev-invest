@@ -1,8 +1,6 @@
 <?php
 
-namespace App\Filament\Pages;
-
-use Filament\Pages\Page;
+namespace App\Filament\Investor\Pages;
 
 class InvestorBoard extends \Filament\Pages\Dashboard
 {
