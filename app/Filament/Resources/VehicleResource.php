@@ -8,6 +8,8 @@ use App\Models\Vehicle;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\Alignment;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -35,9 +37,10 @@ class VehicleResource extends Resource
                 TextColumn::make('title'),
                 TextColumn::make('produced'),
                 TextColumn::make('mileage'),
-                TextColumn::make('cost'),
-                TextColumn::make('price'),
-                TextColumn::make('profit'),
+                TextColumn::make('sale_date')->date()->label('Дата продажу'),
+                TextColumn::make('cost')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End),
+                TextColumn::make('price')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End),
+                TextColumn::make('profit')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)->weight(FontWeight::Bold),
             ])
             ->filters([
                 //
