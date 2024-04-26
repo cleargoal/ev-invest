@@ -32,7 +32,6 @@ class VehicleSeeder extends Seeder
 
         while ($startDay->lte($today)) {
             $currentDate = $startDay->toDateString();
-//            $this->command->info($currentDate);
             $isInvestment = Arr::random($investment);
 
             if ($isInvestment) {
@@ -56,7 +55,7 @@ class VehicleSeeder extends Seeder
                 $available = Vehicle::where('sale_date', null)->get();
                 $sellVehicle = $available->count() > 0 ? $available->random() : null;
                 if ($sellVehicle) {
-                    $price = $sellVehicle->cost + rand(5, 20) * 10000;
+                    $price = -($sellVehicle->cost + rand(5, 20) * 10000);
                     $this->calc->sellVehicle($sellVehicle, $currentDate, $price);
                 }
             }
