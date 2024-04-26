@@ -26,17 +26,17 @@ class VehicleSeeder extends Seeder
         $today = Carbon::today();
         $this->calc = new TotalCalculator();
 
-        $investment = [true, false, false, false, false];
-        $buyVehicle = [true, false, false, false, false, false, false, false, false, false,];
-        $sellVehicles = [true, false, false, false, ];
+        $investment = [true, false, false, false, false, false, false, false,];
+        $buyVehicle = [true, false, false, false, false, false, false, false, false, false, false, false, false,];
+        $sellVehicles = [true, false, false, false, false, false, false,];
 
         while ($startDay->lte($today)) {
             $currentDate = $startDay->toDateString();
             $isInvestment = Arr::random($investment);
 
             if ($isInvestment) {
-                $payment = Payment::factory()->create(['created_at' => $currentDate]);
-                $this->calc->processing($payment);
+                $payment = Payment::factory()->make(['created_at' => $currentDate]);
+                $this->calc->createPayment($payment->toArray());
             }
 
             $isBuyVehicle = !$isInvestment && Arr::random($buyVehicle);
@@ -49,7 +49,7 @@ class VehicleSeeder extends Seeder
                 $this->calc->createPayment($vehicleData);
             }
 
-            $isSaturday = (Carbon::parse($currentDate)->dayOfWeek === Carbon::SATURDAY);
+            $isSaturday = (Carbon::parse($currentDate)->dayOfWeek === Carbon::SATURDAY); // it Works!
             $isSellVehicle = !$isInvestment && Arr::random($sellVehicles);
             if ($isSaturday && $isSellVehicle) {
                 $available = Vehicle::where('sale_date', null)->get();
