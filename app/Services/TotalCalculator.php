@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Models\Total;
 use App\Models\User;
 use App\Models\Vehicle;
+use Illuminate\Support\Carbon;
 
 class TotalCalculator
 {
@@ -87,13 +88,13 @@ class TotalCalculator
             $newPay->created_at = $payData['created_at'];
         }
 
-        $newPay->save();
+//        $newPay->save();
         if (!$addIncome) {
             $this->processing($newPay);
         }
     }
 
-    public function buyVehicle(array $vehData): true
+    public function buyVehicle(array $vehData): bool
     {
         $vehicle = new Vehicle();
         $vehicle->title = $vehData['title'];
@@ -101,17 +102,34 @@ class TotalCalculator
         $vehicle->produced = $vehData['produced'];
         $vehicle->mileage = $vehData['mileage'];
         $vehicle->cost = $vehData['cost'];
+        $vehicle->operation_id = 2;
+        if (isset($vehData['created_at'])) {
+            $vehicle->created_at = $vehData['created_at'];
+        }
         $vehicle->save();
-        // TODO: add createPayment();;; set correct mechanic of Total change
+
+        $payData = [
+            'user_id' => $vehData['user_id'],
+            'operation_id' => 2,
+            'amount' => $vehData['cost'],
+            'created_at' => $vehicle->sale_date,
+        ];
+        $this->createPayment($payData, true);
 
         return true;
     }
 
-    public function sellVehicle($vehicle, $currentDate, $actPrice): true
+    public function sellVehicle($vehicle, $saleDate, $actualPrice): true
     {
-        $vehicle->sale_date = $currentDate;
-        $vehicle->price = $actPrice;
+        $vehicle->sale_date = $saleDate;
+        $vehicle->price = $actualPrice;
         $vehicle->profit = $vehicle->price - $vehicle->cost;
+
+        $saleDate = Carbon::parse($vehicle->sale_date);
+        $createdAt = Carbon::parse($vehicle->created_at);
+        $duration = $saleDate->diffInDays($createdAt);
+
+        $vehicle->sale_duration = $duration;
         $vehicle->save();
 
         $this->investIncome($vehicle);
@@ -137,8 +155,7 @@ class TotalCalculator
                     'created_at' => $vehicle->sale_date,
                 ];
                 $this->createPayment($payData, true);
-            }        }
+            }
+        }
     }
-
-
 }
