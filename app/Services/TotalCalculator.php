@@ -102,7 +102,6 @@ class TotalCalculator
         $vehicle->produced = $vehData['produced'];
         $vehicle->mileage = $vehData['mileage'];
         $vehicle->cost = $vehData['cost'];
-        $vehicle->operation_id = 2;
         if (isset($vehData['created_at'])) {
             $vehicle->created_at = $vehData['created_at'];
         }
