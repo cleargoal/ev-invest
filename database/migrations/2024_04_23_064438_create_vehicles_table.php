@@ -21,7 +21,7 @@ return new class extends Migration
             $table->integer('price')->nullable()->comment('Price in cents');
             $table->integer('profit')->nullable();
             $table->timestamp('sale_date')->nullable();
-            $table->unsignedInteger('sale_duration')->nullable()->comment('How long is a car in sale process. In seconds');
+            $table->integer('sale_duration')->nullable()->comment('How long is a car in the sale process. In DAYS');
             $table->timestamps();
         });
     }
