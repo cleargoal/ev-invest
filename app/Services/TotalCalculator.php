@@ -31,7 +31,7 @@ class TotalCalculator
      * Calculate contributions of all investors
      *
      */
-    public function contributions($paymentId)
+    public function contributions($paymentId, $createdAt)
     {
         $usersWithLastContributions = User::with('lastContribution')->get();
         $totalAmount = $usersWithLastContributions->sum(function ($user) {
@@ -42,12 +42,13 @@ class TotalCalculator
             $lastContribution = $user->lastContribution;
 
             if ($lastContribution && $totalAmount > 0) {
-                $userContributionPercent = ($lastContribution->amount / $totalAmount) * 1000000; // Percents have precision 99.9999
+                $userContributionPercent = $lastContribution->amount * 1000000 / $totalAmount; // Percents have precision 99.9999
                 $newContribution = new Contribution();
                 $newContribution->user_id = $lastContribution->user_id;
                 $newContribution->payment_id = $paymentId;
                 $newContribution->percents = $userContributionPercent;
                 $newContribution->amount = $lastContribution->amount;
+                $newContribution->created_at = $createdAt;
                 $newContribution->save();
             }
         }
@@ -66,7 +67,7 @@ class TotalCalculator
         $newContribution->save();
 
         $this->calculateTotal($payment);
-        $this->contributions($payment->id);
+        $this->contributions($payment->id, $payment->created_at);
         return true;
     }
 
