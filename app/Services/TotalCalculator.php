@@ -88,7 +88,7 @@ class TotalCalculator
             $newPay->created_at = $payData['created_at'];
         }
 
-//        $newPay->save();
+        $newPay->save();
         if (!$addIncome) {
             $this->processing($newPay);
         }
