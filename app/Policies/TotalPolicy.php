@@ -21,7 +21,7 @@ class TotalPolicy
      */
     public function view(User $user, Total $total): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -29,7 +29,7 @@ class TotalPolicy
      */
     public function create(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -37,7 +37,7 @@ class TotalPolicy
      */
     public function update(User $user, Total $total): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -45,7 +45,7 @@ class TotalPolicy
      */
     public function delete(User $user, Total $total): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -53,7 +53,7 @@ class TotalPolicy
      */
     public function restore(User $user, Total $total): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -61,6 +61,6 @@ class TotalPolicy
      */
     public function forceDelete(User $user, Total $total): bool
     {
-        //
+        return true;
     }
 }
