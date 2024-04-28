@@ -11,7 +11,6 @@ use Illuminate\Support\Carbon;
 
 class VehicleSeeder extends Seeder
 {
-    private TotalCalculator $calc;
 
     /**
      * Run the database seeds.
@@ -20,7 +19,7 @@ class VehicleSeeder extends Seeder
     {
         $startDay = Carbon::createFromDate(2023, 1, 2);
         $today = Carbon::today();
-        $this->calc = new TotalCalculator();
+        $calc = new TotalCalculator();
 
         while ($startDay->lte($today)) {
             $currentDate = $startDay->toDateString();
@@ -28,7 +27,7 @@ class VehicleSeeder extends Seeder
             if (Carbon::parse($currentDate)->day === 4) {
                 $this->command->info($currentDate);
                 $vehicle = Vehicle::factory()->make(['created_at' => $currentDate,]);
-                $this->calc->buyVehicle($vehicle->toArray());
+                $calc->buyVehicle($vehicle->toArray());
             }
 
             $startDay->addDay();
