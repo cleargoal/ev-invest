@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             OperationSeeder::class, // just this for prod
             UserSeeder::class,
             VehicleSeeder::class,
+            PaymentSeeder::class,
         ]);
     }
 }
