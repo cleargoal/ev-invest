@@ -16,6 +16,8 @@ use Filament\Tables\Table;
 class VehicleResource extends Resource
 {
     protected static ?string $model = Vehicle::class;
+    protected static ?string $modelLabel = 'Автівка';
+    protected static ?string $pluralModelLabel = 'Автівки';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -31,13 +33,16 @@ class VehicleResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('title'),
-                TextColumn::make('produced'),
-                TextColumn::make('mileage'),
+                TextColumn::make('title')->label('Марка'),
+                TextColumn::make('produced')->label('Рік випуску')->width('4rem'),
+                TextColumn::make('mileage')->label('Пробіг'),
+                TextColumn::make('created_at')->date()->label('Дата покупки'),
                 TextColumn::make('sale_date')->date()->label('Дата продажу'),
-                TextColumn::make('cost')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End),
-                TextColumn::make('price')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End),
-                TextColumn::make('profit')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)->weight(FontWeight::Bold),
+                TextColumn::make('sale_duration')->label('Тривалість продажу, днів')->width('5rem')->alignment(Alignment::Center),
+                TextColumn::make('cost')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)->label('Сума покупки'),
+                TextColumn::make('price')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)->label('Сума продажу'),
+                TextColumn::make('profit')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)->weight(FontWeight::Bold)
+                    ->label('Прибуток'),
             ])
             ->filters([
                 //

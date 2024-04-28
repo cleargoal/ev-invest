@@ -25,7 +25,8 @@ class TotalCalculator
         $newRecord->payment_id = $payment->id;
         $newRecord->amount = $newAmount;
         $newRecord->created_at = $payment->created_at;
-        return $newRecord->save();
+        $newRecord->save();
+        return $newRecord->amount;
     }
 
     /**
@@ -43,7 +44,7 @@ class TotalCalculator
             $lastContribution = $user->lastContribution;
 
             if ($lastContribution && $totalAmount > 0) {
-                $userContributionPercent = $lastContribution->amount * 1000000 / $totalAmount; // Percents have precision 99.9999
+                $userContributionPercent = ($lastContribution->amount / $totalAmount) * 1000000; // Percents have precision 99.9999
                 $newContribution = new Contribution();
                 $newContribution->user_id = $lastContribution->user_id;
                 $newContribution->payment_id = $paymentId;
@@ -75,47 +76,55 @@ class TotalCalculator
     /**
      *  Create Payment
      * @param array $payData
-     * @param bool $addIncome
-     * @return void
+     * @param bool $addIncome - gets true, when income calculated; in this case 'processing' method run from sellVehicle method
+     * @return Payment
      */
-    public function createPayment(array $payData, $addIncome = false): void
+    public function createPayment(array $payData, bool $addIncome = false): Payment
     {
         $newPay = new Payment();
-        $newPay->user_id = $payData['user_id'];
-        $newPay->operation_id = $payData['operation_id'];
-        $newPay->amount = $payData['amount'];
-        if (isset($payData['created_at'])) {
-            $newPay->created_at = $payData['created_at'];
-        }
-
+        $newPay->fill($payData);
+//        $newPay->user_id = $payData['user_id'];
+//        $newPay->operation_id = $payData['operation_id'];
+//        $newPay->amount = $payData['amount'];
+//        if (isset($payData['created_at'])) {
+//            $newPay->created_at = $payData['created_at'];
+//        }
+//
         $newPay->save();
         if (!$addIncome) {
             $this->processing($newPay);
         }
+        return $newPay;
     }
 
-    public function buyVehicle(array $vehData): bool
+    /**
+     * Create New vehicle bought
+     * @param array $vehData - data of new vehicle
+     * @return Vehicle
+     */
+    public function buyVehicle(array $vehData): Vehicle
     {
         $vehicle = new Vehicle();
-        $vehicle->title = $vehData['title'];
-        $vehicle->user_id = $vehData['user_id'];
-        $vehicle->produced = $vehData['produced'];
-        $vehicle->mileage = $vehData['mileage'];
-        $vehicle->cost = $vehData['cost'];
-        if (isset($vehData['created_at'])) {
-            $vehicle->created_at = $vehData['created_at'];
-        }
+        $vehicle->fill($vehData);
+//        $vehicle->title = $vehData['title'];
+//        $vehicle->user_id = $vehData['user_id'];
+//        $vehicle->produced = $vehData['produced'];
+//        $vehicle->mileage = $vehData['mileage'];
+//        $vehicle->cost = $vehData['cost'];
+//        if (isset($vehData['created_at'])) { // it's for seeding data
+//            $vehicle->created_at = $vehData['created_at'];
+//        }
         $vehicle->save();
 
         $payData = [
             'user_id' => $vehData['user_id'],
             'operation_id' => 2,
             'amount' => $vehData['cost'],
-            'created_at' => $vehicle->sale_date,
+            'created_at' => $vehData['created_at'],
         ];
         $this->createPayment($payData, true);
 
-        return true;
+        return $vehicle;
     }
 
     public function sellVehicle($vehicle, $saleDate, $actualPrice): true
@@ -126,7 +135,7 @@ class TotalCalculator
 
         $saleDate = Carbon::parse($vehicle->sale_date);
         $createdAt = Carbon::parse($vehicle->created_at);
-        $duration = $saleDate->diffInDays($createdAt);
+        $duration = $createdAt->diffInDays($saleDate);
 
         $vehicle->sale_duration = $duration;
         $vehicle->save();
@@ -153,6 +162,7 @@ class TotalCalculator
                     'amount' => $vehicle->profit * $investor->lastContribution->percents / 1000000,
                     'created_at' => $vehicle->sale_date,
                 ];
+//                dd($vehicle->profit, $investor->lastContribution->percents, $payData);
                 $this->createPayment($payData, true);
             }
         }

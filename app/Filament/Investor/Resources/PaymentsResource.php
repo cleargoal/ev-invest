@@ -19,6 +19,9 @@ class PaymentsResource extends Resource
 {
     protected static ?string $model = Payment::class;
 
+    protected static ?string $modelLabel = 'Фінансова операція';
+    protected static ?string $pluralModelLabel = 'Фінасові операції';
+
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
@@ -37,13 +40,12 @@ class PaymentsResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->recordClasses(fn (Model $record) => match ($record->amount < 0) {
+            ->recordClasses(fn (Model $record) => match (true) {
                 $record->amount < 0 => 'bg-red-50',
                 default => null,
             })
             ->heading('Мої платежі')
             ->columns([
-                TextColumn::make('user.name')->width('5rem'),
                 TextColumn::make('created_at')->date()->width('5rem')->label('Дата операції'),
                 TextColumn::make('operation.title')->width('5rem')->label('Сутність операції')->sortable(),
                 TextColumn::make('amount')
@@ -55,7 +57,6 @@ class PaymentsResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
