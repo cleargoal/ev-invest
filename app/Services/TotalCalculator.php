@@ -83,15 +83,9 @@ class TotalCalculator
     {
         $newPay = new Payment();
         $newPay->fill($payData);
-//        $newPay->user_id = $payData['user_id'];
-//        $newPay->operation_id = $payData['operation_id'];
-//        $newPay->amount = $payData['amount'];
-//        if (isset($payData['created_at'])) {
-//            $newPay->created_at = $payData['created_at'];
-//        }
-//
         $newPay->save();
-        if (!$addIncome) {
+
+        if (!$addIncome) { // IF not add investors income; It's when car sold
             $this->processing($newPay);
         }
         return $newPay;
@@ -106,14 +100,6 @@ class TotalCalculator
     {
         $vehicle = new Vehicle();
         $vehicle->fill($vehData);
-//        $vehicle->title = $vehData['title'];
-//        $vehicle->user_id = $vehData['user_id'];
-//        $vehicle->produced = $vehData['produced'];
-//        $vehicle->mileage = $vehData['mileage'];
-//        $vehicle->cost = $vehData['cost'];
-//        if (isset($vehData['created_at'])) { // it's for seeding data
-//            $vehicle->created_at = $vehData['created_at'];
-//        }
         $vehicle->save();
 
         $payData = [
@@ -122,7 +108,7 @@ class TotalCalculator
             'amount' => $vehData['cost'],
             'created_at' => $vehData['created_at'],
         ];
-        $this->createPayment($payData, true);
+        $this->createPayment($payData);
 
         return $vehicle;
     }
@@ -135,23 +121,29 @@ class TotalCalculator
 
         $saleDate = Carbon::parse($vehicle->sale_date);
         $createdAt = Carbon::parse($vehicle->created_at);
-        $duration = $createdAt->diffInDays($saleDate);
+        $duration = $createdAt->diffInDays($saleDate); // sale duration in days
 
         $vehicle->sale_duration = $duration;
         $vehicle->save();
 
         $this->investIncome($vehicle);
 
-        $paymentData = $vehicle->toArray();
-        $paymentData['operation_id'] = 3;
-        $paymentData['amount'] = -($paymentData['price']);
-        $paymentData['created_at'] = $paymentData['sale_date'];
-
+        $paymentData = [
+            'user_id' => $vehicle->user_id,
+            'operation_id' => 3,
+            'amount' => -($vehicle->price),
+            'created_at' => $vehicle->sale_date,
+        ];
         $this->createPayment($paymentData); // data of sold car only
         return true;
     }
 
-    public function investIncome($vehicle): void
+    /**
+     * Calculate invest income for every investor
+     * @param Vehicle $vehicle
+     * @return int it's count investors (actually this return not necessary)
+     */
+    public function investIncome($vehicle): int
     {
         $investors = User::with('lastContribution')->get();
         foreach ($investors as $investor) {
@@ -162,9 +154,9 @@ class TotalCalculator
                     'amount' => $vehicle->profit * $investor->lastContribution->percents / 1000000,
                     'created_at' => $vehicle->sale_date,
                 ];
-//                dd($vehicle->profit, $investor->lastContribution->percents, $payData);
                 $this->createPayment($payData, true);
             }
         }
+        return $investors->count();
     }
 }

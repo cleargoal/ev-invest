@@ -17,7 +17,7 @@ class PaymentSeeder extends Seeder
     {
         $calc = new TotalCalculator();
 
-        for ($i=2; $i <= 10; $i++) {
+        for ($i=2; $i <= 10; $i++) { // without 1st user, who is the operator
             $payment = Payment::factory()->make(['user_id' => $i]);
             $calc->createPayment($payment->toArray());
         }

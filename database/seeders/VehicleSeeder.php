@@ -25,7 +25,6 @@ class VehicleSeeder extends Seeder
             $currentDate = $startDay->toDateString();
 
             if (Carbon::parse($currentDate)->day === 4) {
-                $this->command->info($currentDate);
                 $vehicle = Vehicle::factory()->make(['created_at' => $currentDate,]);
                 $calc->buyVehicle($vehicle->toArray());
             }

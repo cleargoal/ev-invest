@@ -48,9 +48,9 @@ class TotalResource extends Resource
             ->actions([
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+//                Tables\Actions\BulkActionGroup::make([
+//                    Tables\Actions\DeleteBulkAction::make(),
+//                ]),
             ]);
     }
 
