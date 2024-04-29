@@ -26,9 +26,9 @@ class StatsOverview extends BaseWidget
             }) / 10000;        $vehicles = Vehicle::where('sale_date', null)->get()->sum('cost')/100;
 
         return [
-            Stat::make('Сьогодні сума пулу, $$', $total),
-            Stat::make('Сума мого внеску', $myContribution->amount/100),
-            Stat::make('Моя доля у сумі пулу (%)', $myContribution->percents/10000),
+            Stat::make('Актуальна сума пулу, $$', $total),
+            Stat::make('Сума мого внеску', $myContribution ? $myContribution->amount/100 : 0),
+            Stat::make('Моя доля у сумі пулу (%)', $myContribution ? $myContribution->percents/10000 : 0),
             Stat::make('Загальна вартість автівок - закупівля', $vehicles),
             Stat::make('Загальна сума інвестицій', $totalAmount),
             Stat::make('Спільна Доля інвестицій у пулі (%)', $totalPercents),
