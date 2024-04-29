@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->index();
             $table->unsignedBigInteger('operation_id')->index();
             $table->integer('amount');
+            $table->boolean('confirmed')->default(false)->comment('Mark of operator confirm the operation');
             $table->timestamps();
         });
     }
