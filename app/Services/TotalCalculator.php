@@ -85,7 +85,7 @@ class TotalCalculator
         $newPay->fill($payData);
         $newPay->save();
 
-        if (!$addIncome) { // IF not add investors income; It's when car sold
+        if (!$addIncome && $newPay->confirmed) { // IF not add investors income; It's when car sold
             $this->processing($newPay);
         }
         return $newPay;
@@ -157,7 +157,7 @@ class TotalCalculator
                     'confirmed' => true,
                     'created_at' => $vehicle->sale_date,
                 ];
-                $this->createPayment($payData, true);
+                $this->createPayment($payData, true); // true prevents to change the Total until all data have been stored
             }
         }
         return $investors->count();
