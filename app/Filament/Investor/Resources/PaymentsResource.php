@@ -2,20 +2,26 @@
 
 namespace App\Filament\Investor\Resources;
 
-use App\Filament\Resources\PaymentsResource\Pages;
+use App\Filament\Investor\Resources\PaymentsResource\Pages\CreatePayments;
+use App\Filament\Investor\Resources\PaymentsResource\Pages\EditPayments;
+use App\Filament\Investor\Resources\PaymentsResource\Pages\ListPayments;
+use App\Filament\Investor\Resources\PaymentsResource\Pages\ViewPayment;
 use App\Filament\Resources\PaymentsResource\RelationManagers;
 use App\Models\Payment;
+use App\Services\TotalCalculator;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Radio;
+use Filament\Tables\Columns\ToggleColumn;
 
 class PaymentsResource extends Resource
 {
@@ -30,25 +36,24 @@ class PaymentsResource extends Resource
     {
         return $form
             ->schema([
-                Radio::make('operation_id')->label('Я хочу')
+                Radio::make('operation_id')->label('Я хочу')->inline()->inlineLabel(false)
                     ->options([
                         '4' => 'Додати до внеску',
                         '5' => 'Замовити вилучення',
                     ]),
-                TextInput::make('amount')->label('Сума'),
-                TextInput::make('user_id')->default(auth()->user()->id)->hidden(),
-            ])->columns(4);
+                TextInput::make('amount')->label('Сума')->extraInputAttributes(['width' => 200]),
+            ])->columns(1);
     }
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->where('user_id', auth()->user()->id)->where('confirmed', true);
+        return parent::getEloquentQuery()->where('user_id', auth()->user()->id);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->recordClasses(fn (Model $record) => match (true) {
+            ->recordClasses(fn(Model $record) => match (true) {
                 $record->amount < 0 => 'bg-red-50',
                 default => null,
             })
@@ -60,6 +65,20 @@ class PaymentsResource extends Resource
                     ->weight(FontWeight::Bold)
                     ->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)
                     ->label('Сума'),
+                IconColumn::make('confirmed')->label('Зарахування')->width('5rem')->alignment(Alignment::Center)
+                    ->sortable()
+                    ->icon(fn(bool $state): string => match ($state) {
+                        true => 'heroicon-o-check-circle',
+                        false => 'heroicon-o-clock',
+                    })
+                    ->color(fn(bool $state): string => match ($state) {
+                        true => 'success',
+                        false => 'warning',
+                    }),
+                ToggleColumn::make('confirmed')->label('Підтвердження')->alignment(Alignment::Center)
+                    ->afterStateUpdated(function ($record, $state) {
+                        (new TotalCalculator())->processing($record);
+                    }),
             ])
             ->filters([
                 //
@@ -83,9 +102,10 @@ class PaymentsResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => \App\Filament\Investor\Resources\PaymentsResource\Pages\ListPayments::route('/'),
-            'create' => \App\Filament\Investor\Resources\PaymentsResource\Pages\CreatePayments::route('/create'),
-            'edit' => \App\Filament\Investor\Resources\PaymentsResource\Pages\EditPayments::route('/{record}/edit'),
+            'index' => ListPayments::route('/'),
+            'create' => CreatePayments::route('/create'),
+//            'edit' => EditPayments::route('/{record}/edit'),
+//            'show' => ViewPayment::route('/{record}/show'),
         ];
     }
 }
