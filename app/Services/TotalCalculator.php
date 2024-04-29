@@ -106,6 +106,7 @@ class TotalCalculator
             'user_id' => $vehData['user_id'],
             'operation_id' => 2,
             'amount' => $vehData['cost'],
+            'confirmed' => true,
             'created_at' => $vehData['created_at'],
         ];
         $this->createPayment($payData);
@@ -132,6 +133,7 @@ class TotalCalculator
             'user_id' => $vehicle->user_id,
             'operation_id' => 3,
             'amount' => -($vehicle->price),
+            'confirmed' => true,
             'created_at' => $vehicle->sale_date,
         ];
         $this->createPayment($paymentData); // data of sold car only
@@ -152,6 +154,7 @@ class TotalCalculator
                     'user_id' => $investor->lastContribution->user_id,
                     'operation_id' => 6,
                     'amount' => $vehicle->profit * $investor->lastContribution->percents / 1000000,
+                    'confirmed' => true,
                     'created_at' => $vehicle->sale_date,
                 ];
                 $this->createPayment($payData, true);
