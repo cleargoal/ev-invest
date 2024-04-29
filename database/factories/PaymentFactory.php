@@ -21,6 +21,7 @@ class PaymentFactory extends Factory
             'user_id' => '',
             'operation_id' => 1,
             'amount' => rand(25000, 200000),
+            'confirmed' => rand(0, 1),
             'created_at' => '',
         ];
     }
