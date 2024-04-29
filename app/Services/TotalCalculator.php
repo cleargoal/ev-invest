@@ -14,10 +14,10 @@ class TotalCalculator
 
     /**
      * Get any change of total pool from 'payments' and recalculate it
-     * @param $payment
+     * @param Payment $payment
      * @return bool
      */
-    public function calculateTotal($payment): bool
+    public function calculateTotal(Payment $payment): bool
     {
         $lastRecord = Total::orderBy('id', 'desc')->first();
         $newAmount = $lastRecord ? $lastRecord->amount + $payment->amount : $payment->amount;
@@ -116,7 +116,7 @@ class TotalCalculator
 
     public function sellVehicle($vehicle, $saleDate, $actualPrice): true
     {
-        $vehicle->sale_date = $saleDate;
+        $vehicle->sale_date = $saleDate; // TODO: is it better to use Carbon::now()?
         $vehicle->price = $actualPrice;
         $vehicle->profit = $vehicle->price - $vehicle->cost;
 
