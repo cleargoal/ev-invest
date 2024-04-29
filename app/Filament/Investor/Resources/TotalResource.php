@@ -66,7 +66,7 @@ class TotalResource extends Resource
         return [
             'index' => Pages\ListTotals::route('/'),
             'create' => Pages\CreateTotal::route('/create'),
-            'edit' => Pages\EditTotal::route('/{record}/edit'),
+//            'edit' => Pages\EditTotal::route('/{record}/edit'),
         ];
     }
 }
