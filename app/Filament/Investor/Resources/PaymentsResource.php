@@ -14,6 +14,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Radio;
 
 class PaymentsResource extends Resource
 {
@@ -28,13 +30,19 @@ class PaymentsResource extends Resource
     {
         return $form
             ->schema([
-                //
-            ]);
+                Radio::make('operation_id')->label('Я хочу')
+                    ->options([
+                        '4' => 'Додати до внеску',
+                        '5' => 'Замовити вилучення',
+                    ]),
+                TextInput::make('amount')->label('Сума'),
+                TextInput::make('user_id')->default(auth()->user()->id)->hidden(),
+            ])->columns(4);
     }
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->where('user_id', auth()->user()->id);
+        return parent::getEloquentQuery()->where('user_id', auth()->user()->id)->where('confirmed', true);
     }
 
     public static function table(Table $table): Table
@@ -59,9 +67,9 @@ class PaymentsResource extends Resource
             ->actions([
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+//                Tables\Actions\BulkActionGroup::make([
+//                    Tables\Actions\DeleteBulkAction::make(),
+//                ]),
             ]);
     }
 
