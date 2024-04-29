@@ -59,9 +59,9 @@ class ContributionResource extends Resource
             ->actions([
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+//                Tables\Actions\BulkActionGroup::make([
+//                    Tables\Actions\DeleteBulkAction::make(),
+//                ]),
             ]);
     }
 
@@ -77,7 +77,7 @@ class ContributionResource extends Resource
         return [
             'index' => Pages\ListContributions::route('/'),
             'create' => Pages\CreateContribution::route('/create'),
-            'edit' => Pages\EditContribution::route('/{record}/edit'),
+//            'edit' => Pages\EditContribution::route('/{record}/edit'),
         ];
     }
 }
