@@ -13,7 +13,26 @@ class EditVehicle extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+//            Actions\DeleteAction::make(),
         ];
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+//        $data['user_id'] = auth()->id();
+        $data['cost'] = $data['cost'] / 100;
+
+        return $data;
+    }
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $data['cost'] = $data['cost'] * 100;
+
+        return $data;
     }
 }
