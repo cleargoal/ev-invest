@@ -53,7 +53,7 @@ class ComplexSeeder extends Seeder
                 $sellVehicle = $existCars->count() > 0 ? $existCars->random() : null;
                 if ($sellVehicle) {
                     $price = $sellVehicle->cost + rand(5, 20) * 10000;
-                    $this->calc->sellVehicle($sellVehicle, $currentDate, $price);
+                    $this->calc->sellVehicle($sellVehicle, $price, $currentDate);
                 }
             }
 
