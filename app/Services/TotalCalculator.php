@@ -114,9 +114,9 @@ class TotalCalculator
         return $vehicle;
     }
 
-    public function sellVehicle($vehicle, $saleDate, $actualPrice): true
+    public function sellVehicle($vehicle, $actualPrice, $saleDate = null): true
     {
-        $vehicle->sale_date = $saleDate; // TODO: is it better to use Carbon::now()?
+        $vehicle->sale_date = $saleDate ?? Carbon::now();
         $vehicle->price = $actualPrice;
         $vehicle->profit = $vehicle->price - $vehicle->cost;
 
