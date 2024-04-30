@@ -27,9 +27,9 @@ class VehiclePolicy
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user): bool
+    public function create(User $user, Vehicle $vehicle): bool
     {
-        return true;
+        return $user->id === $vehicle->user_id;
     }
 
     /**
@@ -37,7 +37,7 @@ class VehiclePolicy
      */
     public function update(User $user, Vehicle $vehicle): bool
     {
-        return true;
+        return $user->id === $vehicle->user_id;
     }
 
     /**
@@ -45,7 +45,7 @@ class VehiclePolicy
      */
     public function delete(User $user, Vehicle $vehicle): bool
     {
-        return true;
+        return false;
     }
 
     /**
