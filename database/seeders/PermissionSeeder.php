@@ -18,6 +18,13 @@ class PermissionSeeder extends Seeder
 
         foreach ($permissions as $permission) {
             foreach ($models as $model) {
+                if (
+                    $model === 'vehicle' && $permission === 'confirm'
+                    ||
+                    $model === 'payment' && ($permission === 'sell' || $permission === 'update')
+                ) {
+                    continue;
+                }
                 $newPermission = new Permission();
                 $newPermission->name = $permission . '-' . $model;
                 $newPermission->save();
