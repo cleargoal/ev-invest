@@ -49,9 +49,9 @@ class ContributionResource extends Resource
                 TextColumn::make('payment.created_at')->date()->width('5rem')->label('Дата операції'),
                 TextColumn::make('payment.user.name')->width('5rem')->label('Інвестор')->sortable(),
                 TextColumn::make('payment.operation.title')->width('5rem')->label('Сутність операції')->sortable(),
-                TextColumn::make('amount')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)
+                TextColumn::make('amount')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::Center)
                     ->label('Моя Сума'),
-                ViewColumn::make('percents')->view('tables.columns.percents')->label('Мій Відсоток %')->width('5rem')->alignment(Alignment::End),
+                ViewColumn::make('percents')->view('tables.columns.percents')->label('Мій Відсоток %')->width('5rem')->alignment(Alignment::Center),
             ])
             ->filters([
                 SelectFilter::make('payment.operation_id')->options($operationsFilterOptions)->label('Операція'),
