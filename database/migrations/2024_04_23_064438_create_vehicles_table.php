@@ -17,8 +17,9 @@ return new class extends Migration
             $table->string('title');
             $table->string('produced')->comment('The year when the vehicle produced')->nullable();
             $table->string('mileage')->nullable();
-            $table->integer('cost')->comment('Cost in cents');
-            $table->integer('price')->nullable()->comment('Price in cents');
+            $table->integer('cost')->comment('Cost, buy price in cents');
+            $table->integer('plan_sale')->nullable()->comment('Plan to sale price in cents');
+            $table->integer('price')->nullable()->comment('Sale Price in cents');
             $table->integer('profit')->nullable();
             $table->timestamp('sale_date')->nullable();
             $table->integer('sale_duration')->nullable()->comment('How long is a car in the sale process. In DAYS');
