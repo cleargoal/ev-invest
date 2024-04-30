@@ -27,9 +27,9 @@ class VehiclePolicy
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user, Vehicle $vehicle): bool
+    public function create(User $user): bool
     {
-        return $user->id === $vehicle->user_id;
+        return $user->role == ['admin', 'operator'];
     }
 
     /**
