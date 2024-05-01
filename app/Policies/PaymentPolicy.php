@@ -37,7 +37,7 @@ class PaymentPolicy
      */
     public function update(User $user, Payment $payment): bool
     {
-        return true;
+        return  $user->role == ['admin', 'operator'];
     }
 
     /**
