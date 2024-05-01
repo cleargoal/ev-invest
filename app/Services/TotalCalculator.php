@@ -107,8 +107,11 @@ class TotalCalculator
             'operation_id' => 2,
             'amount' => $vehData['cost'],
             'confirmed' => true,
-            'created_at' => $vehData['created_at'],
         ];
+        if (isset($vehData['created_at'])) {
+            $payData['created_at'] = $vehData['created_at'];
+        }
+
         $this->createPayment($payData);
 
         return $vehicle;
