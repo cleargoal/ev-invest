@@ -2,16 +2,21 @@
 
 namespace App\Filament\Investor\Resources;
 
-use App\Filament\Resources\VehicleResource\Pages;
 use App\Filament\Resources\VehicleResource\RelationManagers;
 use App\Models\Vehicle;
+use Filament\Actions\StaticAction;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Filament\Forms\Components\TextInput;
+use Illuminate\Support\HtmlString;
+use App\Services\TotalCalculator;
 
 class VehicleResource extends Resource
 {
@@ -25,8 +30,11 @@ class VehicleResource extends Resource
     {
         return $form
             ->schema([
-                //
-            ]);
+                TextInput::make('title')->label('Марка та модель'),
+                TextInput::make('produced')->label('Рік випуску'),
+                TextInput::make('mileage')->label('Пробіг'),
+                TextInput::make('cost')->label('Ціна покупки'),
+            ])->columns(4);
     }
 
     public static function table(Table $table): Table
@@ -34,13 +42,15 @@ class VehicleResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('title')->label('Марка'),
-                TextColumn::make('produced')->label('Рік випуску')->width('4rem'),
+                TextColumn::make('produced')->label(new HtmlString('Рік <br /> випуску'))->width('4rem'),
                 TextColumn::make('mileage')->label('Пробіг'),
                 TextColumn::make('created_at')->date()->label('Дата покупки'),
                 TextColumn::make('sale_date')->date()->label('Дата продажу'),
-                TextColumn::make('sale_duration')->label('Тривалість продажу, днів')->width('5rem')->alignment(Alignment::Center),
+                TextColumn::make('sale_duration')->label(new HtmlString('Тривалість<br /> продажу,<br /> днів'))->width('4rem')->alignment(Alignment::Center),
                 TextColumn::make('cost')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)->label('Сума покупки'),
-                TextColumn::make('price')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)->label('Сума продажу'),
+                TextColumn::make('plan_sale')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)
+                    ->label(new HtmlString('Планова <br />Сума<br /> продажу')),
+                TextColumn::make('price')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> продажу')),
                 TextColumn::make('profit')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)->weight(FontWeight::Bold)
                     ->label('Прибуток'),
             ])
@@ -49,6 +59,19 @@ class VehicleResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Action::make('sell')->button()->color('success')
+                    ->label('Продано')
+                    ->form([
+                        TextInput::make('price')->label('Ціна продажу')->required(),
+                    ])
+                    ->action(function (array $data, Vehicle $record): void {
+                        $record->price = $data['price'] * 100; // $data['price'] is in cents
+                        $record->save();
+                        (new TotalCalculator())->sellVehicle($record, $record->price);
+                    })
+                    ->modalWidth(MaxWidth::ExtraSmall)
+                    ->modalCancelAction(fn (StaticAction $action) => $action->label('Поки що ні'))
+                    ->modalSubmitAction(fn (StaticAction $action) => $action->label('Дійсно Продано')),
             ])
             ->bulkActions([
 //                Tables\Actions\BulkActionGroup::make([
