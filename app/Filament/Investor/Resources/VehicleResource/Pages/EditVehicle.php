@@ -24,14 +24,15 @@ class EditVehicle extends EditRecord
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-//        $data['user_id'] = auth()->id();
         $data['cost'] = $data['cost'] / 100;
+        $data['plan_sale'] = $data['plan_sale'] / 100;
 
         return $data;
     }
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $data['cost'] = $data['cost'] * 100;
+        $data['plan_sale'] = $data['plan_sale'] * 100;
 
         return $data;
     }
