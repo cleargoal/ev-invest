@@ -6,7 +6,6 @@ use App\Models\Vehicle;
 use App\Services\TotalCalculator;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 
 class RandomVehicleSeeder extends Seeder
