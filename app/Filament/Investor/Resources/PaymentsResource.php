@@ -76,11 +76,6 @@ class PaymentsResource extends Resource
                         true => 'success',
                         false => 'warning',
                     }),
-//                ToggleColumn::make('confirmed')->label('Підтвердження')->width('5rem')->alignment(Alignment::Center)
-//                    ->visible(auth()->user()->roles->contains('name', 'operator'))
-//                    ->afterStateUpdated(function ($record, $state) {
-//                        (new TotalCalculator())->processing($record);
-//                    }),
             ])
             ->filters([
                 //
