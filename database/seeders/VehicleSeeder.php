@@ -18,7 +18,7 @@ class VehicleSeeder extends Seeder
             [
                 'title' => 'VW e-Golf',
                 'produced' => '2015',
-                'mileage' => '2015',
+                'mileage' => '107000',
                 'cost' => '9300',
                 'plan_sale' => '12000',
             ],
