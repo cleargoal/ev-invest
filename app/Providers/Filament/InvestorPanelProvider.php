@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Investor\Widgets\PayConfirmWidget;
 use App\Filament\Investor\Widgets\StatsOverview;
 use App\Filament\Resources\InvestorResource;
 use Filament\Http\Middleware\Authenticate;
@@ -40,6 +41,7 @@ class InvestorPanelProvider extends PanelProvider
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
                 StatsOverview::class,
+                PayConfirmWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
