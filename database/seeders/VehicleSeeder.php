@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Vehicle;
+use App\Services\TotalCalculator;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -91,5 +93,17 @@ class VehicleSeeder extends Seeder
                 'plan_sale' => '12000',
             ],
         ];
+
+        $calc = new TotalCalculator();
+        foreach ($vehicles as $vehicle) {
+            $newVehicle = Vehicle::factory()->make([
+                'title' => $vehicle['title'],
+                'produced' => $vehicle['produced'],
+                'mileage' => $vehicle['mileage'],
+                'cost' => $vehicle['cost'] * 100,
+                'plan_sale' => $vehicle['plan_sale'] * 100,
+            ]);
+            $calc->buyVehicle($newVehicle->toArray());
+        }
     }
 }
