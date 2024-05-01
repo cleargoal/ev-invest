@@ -15,8 +15,11 @@ class StatsOverview extends BaseWidget
     {
         $total = Total::orderBy('id', 'desc')->first()->amount/100;
         $myContribution = Contribution::where('user_id', auth()->user()->id)->orderBy('id', 'desc')->first();
+        $operId = User::whereHas('roles', function ($query) {
+            $query->where('name', 'operator');
+        })->first()->id;
 
-        $usersWithLastContributions = User::where('id', '>', 1)->with('lastContribution')->get();
+        $usersWithLastContributions = User::whereNot('id', $operId)->with('lastContribution')->get();
         $totalAmount = $usersWithLastContributions->sum(function ($user) {
                 return $user->lastContribution ? $user->lastContribution->amount : 0;
             }) / 100;
