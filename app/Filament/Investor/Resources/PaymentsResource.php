@@ -65,7 +65,8 @@ class PaymentsResource extends Resource
                     ->weight(FontWeight::Bold)
                     ->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)
                     ->label('Сума'),
-                IconColumn::make('confirmed')->label('Зарахування')->width('5rem')->alignment(Alignment::Center)
+                IconColumn::make('confirmed_icon')->label('Зарахування')->width('5rem')->alignment(Alignment::Center)
+                    ->state(fn(?Payment $record) => $record->confirmed)
                     ->sortable()
                     ->icon(fn(bool $state): string => match ($state) {
                         true => 'heroicon-o-check-circle',
@@ -75,10 +76,11 @@ class PaymentsResource extends Resource
                         true => 'success',
                         false => 'warning',
                     }),
-                ToggleColumn::make('confirmed')->label('Підтвердження')->alignment(Alignment::Center)
-                    ->afterStateUpdated(function ($record, $state) {
-                        (new TotalCalculator())->processing($record);
-                    }),
+//                ToggleColumn::make('confirmed')->label('Підтвердження')->width('5rem')->alignment(Alignment::Center)
+//                    ->visible(auth()->user()->roles->contains('name', 'operator'))
+//                    ->afterStateUpdated(function ($record, $state) {
+//                        (new TotalCalculator())->processing($record);
+//                    }),
             ])
             ->filters([
                 //
