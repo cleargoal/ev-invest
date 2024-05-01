@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Filament\Investor\Pages;
+use App\Filament\Investor\Widgets\PayConfirmWidget;
 use App\Filament\Investor\Widgets\StatsOverview;
 
 class InvestorBoard extends \Filament\Pages\Dashboard
@@ -12,7 +13,8 @@ class InvestorBoard extends \Filament\Pages\Dashboard
     protected function getHeaderWidgets(): array
     {
         return [
-            StatsOverview::class
+            StatsOverview::class,
+            PayConfirmWidget::class,
         ];
     }
 }
