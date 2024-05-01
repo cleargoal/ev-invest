@@ -29,7 +29,7 @@ class VehiclePolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole(in_array($user->roles(),['admin', 'operator']));
+        return $user->hasRole(['admin', 'operator']);
     }
 
     /**
