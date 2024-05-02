@@ -15,20 +15,22 @@ class UserSeeder extends Seeder
     {
         $users = [
             [
-                'name' => 'Володимир Єфремов',
-                'email' => 'cleargoal01@gmail.com',
+                'name' => config('services.users.user_admin.name'),
+                'email' => config('services.users.user_admin.email'),
             ],
             [
-                'name' => 'Володимир Несвіт',
-                'email' => 'luckynesvit@gmail.com',
+                'name' => config('services.users.user_operator.name'),
+                'email' => config('services.users.user_operator.email'),
             ],
             [
-                'name' => 'Євген Кауров',
-                'email' => 'Eugene.kaurov@gmail.com',
+                'name' => config('services.users.user_investor.name'),
+                'email' => config('services.users.user_investor.email'),
             ],
         ];
 
         foreach ($users as $user) {
+//            dump(config('services.users'));
+
             User::factory()->create([
                 'name' => $user['name'],
                 'email' => $user['email'],
