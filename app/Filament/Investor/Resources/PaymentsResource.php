@@ -8,7 +8,6 @@ use App\Filament\Investor\Resources\PaymentsResource\Pages\ListPayments;
 use App\Filament\Investor\Resources\PaymentsResource\Pages\ViewPayment;
 use App\Filament\Resources\PaymentsResource\RelationManagers;
 use App\Models\Payment;
-use App\Services\TotalCalculator;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
@@ -21,7 +20,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Radio;
-use Filament\Tables\Columns\ToggleColumn;
 
 class PaymentsResource extends Resource
 {
