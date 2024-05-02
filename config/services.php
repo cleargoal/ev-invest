@@ -31,4 +31,19 @@ return [
         ],
     ],
 
+    'users' => [
+        'user_admin' => [
+            'name' => env('ADMIN_NAME'),
+            'email' => env('ADMIN_EMAIL'),
+        ],
+        'user_operator' => [
+            'name' => env('OPERATOR_NAME'),
+            'email' => env('OPERATOR_EMAIL'),
+        ],
+        'user_investor' => [
+            'name' => env('INVESTOR_NAME'),
+            'email' => env('INVESTOR_EMAIL'),
+
+        ],
+    ],
 ];
