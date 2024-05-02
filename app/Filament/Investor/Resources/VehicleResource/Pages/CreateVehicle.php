@@ -9,6 +9,7 @@ use App\Services\TotalCalculator;
 class CreateVehicle extends CreateRecord
 {
     protected static string $resource = VehicleResource::class;
+    protected static bool $canCreateAnother = false;
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
