@@ -5,7 +5,7 @@
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
+                    <a href="{{ route('main') }}">
                         <x-application-logo class="block w-auto h-16 fill-current text-gray-800" />
                     </a>
                 </div>
@@ -14,6 +14,11 @@
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
+                    </x-nav-link>
+                </div>
+                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                    <x-nav-link :href="route('filament.investor.pages.investor-board')" :active="request()->routeIs('investor')">
+                        {{ __('Панель інвестора') }}
                     </x-nav-link>
                 </div>
             </div>
