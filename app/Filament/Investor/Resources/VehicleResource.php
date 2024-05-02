@@ -34,18 +34,19 @@ class VehicleResource extends Resource
                 TextInput::make('produced')->label('Рік випуску'),
                 TextInput::make('mileage')->label('Пробіг'),
                 TextInput::make('cost')->label('Ціна покупки'),
-            ])->columns(4);
+                TextInput::make('plan_sale')->label('Планова Сума продажу'),
+            ])->columns(3);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('title')->label('Марка'),
+                TextColumn::make('title')->label('Марка')->width('4rem'),
                 TextColumn::make('produced')->label(new HtmlString('Рік <br /> випуску'))->width('4rem'),
                 TextColumn::make('mileage')->label('Пробіг'),
                 TextColumn::make('created_at')->date()->label('Дата покупки'),
-                TextColumn::make('sale_date')->date()->label('Дата продажу'),
+                TextColumn::make('sale_date')->date()->label(new HtmlString('Дата<br /> продажу'))->width('4rem'),
                 TextColumn::make('sale_duration')->label(new HtmlString('Тривалість<br /> продажу,<br /> днів'))->width('4rem')->alignment(Alignment::Center),
                 TextColumn::make('cost')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)->label('Сума покупки'),
                 TextColumn::make('plan_sale')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)
