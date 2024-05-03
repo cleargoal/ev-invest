@@ -29,7 +29,7 @@ class OperationPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->hasRole('admin');
     }
 
     /**
@@ -37,7 +37,7 @@ class OperationPolicy
      */
     public function update(User $user, Operation $operation): bool
     {
-        return true;
+        return $user->hasRole('admin');
     }
 
     /**
@@ -45,7 +45,7 @@ class OperationPolicy
      */
     public function delete(User $user, Operation $operation): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -53,7 +53,7 @@ class OperationPolicy
      */
     public function restore(User $user, Operation $operation): bool
     {
-        return true;
+        return false;
     }
 
     /**
