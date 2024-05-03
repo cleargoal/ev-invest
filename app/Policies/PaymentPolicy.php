@@ -37,7 +37,7 @@ class PaymentPolicy
      */
     public function update(User $user, Payment $payment): bool
     {
-        return  $user->role == ['admin', 'operator'];
+        return  false;
     }
 
     /**
@@ -45,7 +45,7 @@ class PaymentPolicy
      */
     public function delete(User $user, Payment $payment): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -53,7 +53,7 @@ class PaymentPolicy
      */
     public function restore(User $user, Payment $payment): bool
     {
-        return true;
+        return false;
     }
 
     /**
