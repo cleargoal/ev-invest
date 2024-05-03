@@ -8,6 +8,7 @@ use Filament\Resources\Pages\CreateRecord;
 class CreatePayments extends CreateRecord
 {
     protected static string $resource = PaymentsResource::class;
+    protected static bool $canCreateAnother = false;
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
