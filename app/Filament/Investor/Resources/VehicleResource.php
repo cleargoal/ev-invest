@@ -16,7 +16,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Support\HtmlString;
-use App\Services\TotalCalculator;
+use App\Services\CalculationService;
 
 class VehicleResource extends Resource
 {
@@ -60,7 +60,9 @@ class VehicleResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Action::make('sell')->button()->color('success')
+                Action::make('sell')
+                    ->authorize('sell')
+                    ->button()->color('success')
                     ->label('Продано')
                     ->form([
                         TextInput::make('price')->label('Ціна продажу')->required(),
@@ -68,11 +70,11 @@ class VehicleResource extends Resource
                     ->action(function (array $data, Vehicle $record): void {
                         $record->price = $data['price'] * 100; // $data['price'] is in cents
                         $record->save();
-                        (new TotalCalculator())->sellVehicle($record, $record->price);
+                        (new CalculationService())->sellVehicle($record, $record->price);
                     })
                     ->modalWidth(MaxWidth::ExtraSmall)
-                    ->modalCancelAction(fn (StaticAction $action) => $action->label('Поки що ні'))
-                    ->modalSubmitAction(fn (StaticAction $action) => $action->label('Дійсно Продано')),
+                    ->modalCancelAction(fn(StaticAction $action) => $action->label('Поки що ні'))
+                    ->modalSubmitAction(fn(StaticAction $action) => $action->label('Дійсно Продано')),
             ])
             ->bulkActions([
 //                Tables\Actions\BulkActionGroup::make([
