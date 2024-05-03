@@ -3,11 +3,9 @@
 namespace App\Filament\Investor\Widgets;
 
 use App\Models\Payment;
-use App\Services\TotalCalculator;
+use App\Services\CalculationService;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\FontWeight;
-use Filament\Tables;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
@@ -35,7 +33,7 @@ class PayConfirmWidget extends BaseWidget
                 ToggleColumn::make('confirmed')->label('Підтвердження')->width('5rem')->alignment(Alignment::Center)
                     ->visible(auth()->user()->roles->contains('name', 'operator'))
                     ->afterStateUpdated(function ($record, $state) {
-                        (new TotalCalculator())->processing($record);
+                        (new CalculationService())->processing($record);
                     }),
             ]);
     }
