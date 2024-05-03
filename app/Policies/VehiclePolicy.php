@@ -32,6 +32,11 @@ class VehiclePolicy
         return $user->hasRole('operator');
     }
 
+    public function sell(User $user): bool
+    {
+        return $user->hasRole('operator');
+    }
+
     /**
      * Determine whether the user can update the model.
      */
