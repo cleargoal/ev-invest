@@ -3,19 +3,16 @@
 namespace Database\Seeders;
 
 use App\Models\Payment;
-use App\Models\User;
 use App\Models\Vehicle;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
-use App\Services\TotalCalculator;
+use App\Services\CalculationService;
 
 class ComplexSeeder extends Seeder
 {
 
-    private TotalCalculator $calc;
+    private CalculationService $calc;
 
     /**
      * Run the database seeds. Complex seeding for all models
@@ -24,7 +21,7 @@ class ComplexSeeder extends Seeder
     {
         $startDay = Carbon::createFromDate(2023, 1, 2);
         $today = Carbon::today();
-        $this->calc = new TotalCalculator();
+        $this->calc = new CalculationService();
 
         $investment = [true, false, false, false, false, false, false, false,];
         $buyVehicle = [true, false, false, false, false, false, false, false, false, false, false, false, false,];
