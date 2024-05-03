@@ -2,8 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Services\TotalCalculator;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Services\CalculationService;
 use Illuminate\Database\Seeder;
 
 class ContributionSeeder extends Seeder
@@ -13,6 +12,6 @@ class ContributionSeeder extends Seeder
      */
     public function run(): void
     {
-        (new TotalCalculator())->seeding();
+        (new CalculationService())->seeding();
     }
 }
