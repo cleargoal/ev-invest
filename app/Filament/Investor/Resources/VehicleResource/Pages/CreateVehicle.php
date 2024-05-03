@@ -4,7 +4,7 @@ namespace App\Filament\Investor\Resources\VehicleResource\Pages;
 
 use App\Filament\Investor\Resources\VehicleResource;
 use Filament\Resources\Pages\CreateRecord;
-use App\Services\TotalCalculator;
+use App\Services\CalculationService;
 
 class CreateVehicle extends CreateRecord
 {
@@ -21,7 +21,7 @@ class CreateVehicle extends CreateRecord
 
     protected function handleRecordCreation(array $data): \Illuminate\Database\Eloquent\Model
     {
-        return (new TotalCalculator())->buyVehicle($data);
+        return (new CalculationService())->buyVehicle($data);
     }
 
     protected function getRedirectUrl(): string
