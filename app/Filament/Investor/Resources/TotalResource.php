@@ -5,15 +5,11 @@ namespace App\Filament\Investor\Resources;
 use App\Filament\Investor\Resources\TotalResource\Pages;
 use App\Filament\Investor\Resources\TotalResource\RelationManagers;
 use App\Models\Total;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\FontWeight;
-use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Columns\TextColumn;
 
 class TotalResource extends Resource
@@ -67,8 +63,6 @@ class TotalResource extends Resource
     {
         return [
             'index' => Pages\ListTotals::route('/'),
-            'create' => Pages\CreateTotal::route('/create'),
-//            'edit' => Pages\EditTotal::route('/{record}/edit'),
         ];
     }
 }
