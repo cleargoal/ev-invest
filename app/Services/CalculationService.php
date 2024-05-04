@@ -8,106 +8,9 @@ use App\Models\Total;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Date;
 
 class CalculationService
 {
-
-    /**
-     * Get any change of total pool from 'payments' and recalculate it
-     * @param Payment $payment
-     * @return bool
-     */
-    public function calculateTotal(Payment $payment): int
-    {
-        $lastRecord = Total::orderBy('id', 'desc')->first();
-        $newRecord = new Total();
-        $newRecord->amount = $lastRecord ? $lastRecord->amount + $payment->amount : $payment->amount;;
-        $newRecord->payment_id = $payment->id;
-        $newRecord->created_at = $payment->created_at;
-        $newRecord->save();
-        return $newRecord->amount;
-    }
-
-    /**
-     * Calculate contributions of all investors
-     * @param int $paymentId
-     * @param Date $createdAt
-     * @return int
-     */
-    public function contributions(int $paymentId, Date $createdAt): int
-    {
-        $usersWithLastContributions = User::with('lastContribution')->get();
-        $totalAmount = $usersWithLastContributions->sum(function ($user) {
-            return optional($user->lastContribution)->amount ?? 0;
-        });
-
-        foreach ($usersWithLastContributions as $user) {
-            $lastContribution = $user->lastContribution;
-
-            if ($lastContribution && $totalAmount > 0) {
-                $userContributionPercent = ($lastContribution->amount / $totalAmount) * 1000000; // Percents have precision 99.9999
-                $newContribution = new Contribution();
-                $newContribution->user_id = $lastContribution->user_id;
-                $newContribution->payment_id = $paymentId;
-                $newContribution->percents = $userContributionPercent;
-                $newContribution->amount = $lastContribution->amount;
-                $newContribution->created_at = $createdAt;
-                $newContribution->save();
-            }
-        }
-        return $totalAmount;
-    }
-
-    /**
-     * Process calculation of Total and contributions
-     * @param Payment $payment
-     * @return true
-     */
-    public function processing(Payment $payment): true
-    {
-        $this->createContribution($payment);
-        $this->calculateTotal($payment);
-        $this->contributions($payment->id, $payment->created_at);
-        return true;
-    }
-
-    /**
-     * Create contribution
-     * @param Payment $payment
-     * @return Contribution
-     */
-    protected function createContribution(Payment $payment): Contribution
-    {
-        $lastContrib = Contribution::where('user_id', $payment->user_id )->orderBy('id', 'desc')->first();
-
-        $newContribution = new Contribution();
-        $newContribution->payment_id = $payment->id;
-        $newContribution->user_id = $payment->user_id;
-        $newContribution->percents = $lastContrib ? $lastContrib->percents : 0;
-        $newContribution->amount = $lastContrib ? $lastContrib->amount + $payment->amount : $payment->amount;
-        $newContribution->save();
-        return $newContribution;
-    }
-
-
-    /**
-     *  Create Payment
-     * @param array $payData
-     * @param bool $addIncome - gets true, when income calculated; in this case 'processing' method run from sellVehicle method
-     * @return Payment
-     */
-    public function createPayment(array $payData, bool $addIncome = false): Payment
-    {
-        $newPay = new Payment();
-        $newPay->fill($payData);
-        $newPay->save();
-
-        if (!$addIncome && $newPay->confirmed) { // IF not add investors income; It's when car sold
-            $this->processing($newPay);
-        }
-        return $newPay;
-    }
 
     /**
      * Create New vehicle bought
@@ -125,7 +28,7 @@ class CalculationService
             'confirmed' => true,
         ];
 
-        if (isset($vehData['created_at'])) {
+        if (isset($vehData['created_at'])) { // if data created in seeder
             $payData['created_at'] = $vehData['created_at'];
         }
 
@@ -151,12 +54,12 @@ class CalculationService
      * Sell Vehicle
      * @param Vehicle $vehicle
      * @param int $actualPrice
-     * @param Date|null $saleDate - is for seeding only
+     * @param Carbon|null $saleDate - is for seeding only
      * @return Vehicle
      */
-    public function sellVehicle(Vehicle $vehicle, int $actualPrice, Date $saleDate = null): Vehicle
+    public function sellVehicle(Vehicle $vehicle, int $actualPrice, Carbon $saleDate = null): Vehicle
     {
-        $this->updateVehicleWhenSold($vehicle, $actualPrice, $saleDate);
+        $vehicle = $this->updateVehicleWhenSold($vehicle, $actualPrice, $saleDate);
         $this->investIncome($vehicle);
 
         $paymentData = [
@@ -179,11 +82,11 @@ class CalculationService
      */
     protected function updateVehicleWhenSold(Vehicle $vehicle, $actualPrice, $saleDate): Vehicle
     {
-        $saleDate = $saleDate ? Carbon::parse($saleDate) : Carbon::now();
+        $soldDate = $saleDate ? Carbon::parse($saleDate) : Carbon::now();
         $createdAt = Carbon::parse($vehicle->created_at);
-        $duration = $createdAt->diffInDays($saleDate); // sale duration in days
+        $duration = $createdAt->diffInDays($soldDate); // sale duration in days
 
-        $vehicle->sale_date = $saleDate ?? Carbon::now();
+        $vehicle->sale_date = $soldDate;
         $vehicle->price = $actualPrice;
         $vehicle->profit = $vehicle->price - $vehicle->cost;
         $vehicle->sale_duration = $duration;
@@ -213,4 +116,104 @@ class CalculationService
         }
         return $investors->count();
     }
+
+    /**
+     *  Create Payment
+     * @param array $payData
+     * @param bool $addIncome - gets true, when income calculated; in this case 'processing' method run from sellVehicle method
+     * @return Payment
+     */
+    public function createPayment(array $payData, bool $addIncome = false): Payment
+    {
+        $newPay = new Payment();
+        $newPay->fill($payData);
+        $newPay->save();
+
+        $this->processing($newPay, $addIncome);
+        return $newPay;
+    }
+
+    /**
+     * Process calculation of Total and contributions
+     * @param Payment $payment
+     * @param bool $addIncome
+     * @return true
+     */
+    public function processing(Payment $payment, bool $addIncome = false): true
+    {
+        if ($payment->confirmed) {
+            $this->createContribution($payment);
+            $this->calculateTotal($payment);
+        }
+
+        if (!$addIncome && $payment->confirmed) { // IF not add investors income; It's when car sold
+            $this->contributions($payment->id, $payment->created_at);
+        }
+        return true;
+    }
+
+    /**
+     * Create contribution
+     * @param Payment $payment
+     * @return Contribution
+     */
+    protected function createContribution(Payment $payment): Contribution
+    {
+        $lastContrib = Contribution::where('user_id', $payment->user_id )->orderBy('id', 'desc')->first();
+
+        $newContribution = new Contribution();
+        $newContribution->payment_id = $payment->id;
+        $newContribution->user_id = $payment->user_id;
+        $newContribution->percents = $lastContrib ? $lastContrib->percents : 0;
+        $newContribution->amount = $lastContrib ? $lastContrib->amount + $payment->amount : $payment->amount;
+        $newContribution->save();
+        return $newContribution;
+    }
+
+    /**
+     * Get any change of total pool from 'payments' and recalculate it
+     * @param Payment $payment
+     * @return int
+     */
+    public function calculateTotal(Payment $payment): int
+    {
+        $lastRecord = Total::orderBy('id', 'desc')->first();
+        $newRecord = new Total();
+        $newRecord->amount = $lastRecord ? $lastRecord->amount + $payment->amount : $payment->amount;;
+        $newRecord->payment_id = $payment->id;
+        $newRecord->created_at = $payment->created_at;
+        $newRecord->save();
+        return $newRecord->amount;
+    }
+
+    /**
+     * Calculate contributions of all investors
+     * @param int $paymentId
+     * @param Carbon $createdAt
+     * @return int
+     */
+    public function contributions(int $paymentId, Carbon $createdAt): int
+    {
+        $usersWithLastContributions = User::with('lastContribution')->get();
+        $totalAmount = $usersWithLastContributions->sum(function ($user) {
+            return optional($user->lastContribution)->amount ?? 0;
+        });
+
+        foreach ($usersWithLastContributions as $user) {
+            $lastContribution = $user->lastContribution;
+
+            if ($lastContribution && $totalAmount > 0) {
+                $userContributionPercent = ($lastContribution->amount / $totalAmount) * 1000000; // Percents have precision 99.9999
+                $newContribution = new Contribution();
+                $newContribution->user_id = $lastContribution->user_id;
+                $newContribution->payment_id = $paymentId;
+                $newContribution->percents = $userContributionPercent;
+                $newContribution->amount = $lastContribution->amount;
+                $newContribution->created_at = $createdAt;
+                $newContribution->save();
+            }
+        }
+        return $totalAmount;
+    }
+
 }
