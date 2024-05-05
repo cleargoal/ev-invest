@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Vehicle;
-use App\Services\TotalCalculator;
+use App\Services\CalculationService;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -94,7 +94,7 @@ class VehicleSeeder extends Seeder
             ],
         ];
 
-        $calc = new TotalCalculator();
+        $calc = new CalculationService();
         foreach ($vehicles as $vehicle) {
             $newVehicle = Vehicle::factory()->make([
                 'title' => $vehicle['title'],
