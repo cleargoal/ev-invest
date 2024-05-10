@@ -23,22 +23,13 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
-        $isTesting = app()->runningUnitTests();
-        $attributes = [
+        return [
+            'name' => fake()->name,
+            'email' => fake()->unique()->safeEmail,
             'email_verified_at' => now(),
-            'password' => static::$password ?? Hash::make('password'),
+            'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
-
-        if ($isTesting) {
-            $attributes['name'] = fake()->name;
-            $attributes['email'] = fake()->unique()->safeEmail;
-        } else {
-            $attributes['name'] = '';
-            $attributes['email'] = '';
-        }
-
-        return $attributes;
     }
 
     /**
