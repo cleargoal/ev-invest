@@ -2,7 +2,7 @@
 
 namespace App\Filament\Investor\Resources;
 
-use App\Filament\Resources\VehicleResource\RelationManagers;
+use App\Filament\Investor\Resources\VehicleResource\RelationManagers;
 use App\Models\Vehicle;
 use Filament\Actions\StaticAction;
 use Filament\Forms\Components\DatePicker;
@@ -16,6 +16,7 @@ use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Forms\Components\TextInput;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
 use App\Services\CalculationService;
 
@@ -23,9 +24,15 @@ class VehicleResource extends Resource
 {
     protected static ?string $model = Vehicle::class;
     protected static ?string $modelLabel = 'Автівка';
-    protected static ?string $pluralModelLabel = 'Автівки';
+    protected static ?string $pluralModelLabel = 'Автівки у продажі';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->where('sale_date', null);
+    }
+
 
     public static function form(Form $form): Form
     {
