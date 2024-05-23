@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\CalculationService;
 use Carbon\Carbon;
@@ -96,9 +97,12 @@ class VehicleSeeder extends Seeder
         ];
 
         $created = Carbon::createFromDate(2024, 1, 1);
+        dump($created);
+        $companyId = User::role('company')->first()->id;
         $calc = new CalculationService();
         foreach ($vehicles as $vehicle) {
             $newVehicle = Vehicle::factory()->make([
+                'user_id' => $companyId,
                 'title' => $vehicle['title'],
                 'produced' => $vehicle['produced'],
                 'mileage' => $vehicle['mileage'],
@@ -106,7 +110,7 @@ class VehicleSeeder extends Seeder
                 'plan_sale' => $vehicle['plan_sale'] * 100,
                 'created_at' => $created,
             ]);
-            $calc->buyVehicle($newVehicle->toArray());
+            $calc->buyVehicle($newVehicle->toArray(), true);
         }
     }
 }
