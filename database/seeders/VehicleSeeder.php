@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Vehicle;
 use App\Services\CalculationService;
+use Carbon\Carbon;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -94,6 +95,7 @@ class VehicleSeeder extends Seeder
             ],
         ];
 
+        $created = Carbon::createFromDate(2024, 1, 1);
         $calc = new CalculationService();
         foreach ($vehicles as $vehicle) {
             $newVehicle = Vehicle::factory()->make([
@@ -102,6 +104,7 @@ class VehicleSeeder extends Seeder
                 'mileage' => $vehicle['mileage'],
                 'cost' => $vehicle['cost'] * 100,
                 'plan_sale' => $vehicle['plan_sale'] * 100,
+                'created_at' => $created,
             ]);
             $calc->buyVehicle($newVehicle->toArray());
         }
