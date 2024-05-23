@@ -29,11 +29,11 @@ class DatabaseSeeder extends Seeder
         $this->command->info('Role - Perms');
         $this->call(RolePermissionSeeder::class);
 
-        $this->command->info('Vehicles');
-        $this->call(VehicleSeeder::class);
-
         $this->command->info('User Roles');
         $this->call(UserRolesSeeder::class);
+
+        $this->command->info('Vehicles');
+        $this->call(VehicleSeeder::class);
 
     }
 }
