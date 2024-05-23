@@ -29,20 +29,21 @@ class VehiclePolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole('operator');
+        return $user->hasRole('company');
     }
 
     public function sell(User $user): bool
     {
-        return $user->hasRole('operator');
+        return $user->hasRole('company');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Vehicle $vehicle): bool
+    public function update(User $user): bool
     {
-        return $user->id === $vehicle->user_id;
+//        return $user->id === $vehicle->user_id;
+        return $user->hasRole('company');
     }
 
     /**
