@@ -43,7 +43,10 @@ return [
         'user_investor' => [
             'name' => env('INVESTOR_NAME'),
             'email' => env('INVESTOR_EMAIL'),
-
+        ],
+        'user_company' => [
+            'name' => env('COMPANY_NAME'),
+            'email' => env('COMPANY_EMAIL'),
         ],
     ],
 ];
