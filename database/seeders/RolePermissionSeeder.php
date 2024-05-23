@@ -14,7 +14,6 @@ class RolePermissionSeeder extends Seeder
      */
     public function run(): void
     {
-//        $roles = Role::whereNot('name', 'super-admin')->get();
 
         $roleOperator = Role::where('name', 'operator')->first();
         $operPermissions = Permission::where('name', 'like', '%-payment')->orWhere('name', 'like', '%-vehicle')->get();
