@@ -14,14 +14,26 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call([
-            OperationSeeder::class,
-            UserSeeder::class,
-            RoleSeeder::class,
-            PermissionSeeder::class,
-            RolePermissionSeeder::class,
-            VehicleSeeder::class,
-            UserRolesSeeder::class,
-        ]);
+        $this->command->info('Operations');
+        $this->call(OperationSeeder::class);
+
+        $this->command->info('Users');
+        $this->call(UserSeeder::class);
+
+        $this->command->info('Roles');
+        $this->call(RoleSeeder::class);
+
+        $this->command->info('Permissions');
+        $this->call(PermissionSeeder::class);
+
+        $this->command->info('Role - Perms');
+        $this->call(RolePermissionSeeder::class);
+
+        $this->command->info('Vehicles');
+        $this->call(VehicleSeeder::class);
+
+        $this->command->info('User Roles');
+        $this->call(UserRolesSeeder::class);
+
     }
 }
