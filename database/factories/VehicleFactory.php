@@ -17,12 +17,12 @@ class VehicleFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => 2,
-            'title' => '',
-            'produced' => '',
-            'mileage' => '',
-            'cost' => '',
-            'plan_sale' => '',
+//            'user_id' => '',
+//            'title' => '',
+//            'produced' => '',
+//            'mileage' => '',
+//            'cost' => '',
+//            'plan_sale' => '',
         ];
     }
 }
