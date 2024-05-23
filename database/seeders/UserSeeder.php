@@ -22,10 +22,14 @@ class UserSeeder extends Seeder
                 'name' => config('services.users.user_operator.name'),
                 'email' => config('services.users.user_operator.email'),
             ],
-//            [
-//                'name' => config('services.users.user_investor.name'),
-//                'email' => config('services.users.user_investor.email'),
-//            ],
+            [
+                'name' => config('services.users.user_investor.name'),
+                'email' => config('services.users.user_investor.email'),
+            ],
+            [
+                'name' => config('services.users.user_company.name'),
+                'email' => config('services.users.user_company.email'),
+            ],
         ];
 
         foreach ($users as $user) {
