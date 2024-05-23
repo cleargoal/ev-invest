@@ -5,6 +5,7 @@ namespace App\Filament\Investor\Resources;
 use App\Filament\Resources\VehicleResource\RelationManagers;
 use App\Models\Vehicle;
 use Filament\Actions\StaticAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
@@ -35,6 +36,9 @@ class VehicleResource extends Resource
                 TextInput::make('mileage')->label('Пробіг'),
                 TextInput::make('cost')->label('Ціна покупки'),
                 TextInput::make('plan_sale')->label('Планова Сума продажу'),
+                TextInput::make('profit')->label('Прибутокю Тільки читання')->readOnly(),
+                DatePicker::make('created_at')->label('Дата покупки'),
+                DatePicker::make('sale_date')->label('Дата продажу'),
             ])->columns(3);
     }
 
@@ -45,14 +49,14 @@ class VehicleResource extends Resource
                 TextColumn::make('title')->label('Марка')->width('4rem'),
                 TextColumn::make('produced')->label(new HtmlString('Рік <br /> випуску'))->width('4rem'),
                 TextColumn::make('mileage')->label('Пробіг'),
-                TextColumn::make('created_at')->date()->label('Дата покупки'),
+                TextColumn::make('created_at')->date()->label(new HtmlString('Дата<br /> покупки'))->width('4rem'),
                 TextColumn::make('sale_date')->date()->label(new HtmlString('Дата<br /> продажу'))->width('4rem'),
                 TextColumn::make('sale_duration')->label(new HtmlString('Тривалість<br /> продажу,<br /> днів'))->width('4rem')->alignment(Alignment::Center),
-                TextColumn::make('cost')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)->label('Сума покупки'),
-                TextColumn::make('plan_sale')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)
+                TextColumn::make('cost')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> покупки')),
+                TextColumn::make('plan_sale')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)
                     ->label(new HtmlString('Планова <br />Сума<br /> продажу')),
-                TextColumn::make('price')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> продажу')),
-                TextColumn::make('profit')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)->weight(FontWeight::Bold)
+                TextColumn::make('price')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> продажу')),
+                TextColumn::make('profit')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->weight(FontWeight::Bold)
                     ->label('Прибуток'),
             ])
             ->filters([
