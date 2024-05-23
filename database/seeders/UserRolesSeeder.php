@@ -17,6 +17,7 @@ class UserRolesSeeder extends Seeder
         $users = User::all();
 
         foreach ($users as $user) {
+
             if ($user->email === config('services.users.user_company.email')) {
                 $user->assignRole('company');
                 continue;
@@ -31,6 +32,7 @@ class UserRolesSeeder extends Seeder
             if ($user->email === config('services.users.user_operator.email')) {
                 $user->assignRole('operator');
             }
+
         }
     }
 }
