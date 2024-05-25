@@ -29,7 +29,7 @@ class PaymentPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->hasRole('investor');
     }
 
     /**
@@ -61,6 +61,6 @@ class PaymentPolicy
      */
     public function forceDelete(User $user, Payment $payment): bool
     {
-        return true;
+        return false;
     }
 }
