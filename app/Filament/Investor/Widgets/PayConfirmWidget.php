@@ -13,8 +13,13 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class PayConfirmWidget extends BaseWidget
 {
-    protected int | string | array $columnSpan = 2;
+    protected int | string | array $columnSpan = 12;
     protected static ?string $widgetLabel = 'Не підтверджені Фінансові операції';
+
+    public static function canView(): bool
+    {
+        return Payment::where('confirmed', false)->get()->count() > 0;
+    }
     public function table(Table $table): Table
     {
         return $table
