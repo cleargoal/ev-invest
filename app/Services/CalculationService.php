@@ -19,6 +19,7 @@ class CalculationService
      */
     public function buyVehicle(array $vehData): Vehicle
     {
+        $vehData['created_at'] = isset($vehData['created_at']) && $vehData['created_at'] !== null ? $vehData['created_at'] : Carbon::now();
         $vehicle = $this->createVehicle($vehData);
         $operatorId = User::role('operator')->first()->id;
 
@@ -27,11 +28,8 @@ class CalculationService
             'operation_id' => 2,
             'amount' => $vehData['cost'],
             'confirmed' => true,
+            'created_at' => $vehData['created_at'],
         ];
-
-        if (isset($vehData['created_at'])) { // if data created in seeder
-            $payData['created_at'] = $vehData['created_at'];
-        }
 
         $this->createPayment($payData);
 
@@ -85,11 +83,11 @@ class CalculationService
      */
     protected function updateVehicleWhenSold(Vehicle $vehicle, $actualPrice, $saleDate): Vehicle
     {
-        $soldDate = $saleDate ? Carbon::parse($saleDate) : Carbon::now();
+        $soldDate = $saleDate ? Carbon::parse($saleDate) : Carbon::now(); // check if 'sale_date' is sent from caller, for example from seeder
         $createdAt = Carbon::parse($vehicle->created_at);
         $duration = $createdAt->diffInDays($soldDate); // sale duration in days
 
-        $vehicle->sale_date = $soldDate;
+        $vehicle->sale_date ??= $soldDate;
         $vehicle->price = $actualPrice;
         $vehicle->profit = $vehicle->price - $vehicle->cost;
         $vehicle->sale_duration = $duration;
@@ -105,7 +103,7 @@ class CalculationService
     public function companyCommissions(Vehicle $vehicle): int
     {
         $companyId = User::role('company')->first()->id;
-        $commissions = $vehicle->profit/2; // 1/2 of profit is company's commissions
+        $commissions = $vehicle->profit / 2; // 1/2 of profit is company's commissions
         $payData = [
             'user_id' => $companyId,
             'operation_id' => 7,
@@ -124,7 +122,7 @@ class CalculationService
      */
     public function investIncome(Vehicle $vehicle): int
     {
-        $profitForShare = $vehicle->profit/2; // 1/2 of profit is company's commissions
+        $profitForShare = $vehicle->profit / 2; // 1/2 of profit is company's commissions
         $investors = User::with('lastContribution')->get();
         foreach ($investors as $investor) {
             if (isset($investor->lastContribution)) {
@@ -185,7 +183,7 @@ class CalculationService
      */
     protected function createContribution(Payment $payment): Contribution
     {
-        $lastContrib = Contribution::where('user_id', $payment->user_id )->orderBy('id', 'desc')->first();
+        $lastContrib = Contribution::where('user_id', $payment->user_id)->orderBy('id', 'desc')->first();
 
         $newContribution = new Contribution();
         $newContribution->payment_id = $payment->id;
@@ -205,7 +203,7 @@ class CalculationService
     {
         $lastRecord = Total::orderBy('id', 'desc')->first();
         $newRecord = new Total();
-        $newRecord->amount = $lastRecord ? $lastRecord->amount + $payment->amount : $payment->amount;;
+        $newRecord->amount = $lastRecord ? $lastRecord->amount + $payment->amount : $payment->amount;
         $newRecord->payment_id = $payment->id;
         $newRecord->created_at = $payment->created_at;
         $newRecord->save();
