@@ -26,7 +26,7 @@ class EditVehicle extends EditRecord
     {
         $data['cost'] = $data['cost'] / 100;
         $data['plan_sale'] = $data['plan_sale'] / 100;
-        $data['profit'] = $data['profit'] / 100;
+//        $data['profit'] = $data['profit'] / 100;
 
         return $data;
     }
@@ -34,7 +34,7 @@ class EditVehicle extends EditRecord
     {
         $data['cost'] = $data['cost'] * 100;
         $data['plan_sale'] = $data['plan_sale'] * 100;
-        $data['profit'] = $data['profit'] * 100;
+//        $data['profit'] = $data['profit'] * 100;
 
         return $data;
     }
