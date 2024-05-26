@@ -16,8 +16,8 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\Filter;
 use Filament\Tables\Columns\ViewColumn;
+use Filament\Navigation\NavigationItem;
 
 class ContributionResource extends Resource
 {
@@ -28,6 +28,8 @@ class ContributionResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+//    TODO: hide navigation of this resource for Company
+//    NavigationItem::make()->hidden(fn (): bool => ! auth()->user()->can('viewAny', Payment::class));
     public static function form(Form $form): Form
     {
         return $form
