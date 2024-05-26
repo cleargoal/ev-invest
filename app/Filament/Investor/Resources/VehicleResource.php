@@ -51,6 +51,7 @@ class VehicleResource extends Resource
                 Group::make([
                     DatePicker::make('created_at')->label('Дата покупки'),
                     DatePicker::make('sale_date')->label('Дата продажу')
+                        ->hidden(request()->routeIs(('filament.investor.resources.vehicles.create'))),
                 ])->columns(3)->columnSpanFull(),
             ])->columns(3);
     }
