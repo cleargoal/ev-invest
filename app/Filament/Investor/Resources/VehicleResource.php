@@ -7,6 +7,7 @@ use App\Models\Vehicle;
 use Filament\Actions\StaticAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Form;
+use Filament\Forms\Components\Group;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\FontWeight;
@@ -30,7 +31,7 @@ class VehicleResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->where('sale_date', null);
+        return parent::getEloquentQuery()->where('profit', null);
     }
 
 
@@ -38,14 +39,19 @@ class VehicleResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('title')->label('Марка та модель'),
-                TextInput::make('produced')->label('Рік випуску'),
-                TextInput::make('mileage')->label('Пробіг'),
-                TextInput::make('cost')->label('Ціна покупки'),
-                TextInput::make('plan_sale')->label('Планова Сума продажу'),
-                TextInput::make('profit')->label('Прибутокю Тільки читання')->readOnly(),
-                DatePicker::make('created_at')->label('Дата покупки'),
-                DatePicker::make('sale_date')->label('Дата продажу'),
+                Group::make([
+                    TextInput::make('title')->label('Марка та модель'),
+                    TextInput::make('produced')->label('Рік випуску'),
+                    TextInput::make('mileage')->label('Пробіг'),
+                ])->columns(3)->columnSpanFull(),
+                Group::make([
+                    TextInput::make('cost')->label('Ціна покупки'),
+                    TextInput::make('plan_sale')->label('Планова Сума продажу')
+                ])->columns(3)->columnSpanFull(),
+                Group::make([
+                    DatePicker::make('created_at')->label('Дата покупки'),
+                    DatePicker::make('sale_date')->label('Дата продажу')
+                ])->columns(3)->columnSpanFull(),
             ])->columns(3);
     }
 
