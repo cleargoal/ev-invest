@@ -9,16 +9,24 @@ use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\HtmlString;
 
 class SoldVehicles extends BaseWidget
 {
     protected int | string | array $columnSpan = 12;
+    protected static ?string $widgetLabel = 'Продані автівки';
+
+    protected function getTableHeading(): string | Htmlable | null
+    {
+        return 'Продані автівки';
+    }
+
     public function table(Table $table): Table
     {
         return $table
             ->query(
-                Vehicle::where('sale_date', '<>', null),
+                Vehicle::where('profit', '<>', null),
             )
             ->columns([
                 TextColumn::make('title')->label('Марка')->width('4rem'),
