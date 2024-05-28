@@ -12,6 +12,7 @@
 - admin [admin@mail.org](admin@mail.org)
 - operator  [operator@mail.org](operator@mail.org)
 - investor  [investor@mail.org](investor@mail.org)
+- company [company@mail.com](company@mail.com)
 
 #### those have a general password 'password' and the following emails in the list above for login.
 
