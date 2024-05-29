@@ -3,16 +3,13 @@
 namespace App\Filament\Investor\Resources;
 
 use App\Filament\Investor\Resources\PaymentsResource\Pages\CreatePayments;
-use App\Filament\Investor\Resources\PaymentsResource\Pages\EditPayments;
 use App\Filament\Investor\Resources\PaymentsResource\Pages\ListPayments;
-use App\Filament\Investor\Resources\PaymentsResource\Pages\ViewPayment;
 use App\Filament\Resources\PaymentsResource\RelationManagers;
 use App\Models\Payment;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\FontWeight;
-use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -39,8 +36,8 @@ class PaymentsResource extends Resource
                         '4' => 'Додати до внеску',
                         '5' => 'Замовити вилучення',
                     ]),
-                TextInput::make('amount')->label('Сума')->extraInputAttributes(['width' => 200]),
-            ])->columns(1);
+                TextInput::make('amount')->label('Сума (можна з десятковими знаками)')->extraInputAttributes(['width' => 200]),
+            ])->columns(2);
     }
 
     public static function getEloquentQuery(): Builder
