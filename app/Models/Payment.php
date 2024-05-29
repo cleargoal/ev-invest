@@ -12,7 +12,7 @@ class Payment extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['amount', 'user_id', 'operation_id', 'confirmed'];
+    protected $fillable = ['amount', 'user_id', 'operation_id', 'confirmed', 'created_at'];
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
