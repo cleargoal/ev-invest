@@ -13,7 +13,11 @@ class CreatePayments extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['user_id'] = auth()->id();
-        $data['amount'] = $data['amount'] * 100;
+        $data['amount'] = str_replace(',', '.', $data['amount']) * 100;
+        if($data['operation_id'] === 5 || $data['operation_id'] === '5') {
+            $data['amount'] = $data['amount'] * -1;
+        }
+
         return $data;
     }
 
