@@ -10,7 +10,7 @@ class Vehicle extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'title', 'cost', 'produced', 'mileage', 'price', 'plan_sale', 'created_at', 'sale_date'];
+    protected $fillable = ['user_id', 'title', 'cost', 'produced', 'mileage', 'price', 'plan_sale', 'created_at', 'sale_date', 'profit', 'sale_duration'];
 
     public function payments(): HasMany
     {

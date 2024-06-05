@@ -37,8 +37,8 @@ class UserResource extends Resource
                     ->multiple()
                     ->relationship(name: 'roles', titleAttribute: 'name')
                     ->preload(),
-//                Forms\Components\TextInput::make('password')->label('Password readonly')
-//                    ->readOnly()->default('password'),
+                Forms\Components\TextInput::make('password')->label('Password readonly - need for user creation')
+                    ->readOnly()->default('password'),
             ]);
     }
 

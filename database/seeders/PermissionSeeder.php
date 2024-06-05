@@ -13,7 +13,7 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        $permissions = ['create', 'update', 'confirm', 'sell', ];
+        $permissions = ['create', 'update', 'confirm', 'sell', 'view'];
         $models = ['vehicle', 'payment'];
 
         foreach ($permissions as $permission) {

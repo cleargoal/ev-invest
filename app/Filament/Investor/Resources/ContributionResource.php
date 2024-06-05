@@ -6,6 +6,7 @@ use App\Filament\Investor\Resources\ContributionResource\Pages;
 use App\Filament\Investor\Resources\ContributionResource\RelationManagers;
 use App\Models\Contribution;
 use App\Models\Operation;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -40,7 +41,12 @@ class ContributionResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->where('user_id', auth()->user()->id);
+        if (!auth()->user()->hasRole('viewer')) {
+            return parent::getEloquentQuery()->where('user_id', auth()->user()->id);
+        }
+        else {
+            return parent::getEloquentQuery();
+        }
     }
 
     public static function table(Table $table): Table
@@ -59,6 +65,7 @@ class ContributionResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('payment.operation_id')->options($operationsFilterOptions)->label('Операція'),
+                SelectFilter::make('payment.user_id')->options(User::all()->pluck('name'))->label('Інвестор'),
             ])
             ->actions([
             ])
