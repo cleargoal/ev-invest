@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\TotalChangedEvent;
 use App\Models\Contribution;
 use App\Models\Payment;
 use App\Models\Total;
@@ -207,6 +208,7 @@ class CalculationService
         $newRecord->payment_id = $payment->id;
         $newRecord->created_at = $payment->created_at;
         $newRecord->save();
+        TotalChangedEvent::dispatch($newRecord);
         return $newRecord->amount;
     }
 
@@ -238,6 +240,15 @@ class CalculationService
             }
         }
         return $totalAmount;
+    }
+
+    /**
+     * Actual Total
+     * @return float|int
+     */
+    public function actualTotal(): float|int
+    {
+        return Total::orderBy('id', 'desc')->first()->amount/100;
     }
 
 }
