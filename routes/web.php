@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Models\Total;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -18,8 +19,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/mail', function () {
-    $total = App\Models\Total::find(1);
-
+    $total = Total::orderBy('id', 'desc')->first()->amount/100;
     return new App\Mail\TotalChangedMail($total);
 });
 
