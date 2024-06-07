@@ -17,4 +17,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+Route::get('/mail', function () {
+    $total = App\Models\Total::find(1);
+
+    return new App\Mail\TotalChangedMail($total);
+});
+
 require __DIR__.'/auth.php';
