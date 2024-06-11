@@ -41,7 +41,7 @@ class TotalChangedMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'vendor.mail.html.layout',
+            view: 'vendor.mail.html.pool-changed',
             with: [
                 'header' => 'Зміни в інвест пулу',
                 'sub_header' => 'Інвест пул змінився',

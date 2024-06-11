@@ -6,7 +6,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="color-scheme" content="light">
     <meta name="supported-color-schemes" content="light">
-    <style type="">
+    <style>
         @media only screen and (max-width: 600px) {
             .inner-body {
                 width: 100% !important;
@@ -24,44 +24,34 @@
         }
     </style>
 </head>
-<body style="font-family: 'Comfortaa Light',serif">
+<body>
 
-    <table class="wrapper" width="100%" cellpadding="0" cellspacing="0" role="presentation">
-        <tr>
-            <td align="center">
-                <table class="content" width="100%" cellpadding="0" cellspacing="0" role="presentation">
-                    <tr>
-                        <td class="body" width="100%" cellpadding="0" cellspacing="0" style="border: hidden !important;">
-                            <div style="font-size: xx-large; margin: 1rem;">{{ $sub_header ?? '' }}</div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="body" width="100%" cellpadding="0" cellspacing="0" style="border: hidden !important;">
-                            <div style="font-size: x-large; margin: 1rem;">
-                                <span style="margin-right: 0.5rem;">{{ $explanation ?? '' }}</span>
-                                <span style="font-weight: bold;">{{ $total ?? '' }}</span>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div style="font-size: large; margin: 1rem;">
-                                <a style="font-weight: bold;" href="{{ $url ?? '' }}">{{ $go_to ?? '' }}</a>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div style="font-size: medium; margin: 1rem;">
-                                <span>Також обов'язково зайдіть подивитись "Внески"</span>
-                            </div>
-                        </td>
-                    </tr>
+<table class="wrapper" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+    <tr>
+        <td align="center">
+            <table class="content" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                {{ $header ?? '' }}
 
-                    {{ $footer ?? '' }}
-                </table>
-            </td>
-        </tr>
-    </table>
+                <!-- Email Body -->
+                <tr>
+                    <td class="body" width="100%" cellpadding="0" cellspacing="0" style="border: hidden !important;">
+                        <table class="inner-body" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation">
+                            <!-- Body content -->
+                            <tr>
+                                <td class="content-cell">
+                                    {{ Illuminate\Mail\Markdown::parse($slot) }}
+
+                                    {{ $subcopy ?? '' }}
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                {{ $footer ?? '' }}
+            </table>
+        </td>
+    </tr>
+</table>
 </body>
 </html>
