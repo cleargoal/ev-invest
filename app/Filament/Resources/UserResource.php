@@ -6,13 +6,10 @@ use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
-use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -33,12 +30,12 @@ class UserResource extends Resource
                     ->email()
                     ->required()
                     ->maxLength(255),
-                Select::make('roles')
-                    ->multiple()
-                    ->relationship(name: 'roles', titleAttribute: 'name')
-                    ->preload(),
-                Forms\Components\TextInput::make('password')->label('Password readonly - need for user creation')
-                    ->readOnly()->default('password'),
+                Forms\Components\DateTimePicker::make('email_verified_at'),
+                Forms\Components\TextInput::make('password')
+                    ->password()
+                    ->readOnly()
+                    ->dehydrated(fn ($state) => filled($state))
+                    ->maxLength(255),
             ]);
     }
 
@@ -46,19 +43,18 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')
+                Tables\Columns\TextColumn::make('name')
                     ->searchable(),
-                TextColumn::make('email')
+                Tables\Columns\TextColumn::make('email')
                     ->searchable(),
-                TextColumn::make('email_verified_at')
+                Tables\Columns\TextColumn::make('email_verified_at')
                     ->dateTime()
                     ->sortable(),
-                TextColumn::make('roles.name')->label('Role'),
-                TextColumn::make('created_at')
+                Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
+                Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -67,10 +63,7 @@ class UserResource extends Resource
                 //
             ])
             ->actions([
-//                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-//                Tables\Actions\AttachAction::make('roles')->preloadRecordSelect(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -79,16 +72,19 @@ class UserResource extends Resource
             ]);
     }
 
-    public static function getPages(): array
-    {
-        return [
-            'index' => Pages\ManageUsers::route('/'),
-        ];
-    }
     public static function getRelations(): array
     {
         return [
-            RelationManagers\RolesRelationManager::class,
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListUsers::route('/'),
+            'create' => Pages\CreateUser::route('/create'),
+            'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
     }
 }
