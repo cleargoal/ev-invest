@@ -38,8 +38,8 @@ class TotalResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('payment.created_at')->date()->width('5rem')->label('Дата операції'),
-                Tables\Columns\TextColumn::make('payment.operation.title')
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('payment.id')->sortable()->label('Payment ID'),
+                Tables\Columns\TextColumn::make('payment.operation.title')->sortable(),
                 Tables\Columns\TextColumn::make('payment.user.name')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('amount')
