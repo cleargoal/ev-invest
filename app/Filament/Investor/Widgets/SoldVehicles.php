@@ -26,7 +26,15 @@ class SoldVehicles extends BaseWidget
     {
         return $table
             ->query(
-                Vehicle::where('profit', '<>', null),
+//                Vehicle::where('profit', '<>', null)->with('payments.user'),
+                Vehicle::whereNotNull('profit')
+                    ->whereHas('payments', function($query) {
+                        $query->where('operation', 6); // Replace 'specific_operation' with your actual operation condition
+                    })
+                    ->with(['payments' => function($query) {
+                        $query->where('operation', 6)->with('user'); // Eager load the user relation
+                    }])
+                    ->get(),
             )
             ->columns([
                 TextColumn::make('title')->label('Марка')->width('4rem'),
@@ -39,6 +47,8 @@ class SoldVehicles extends BaseWidget
                 TextColumn::make('price')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> продажу')),
                 TextColumn::make('profit')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->weight(FontWeight::Bold)
                     ->label('Прибуток'),
+                TextColumn::make('user_profit')->state(fn(Vehicle $record) => $record->payments->user)->money('USD', divideBy: 100)
+                    ->width('4rem')->alignment(Alignment::End)->weight(FontWeight::Bold)->color('success')->label('Мій Прибуток'),
             ]);
     }
 }
