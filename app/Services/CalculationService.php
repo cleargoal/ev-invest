@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 class CalculationService
 {
 
+    protected Total $total;
     /**
      * Create New vehicle bought
      * @param array $vehData - data of new vehicle
@@ -71,7 +72,7 @@ class CalculationService
             'confirmed' => true,
             'created_at' => $vehicle->sale_date,
         ];
-        $this->createPayment($paymentData); // data of sold car only
+        $this->createPayment($paymentData); // data of sold car only + Operator
         return $vehicle;
     }
 
@@ -137,6 +138,7 @@ class CalculationService
                 $this->createPayment((array)$payData, true); // true prevents to change the Total until all data have been stored
             }
         }
+        TotalChangedEvent::dispatch($this->total);
         return $investors->count();
     }
 
@@ -174,7 +176,19 @@ class CalculationService
         if (!$addIncome && $payment->confirmed) { // IF not add investors income when car sold. Just for operations of investors add or withdrawal
             $this->contributions($payment->id, $payment->created_at);
         }
+
         return true;
+    }
+
+    /**
+     * Payment confirmation
+     * @param Payment $payment
+     * @return void
+     */
+    public function paymentConfirmation(Payment $payment): void
+    {
+        $this->processing($payment);
+        TotalChangedEvent::dispatch($this->total);
     }
 
     /**
@@ -203,13 +217,13 @@ class CalculationService
     public function calculateTotal(Payment $payment): int
     {
         $lastRecord = Total::orderBy('id', 'desc')->first();
-        $newRecord = new Total();
-        $newRecord->amount = $lastRecord ? $lastRecord->amount + $payment->amount : $payment->amount;
-        $newRecord->payment_id = $payment->id;
-        $newRecord->created_at = $payment->created_at;
-        $newRecord->save();
-        TotalChangedEvent::dispatch($newRecord);
-        return $newRecord->amount;
+        $this->total = new Total();
+        $this->total->amount = $lastRecord ? $lastRecord->amount + $payment->amount : $payment->amount;
+        $this->total->payment_id = $payment->id;
+        $this->total->created_at = $payment->created_at;
+        $this->total->save();
+
+        return $this->total->amount;
     }
 
     /**
