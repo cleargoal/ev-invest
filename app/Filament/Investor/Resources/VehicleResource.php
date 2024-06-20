@@ -84,6 +84,7 @@ class VehicleResource extends Resource
                     ->label('Продано')
                     ->form([
                         TextInput::make('price')->label('Ціна продажу')->required(),
+                        DatePicker::make('sale_date')->label('Дата продажу (не обов\'язково)'),
                     ])
                     ->action(function (array $data, Vehicle $record): void {
                         $record->price = $data['price'] * 100; // $data['price'] is in cents
