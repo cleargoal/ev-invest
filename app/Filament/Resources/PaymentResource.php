@@ -56,6 +56,7 @@ class PaymentResource extends Resource
                     ->dateTime()
                     ->sortable(),
             ])
+            ->defaultSort('id', 'desc')
             ->filters([
                 //
             ])

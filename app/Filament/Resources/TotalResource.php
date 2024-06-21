@@ -46,6 +46,7 @@ class TotalResource extends Resource
                     ->money('USD', divideBy: 100)
                     ->sortable(),
             ])
+            ->defaultSort('id', 'desc')
             ->filters([
                 //
             ])

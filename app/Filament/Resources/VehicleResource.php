@@ -54,39 +54,19 @@ class VehicleResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('title')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('produced')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('mileage')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('cost')
-                    ->money('USD', divideBy: 100)
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('plan_sale')
-                    ->money('USD', divideBy: 100)
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('price')
-                    ->money('USD', divideBy: 100)
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('profit')
-                    ->money('USD', divideBy: 100)
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('sale_date')
-                    ->dateTime()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('sale_duration')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('title')->searchable(),
+                Tables\Columns\TextColumn::make('produced')->searchable(),
+                Tables\Columns\TextColumn::make('mileage')->searchable(),
+                Tables\Columns\TextColumn::make('cost')->money('USD', divideBy: 100)->sortable(),
+                Tables\Columns\TextColumn::make('plan_sale')->money('USD', divideBy: 100)->sortable(),
+                Tables\Columns\TextColumn::make('price')->money('USD', divideBy: 100)->sortable(),
+                Tables\Columns\TextColumn::make('profit')->money('USD', divideBy: 100)->sortable(),
+                Tables\Columns\TextColumn::make('sale_date')->dateTime()->sortable(),
+                Tables\Columns\TextColumn::make('sale_duration')->numeric()->sortable(),
+                Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('id', 'desc')
             ->filters([
                 //
             ])
