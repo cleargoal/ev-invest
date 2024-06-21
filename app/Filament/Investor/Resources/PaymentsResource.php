@@ -25,7 +25,7 @@ class PaymentsResource extends Resource
     protected static ?string $modelLabel = 'Фінансова операція';
     protected static ?string $pluralModelLabel = 'Фінасові операції';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
 
     public static function form(Form $form): Form
     {
@@ -72,6 +72,7 @@ class PaymentsResource extends Resource
                         false => 'warning',
                     }),
             ])
+            ->defaultSort('id', 'desc')
             ->filters([
                 //
             ])
