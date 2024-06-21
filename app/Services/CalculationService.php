@@ -23,17 +23,6 @@ class CalculationService
     {
         $vehData['created_at'] = isset($vehData['created_at']) && $vehData['created_at'] !== null ? $vehData['created_at'] : Carbon::now();
         $vehicle = $this->createVehicle($vehData);
-        $operatorId = User::role('operator')->first()->id;
-
-        $payData = [
-            'user_id' => $operatorId,
-            'operation_id' => 2,
-            'amount' => $vehData['cost'],
-            'confirmed' => true,
-            'created_at' => $vehData['created_at'],
-        ];
-
-        $this->createPayment($payData);
 
         return $vehicle;
     }
@@ -63,16 +52,8 @@ class CalculationService
         $vehicle = $this->updateVehicleWhenSold($vehicle, $actualPrice, $saleDate);
         $this->companyCommissions($vehicle);
         $this->investIncome($vehicle);
-        $operatorId = User::role('operator')->first()->id;
+        TotalChangedEvent::dispatch($this->total);
 
-        $paymentData = [
-            'user_id' => $operatorId,
-            'operation_id' => 3,
-            'amount' => -($vehicle->price),
-            'confirmed' => true,
-            'created_at' => $vehicle->sale_date,
-        ];
-        $this->createPayment($paymentData); // data of sold car only + Operator
         return $vehicle;
     }
 
@@ -108,12 +89,14 @@ class CalculationService
         $commissions = $vehicle->profit / 2; // 1/2 of profit is company's commissions
         $payData = [
             'user_id' => $companyId,
-            'operation_id' => 7,
+            'operation_id' => 7, // company commissions
             'amount' => $commissions,
             'confirmed' => true,
             'created_at' => $vehicle->sale_date,
         ];
-        $this->createPayment((array)$payData, true); // true prevents to change the Total until all data have been stored
+        $payment = $this->createPayment((array)$payData, true); // true prevents to change the Total until all data have been stored
+        $this->createTotal($payment);
+
         return $commissions;
     }
 
@@ -138,7 +121,6 @@ class CalculationService
                 $this->createPayment((array)$payData, true); // true prevents to change the Total until all data have been stored
             }
         }
-        TotalChangedEvent::dispatch($this->total);
         return $investors->count();
     }
 
@@ -170,7 +152,6 @@ class CalculationService
     {
         if ($payment->confirmed) {
             $this->createContribution($payment);
-            $this->calculateTotal($payment);
         }
 
         if (!$addIncome && $payment->confirmed) { // IF not add investors income when car sold. Just for operations of investors add or withdrawal
@@ -181,13 +162,14 @@ class CalculationService
     }
 
     /**
-     * Payment confirmation
+     * Payment confirmation. Payment has been created by Livewire from Investor panel, but rest operations have to be run here
      * @param Payment $payment
      * @return void
      */
     public function paymentConfirmation(Payment $payment): void
     {
         $this->processing($payment);
+        $this->createTotal($payment);
         TotalChangedEvent::dispatch($this->total);
     }
 
@@ -214,7 +196,7 @@ class CalculationService
      * @param Payment $payment
      * @return int
      */
-    public function calculateTotal(Payment $payment): int
+    public function createTotal(Payment $payment): int
     {
         $lastRecord = Total::orderBy('id', 'desc')->first();
         $this->total = new Total();
