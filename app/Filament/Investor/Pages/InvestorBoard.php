@@ -9,7 +9,7 @@ use Illuminate\Contracts\Support\Htmlable;
 
 class InvestorBoard extends Dashboard
 {
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
 
     protected static string $view = 'filament.pages.investor-board';
 
