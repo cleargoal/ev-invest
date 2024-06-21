@@ -13,6 +13,8 @@ class Instruction extends Page
     protected static ?string $navigationIcon = 'heroicon-o-document';
 
     protected static string $view = 'filament.pages.instruction';
+    protected static ?string $navigationGroup = 'Документи';
+    protected static ?string $title = 'Інструкція користувача';
 
     public function getTitle(): string | Htmlable
     {
