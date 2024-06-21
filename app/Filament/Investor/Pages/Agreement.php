@@ -10,9 +10,11 @@ use Filament\Pages\Page;
 
 class Agreement extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-document';
+    protected static ?string $navigationIcon = 'heroicon-o-document-check';
 
     protected static string $view = 'filament.pages.agreement';
+    protected static ?string $navigationGroup = 'Документи';
+    protected static ?string $title = 'Інвестиційна Угода';
 
     public function getTitle(): string | Htmlable
     {
