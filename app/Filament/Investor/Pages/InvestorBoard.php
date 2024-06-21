@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Filament\Investor\Pages;
+
 use App\Filament\Investor\Widgets\PayConfirmWidget;
 use App\Filament\Investor\Widgets\SoldVehicles;
 use App\Filament\Investor\Widgets\StatsOverview;
