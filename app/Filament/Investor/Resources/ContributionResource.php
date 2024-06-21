@@ -63,6 +63,7 @@ class ContributionResource extends Resource
                     ->label('Мій Ітого Внеску'),
                 ViewColumn::make('percents')->view('tables.columns.percents')->label('Мій Відсоток %')->width('5rem')->alignment(Alignment::Center),
             ])
+            ->defaultSort('id', 'desc')
             ->filters([
                 SelectFilter::make('payment.operation_id')->options($operationsFilterOptions)->label('Операція'),
                 SelectFilter::make('payment.user_id')->options(User::all()->pluck('name'))->label('Інвестор'),

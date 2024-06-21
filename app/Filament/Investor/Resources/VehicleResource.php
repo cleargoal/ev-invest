@@ -27,7 +27,7 @@ class VehicleResource extends Resource
     protected static ?string $modelLabel = 'Автівка';
     protected static ?string $pluralModelLabel = 'Автівки у продажі';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-truck';
 
     public static function getEloquentQuery(): Builder
     {
@@ -73,6 +73,7 @@ class VehicleResource extends Resource
                 TextColumn::make('profit')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->weight(FontWeight::Bold)
                     ->label('Прибуток'),
             ])
+            ->defaultSort('id', 'desc')
             ->filters([
                 //
             ])

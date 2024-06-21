@@ -19,7 +19,7 @@ class TotalResource extends Resource
     protected static ?string $modelLabel = 'Весь пул';
     protected static ?string $pluralModelLabel = 'Весь пул';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-inbox-stack';
 
     public static function form(Form $form): Form
     {
@@ -40,6 +40,7 @@ class TotalResource extends Resource
                 TextColumn::make('amount')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)
                     ->label('Ітогова Сума Пулу')->weight(FontWeight::Bold),
             ])
+            ->defaultSort('id', 'desc')
             ->filters([
                 //
             ])
