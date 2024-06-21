@@ -28,6 +28,7 @@ class TotalListener
     {
         $total = Total::orderBy('id', 'desc')->first()->amount/100;
         $mailTo = User::role('investor')->get();
+//        $mailTo = 'cleargoal1@gmail.com';
             Mail::to($mailTo)->send(new TotalChangedMail($total));
     }
 }
