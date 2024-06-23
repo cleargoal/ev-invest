@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Investor\Resources;
 
-use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
+use App\Filament\Investor\Resources\UserResource\Pages;
+use App\Filament\Investor\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\Alignment;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -19,7 +20,9 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $modelLabel = 'Інвестор';
+    protected static ?string $pluralModelLabel = 'Інвестори';
+    protected static ?string $navigationIcon = 'heroicon-o-users';
 
     public static function form(Form $form): Form
     {
@@ -50,21 +53,23 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('email')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('email_verified_at')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('roles.name')->label('Role'),
+                TextColumn::make('name')->searchable(),
+                TextColumn::make('email')->searchable(),
+                TextColumn::make('lastContribution.amount')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::Center)
+                    ->label('Розмір внеску'),
+                TextColumn::make('lastContribution.percents')
+                    ->view('tables.columns.percents')->label('Доля %')->width('5rem')->alignment(Alignment::Center),
+
+                TextColumn::make('email_verified_at')
+                    ->dateTime()->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('roles.name')->label('Role')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
+                    ->dateTime()->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
+                    ->dateTime()->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
