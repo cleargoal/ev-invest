@@ -60,18 +60,18 @@ class VehicleResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('title')->label('Марка')->width('4rem'),
-                TextColumn::make('produced')->label(new HtmlString('Рік <br /> випуску'))->width('4rem'),
-                TextColumn::make('mileage')->label('Пробіг'),
-                TextColumn::make('created_at')->date()->label(new HtmlString('Дата<br /> покупки'))->width('4rem'),
-                TextColumn::make('sale_date')->date()->label(new HtmlString('Дата<br /> продажу'))->width('4rem'),
-                TextColumn::make('sale_duration')->label(new HtmlString('Тривалість<br /> продажу,<br /> днів'))->width('4rem')->alignment(Alignment::Center),
-                TextColumn::make('cost')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> покупки')),
+                TextColumn::make('title')->label('Марка')->width('4rem')->sortable(),
+                TextColumn::make('produced')->label(new HtmlString('Рік <br /> випуску'))->width('4rem')->sortable(),
+                TextColumn::make('mileage')->label('Пробіг')->width('4rem')->sortable(),
+                TextColumn::make('created_at')->date()->label(new HtmlString('Дата<br /> покупки'))->width('4rem')->sortable(),
+                TextColumn::make('sale_date')->date()->label(new HtmlString('Дата<br /> продажу'))->width('4rem')->sortable(),
+                TextColumn::make('sale_duration')->label(new HtmlString('Тривалість<br /> продажу,<br /> днів'))->width('4rem')->alignment(Alignment::Center)->sortable(),
+                TextColumn::make('cost')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> покупки'))->sortable(),
                 TextColumn::make('plan_sale')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)
-                    ->label(new HtmlString('Планова <br />Сума<br /> продажу')),
-                TextColumn::make('price')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> продажу')),
-                TextColumn::make('profit')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->weight(FontWeight::Bold)
-                    ->label('Прибуток'),
+                    ->label(new HtmlString('Планова <br />Сума<br /> продажу'))->sortable(),
+//                TextColumn::make('price')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> продажу')),
+//                TextColumn::make('profit')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->weight(FontWeight::Bold)
+//                    ->label('Прибуток'),
             ])
             ->defaultSort('id', 'desc')
             ->filters([
