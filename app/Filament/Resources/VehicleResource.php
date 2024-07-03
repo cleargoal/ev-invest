@@ -62,10 +62,10 @@ class VehicleResource extends Resource
                 Tables\Columns\TextColumn::make('plan_sale')->money('USD', divideBy: 100)->sortable(),
                 Tables\Columns\TextColumn::make('price')->money('USD', divideBy: 100)->sortable(),
                 Tables\Columns\TextColumn::make('profit')->money('USD', divideBy: 100)->sortable(),
-                Tables\Columns\TextColumn::make('sale_date')->dateTime()->sortable(),
+                Tables\Columns\TextColumn::make('sale_date')->date()->sortable(),
                 Tables\Columns\TextColumn::make('sale_duration')->numeric()->sortable(),
-                Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable()->label('Buy Date'),
-                Tables\Columns\TextColumn::make('updated_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('created_at')->date()->sortable()->label('Buy Date'),
+                Tables\Columns\TextColumn::make('updated_at')->date()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('id', 'desc')
             ->filters([
