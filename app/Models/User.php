@@ -69,4 +69,8 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasOne(Contribution::class)->latestOfMany();
     }
 
+    public function contributions(): HasMany
+    {
+        return $this->hasMany(Contribution::class);
+    }
 }
