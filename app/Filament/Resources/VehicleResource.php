@@ -44,6 +44,7 @@ class VehicleResource extends Resource
                     ->prefix('$'),
                 Forms\Components\TextInput::make('profit')
                     ->numeric(),
+                Forms\Components\DateTimePicker::make('created_at'),
                 Forms\Components\DateTimePicker::make('sale_date'),
                 Forms\Components\TextInput::make('sale_duration')
                     ->numeric(),
