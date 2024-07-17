@@ -37,11 +37,16 @@ class StatsOverview extends BaseWidget
             Stat::make('Актуальна сума пулу, $$', Number::format($total, locale: 'sv'))/*->columnSpan()*/,
             Stat::make('Сума вартості автівок у закупівлі', Number::format($vehicles, locale: 'sv')),
             Stat::make('Резерв пулу - доступний для закупівлі', Number::format($total - $vehicles, locale: 'sv')),
-            Stat::make('Спільна Доля мінорних інвестицій у пулі (%)', $totalPercents),
+            Stat::make('Спільна доля міноритарних інвестицій у пулі (%)', $totalPercents),
 
             Stat::make('Сума мого внеску', Number::format($myContribution ? $myContribution->amount/100 : 0, locale: 'sv')),
             Stat::make('Моя доля у сумі пулу (%)', $myContribution ? $myContribution->percents/10000 : 0),
             Stat::make('Загальна сума інвестицій без Мажор-інвестора', Number::format($totalInvestAmount, locale: 'sv')),
         ];
+    }
+
+    public function url()
+    {
+        return '<a href="/users"';
     }
 }
