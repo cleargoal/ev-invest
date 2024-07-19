@@ -63,6 +63,7 @@ class InvestorPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->favicon(asset('images/ev-logo.webp'))
-            ->viteTheme('resources/css/filament/investor/theme.css');
+            ->viteTheme('resources/css/filament/investor/theme.css')
+            ->profile(isSimple: false);
     }
 }

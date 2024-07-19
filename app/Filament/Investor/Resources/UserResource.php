@@ -14,7 +14,6 @@ use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class UserResource extends Resource
 {
@@ -23,29 +22,6 @@ class UserResource extends Resource
     protected static ?string $modelLabel = 'Інвестор';
     protected static ?string $pluralModelLabel = 'Інвестори';
     protected static ?string $navigationIcon = 'heroicon-o-users';
-
-//    public static function getEloquentQuery(): Builder
-//    {
-//        return parent::getEloquentQuery()
-//            ->leftJoin('contributions', function ($join) {
-//                $join->on('users.id', '=', 'contributions.user_id')
-//                    ->where('contributions.id', '=', function ($query) {
-//                        $query->select('id')
-//                            ->from('contributions')
-//                            ->whereColumn('contributions.user_id', 'users.id')
-//                            ->orderBy('contributions.amount', 'desc')
-//                            ->limit(1);
-//                    });
-//            })
-//            ->orderBy('contributions.amount', 'desc')
-//            ->with('lastContribution');
-//    }
-
-
-
-//        with('lastContribution', function ($query) {
-//            $query->orderBy('contributions.amount','desc');
-//        });
 
 
     public static function form(Form $form): Form
@@ -68,7 +44,7 @@ class UserResource extends Resource
                     ->password()
                     ->readOnly()
                     ->default('password')
-                    ->dehydrated(fn ($state) => filled($state))
+                    ->dehydrated(fn($state) => filled($state))
                     ->maxLength(255),
             ]);
     }
@@ -78,19 +54,16 @@ class UserResource extends Resource
         return $table
             ->modifyQueryUsing(fn(Builder $query) => $query->whereHas('roles', function (Builder $q) {
                 $q->whereNot('name', 'company');
-            }))
-
-//            ->modifyQueryUsing(fn(Builder $query) => $query->with(['contributions', function ($q) {
-//                $q->orderBy('amount', 'desc');
-//            }]))
+            })
+            )
             ->columns([
-                TextColumn::make('name')->searchable(),
+                TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('email')->searchable()->sortable(),
-                TextColumn::make('lastContribution.amount')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::Center)
-                    ->sortable()->label('Розмір внеску'),
-                TextColumn::make('lastContribution.percents')
-                    ->view('tables.columns.percents')->label('Доля %')->width('5rem')->alignment(Alignment::Center)
+                TextColumn::make('actual_contribution')
+                    ->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::Center)->label('Розмір внеску')
                     ->sortable(),
+                TextColumn::make('lastContribution.percents')
+                    ->view('tables.columns.percents')->label('Доля %')->width('5rem')->alignment(Alignment::Center),
                 TextColumn::make('email_verified_at')
                     ->dateTime()->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -103,12 +76,6 @@ class UserResource extends Resource
                     ->dateTime()->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-//            ->defaultSort(
-//                function ($query) {
-//                    $query->orderBy('name', 'desc');
-//                }
-////                'lastContribution.amount', 'desc'
-//            )
             ->filters([
                 //
             ])
