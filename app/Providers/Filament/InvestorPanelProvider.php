@@ -64,6 +64,8 @@ class InvestorPanelProvider extends PanelProvider
             ])
             ->favicon(asset('images/ev-logo.webp'))
             ->viteTheme('resources/css/filament/investor/theme.css')
-            ->profile(isSimple: false);
+            ->profile(isSimple: false)
+            ->brandLogo(asset('images/ev-logo.webp'))
+            ->brandLogoHeight('3rem');
     }
 }
