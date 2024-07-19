@@ -13,6 +13,8 @@ use Illuminate\Support\Number;
 class StatsOverview extends BaseWidget
 {
 
+    protected string $url = '/users';
+
     protected function getStats(): array
     {
         $total = Total::orderBy('id', 'desc')->first()->amount/100;
@@ -45,8 +47,4 @@ class StatsOverview extends BaseWidget
         ];
     }
 
-    public function url()
-    {
-        return '<a href="/users"';
-    }
 }
