@@ -32,7 +32,7 @@ class TotalResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('payment.created_at')->date()->width('5rem')->label('Дата операції'),
+                TextColumn::make('payment.created_at')->date()->width('5rem')->label('Дата операції')->sortable(),
                 TextColumn::make('payment.user.name')->width('5rem')->label('Інвестор')->sortable(),
                 TextColumn::make('payment.operation.title')->width('5rem')->label('Сутність операції')->sortable(),
                 TextColumn::make('payment.amount')->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::Center)
