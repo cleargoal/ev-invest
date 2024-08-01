@@ -54,7 +54,7 @@ class CalculationService
         $vehicle = $this->updateVehicleWhenSold($vehicle, $actualPrice, $saleDate);
         $this->companyCommissions($vehicle);
         $this->investIncome($vehicle);
-        TotalChangedEvent::dispatch($this->total->amount, 'Продано авто', $vehicle->profit);
+        TotalChangedEvent::dispatch($this->total->amount, 'Продано авто. Прибуток:', $vehicle->profit);
 
         return $vehicle;
     }
