@@ -39,6 +39,7 @@ class SoldVehicles extends BaseWidget
                 TextColumn::make('price')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> продажу'))->sortable(),
                 TextColumn::make('profit')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->weight(FontWeight::Bold)
                     ->label('Прибуток')->sortable(),
-            ]);
+            ])
+            ->defaultSort('sale_date', 'desc')            ;
     }
 }
