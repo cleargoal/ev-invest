@@ -14,6 +14,8 @@ class CalculationService
 {
 
     protected Total $total;
+    protected Vehicle $vehicle;
+
     /**
      * Create New vehicle bought
      * @param array $vehData - data of new vehicle
@@ -52,7 +54,7 @@ class CalculationService
         $vehicle = $this->updateVehicleWhenSold($vehicle, $actualPrice, $saleDate);
         $this->companyCommissions($vehicle);
         $this->investIncome($vehicle);
-        TotalChangedEvent::dispatch($this->total);
+        TotalChangedEvent::dispatch($this->total->amount, 'Продано авто', $vehicle->profit);
 
         return $vehicle;
     }
@@ -170,7 +172,7 @@ class CalculationService
     {
         $this->processing($payment);
         $this->createTotal($payment);
-        TotalChangedEvent::dispatch($this->total);
+        TotalChangedEvent::dispatch($this->total->amount, 'Внесок інвестора', $payment->amount);
     }
 
     /**
