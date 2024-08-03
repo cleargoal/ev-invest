@@ -48,6 +48,7 @@
                             <div style="font-size: x-large; margin: 1rem;">
                                 <span style="margin-right: 0.5rem;">{{ $description1 ?? '' }}</span>
                                 <span style="margin-right: 0.5rem;">{{ $description2 ?? '' }}</span>
+                                <span style="margin-right: 0.5rem;">{{ $description3 ?? '' }}</span>
                                 <span style="font-weight: bold;">{{ $amount ?? '' }}</span>
                             </div>
                         </td>

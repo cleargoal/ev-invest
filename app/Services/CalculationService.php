@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Events\BoughtAutoEvent;
 use App\Events\TotalChangedEvent;
+use App\Mail\BoughtAutoMail;
 use App\Models\Contribution;
 use App\Models\Payment;
 use App\Models\Total;
@@ -25,6 +27,7 @@ class CalculationService
     {
         $vehData['created_at'] = isset($vehData['created_at']) && $vehData['created_at'] !== null ? $vehData['created_at'] : Carbon::now();
         $vehicle = $this->createVehicle($vehData);
+        BoughtAutoEvent::dispatch('Придбано авто:', $vehicle);
 
         return $vehicle;
     }
