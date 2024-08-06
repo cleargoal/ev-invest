@@ -10,6 +10,8 @@ class Operation extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['title', 'description'];
+
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
