@@ -45,17 +45,17 @@ class BoughtAutoMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'vendor.mail.html.pool-changed',
+            view: 'vendor.mail.html.vehicle-bought',
             with: [
                 'header' => 'Придбано авто',
                 'sub_header' => 'Придбано авто',
                 'explanation' => $this->vehicle->title,
-                'description1' => 'Рік виготовлення/пробіг: ',
-                'description2' => $this->vehicle->produced . ' / ' . $this->vehicle->mileage,
-                'description3' => 'Ціна купівлі/план продажу: ',
-                'amount' => $this->vehicle->cost/100 . ' / ' . $this->vehicle->plan_sale/100,
+                'description1' => 'Рік виготовлення: ' . $this->vehicle->produced,
+                'description2' =>  'пробіг: '  . $this->vehicle->mileage,
+                'description3' => 'Ціна купівлі: '. $this->vehicle->cost/100,
+                'amount' =>  'план продажу:  ' . $this->vehicle->plan_sale/100,
                 'go_to' => 'Докладніше на сайті',
-                'url' => 'https://ev-invest.segment.best/investor'
+                'url' => 'https://ev-invest.segment.best/investor/vehicles'
             ],
         );
     }
