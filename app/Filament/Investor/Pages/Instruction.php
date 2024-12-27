@@ -2,9 +2,6 @@
 
 namespace App\Filament\Investor\Pages;
 
-use App\Filament\Investor\Widgets\PayConfirmWidget;
-use App\Filament\Investor\Widgets\SoldVehicles;
-use App\Filament\Investor\Widgets\StatsOverview;
 use Illuminate\Contracts\Support\Htmlable;
 use Filament\Pages\Page;
 
