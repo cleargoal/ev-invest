@@ -14,4 +14,9 @@ class Total extends Model
     {
         return $this->belongsTo(Payment::class);
     }
+
+    public function actualTotalAttribute(): float|int
+    {
+        return $this::orderBy('id', 'desc')->first()->amount/100;
+    }
 }
