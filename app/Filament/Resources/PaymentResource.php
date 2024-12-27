@@ -8,11 +8,13 @@ use App\Filament\Resources\PaymentResource\Pages\EditPayment;
 use App\Filament\Resources\PaymentResource\Pages\ListPayments;
 use App\Filament\Resources\PaymentResource\RelationManagers;
 use App\Models\Payment;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -58,7 +60,8 @@ class PaymentResource extends Resource
             ])
             ->defaultSort('id', 'desc')
             ->filters([
-                //
+                SelectFilter::make('user_id')->label('Інвестор')
+                    ->options((fn (): array => User::query()->pluck('name', 'id')->all())),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
