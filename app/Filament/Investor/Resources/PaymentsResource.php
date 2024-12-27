@@ -3,15 +3,20 @@
 namespace App\Filament\Investor\Resources;
 
 use App\Filament\Investor\Resources\PaymentsResource\Pages\CreatePayments;
+use App\Filament\Investor\Resources\PaymentsResource\Pages\EditPayments;
 use App\Filament\Investor\Resources\PaymentsResource\Pages\ListPayments;
-use App\Filament\Resources\PaymentsResource\RelationManagers;
+use App\Filament\Investor\Resources\PaymentsResource\RelationManagers;
+use App\Models\Operation;
 use App\Models\Payment;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\FontWeight;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -23,7 +28,7 @@ class PaymentsResource extends Resource
     protected static ?string $model = Payment::class;
 
     protected static ?string $modelLabel = 'Фінансова операція';
-    protected static ?string $pluralModelLabel = 'Фінасові операції';
+    protected static ?string $pluralModelLabel = 'Фінансові операції';
 
     protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
 
@@ -45,6 +50,9 @@ class PaymentsResource extends Resource
         return parent::getEloquentQuery()->where('user_id', auth()->user()->id);
     }
 
+    /**
+     * @throws \Exception
+     */
     public static function table(Table $table): Table
     {
         return $table
@@ -74,14 +82,17 @@ class PaymentsResource extends Resource
             ])
             ->defaultSort('id', 'desc')
             ->filters([
-                //
+                SelectFilter::make('operation_id')->label('Operation')
+                    ->options(fn (): array => Operation::query()->pluck('title', 'id')->all()),
             ])
             ->actions([
+                EditAction::make('edit')
+                    ->visible(fn(Payment $record) => !$record->confirmed ),
+                DeleteAction::make()
+                    ->visible(fn(Payment $record) => !$record->confirmed )
+                    ->requiresConfirmation(),
             ])
             ->bulkActions([
-//                Tables\Actions\BulkActionGroup::make([
-//                    Tables\Actions\DeleteBulkAction::make(),
-//                ]),
             ]);
     }
 
@@ -97,7 +108,7 @@ class PaymentsResource extends Resource
         return [
             'index' => ListPayments::route('/'),
             'create' => CreatePayments::route('/create'),
-//            'edit' => EditPayments::route('/{record}/edit'),
+            'edit' => EditPayments::route('/{record}/edit'),
 //            'show' => ViewPayment::route('/{record}/show'),
         ];
     }
