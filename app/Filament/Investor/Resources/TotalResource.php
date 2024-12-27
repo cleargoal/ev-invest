@@ -16,8 +16,8 @@ class TotalResource extends Resource
 {
     protected static ?string $model = Total::class;
 
-    protected static ?string $modelLabel = 'Весь пул';
-    protected static ?string $pluralModelLabel = 'Весь пул';
+    protected static ?string $modelLabel = 'Весь пул грошей';
+    protected static ?string $pluralModelLabel = 'Весь пул грошей';
 
     protected static ?string $navigationIcon = 'heroicon-o-inbox-stack';
 
