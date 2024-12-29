@@ -3,11 +3,9 @@
 namespace App\Filament\Resources\PaymentResource\Pages;
 
 use App\Filament\Resources\PaymentResource;
-use App\Services\CalculationService;
-use Filament\Actions;
+use App\Services\PaymentService;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Log;
 
 class CreatePayment extends CreateRecord
 {
@@ -26,9 +24,8 @@ class CreatePayment extends CreateRecord
 
     protected function handleRecordCreation(array $data): Model
     {
-        $created = static::getModel()::create($data);
-        (new CalculationService())->processing($created); // call processing because Payment has been created by Livewire
-        return $created;
+        $newPayment = app(PaymentService::class);
+        return $newPayment->createPayment($data);
     }
 
     protected function getRedirectUrl(): string
