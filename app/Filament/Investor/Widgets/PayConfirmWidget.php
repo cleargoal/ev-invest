@@ -3,7 +3,7 @@
 namespace App\Filament\Investor\Widgets;
 
 use App\Models\Payment;
-use App\Services\CalculationService;
+use App\Services\PaymentService;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
@@ -38,7 +38,8 @@ class PayConfirmWidget extends BaseWidget
                 ToggleColumn::make('confirmed')->label('Підтвердження')->width('5rem')->alignment(Alignment::Center)
                     ->visible(auth()->user()->roles->contains('name', 'company'))
                     ->afterStateUpdated(function ($record, $state) {
-                        (new CalculationService())->paymentConfirmation($record);
+                        $paymentService = app(PaymentService::class);
+                        $paymentService->paymentConfirmation($record);
                     }),
             ]);
     }
