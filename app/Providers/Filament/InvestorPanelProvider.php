@@ -2,15 +2,12 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Investor\Pages\Agreement;
-use App\Filament\Investor\Pages\Instruction;
 use App\Filament\Investor\Widgets\PayConfirmWidget;
-use App\Filament\Investor\Widgets\StatsOverview;
+use App\Filament\Investor\Widgets\StatsOverviewGeneral;
 use App\Filament\Resources\InvestorResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -45,7 +42,7 @@ class InvestorPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
-                StatsOverview::class,
+                StatsOverviewGeneral::class,
                 PayConfirmWidget::class,
             ])
             ->middleware([
@@ -66,6 +63,9 @@ class InvestorPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/investor/theme.css')
             ->profile(isSimple: false)
             ->brandLogo(asset('images/ev-logo.webp'))
-            ->brandLogoHeight('3rem');
+            ->brandLogoHeight('3rem')
+//            ->navigationItems([
+//                NavigationItem::make('Analytics')->hidden(fn(): bool => ! auth()->user()->can('view-analytics'))])
+            ;
     }
 }
