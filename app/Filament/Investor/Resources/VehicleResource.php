@@ -19,7 +19,8 @@ use Filament\Tables\Table;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
-use App\Services\CalculationService;
+use App\Services\VehicleService;
+use Illuminate\Support\Str;
 
 class VehicleResource extends Resource
 {
@@ -75,9 +76,11 @@ class VehicleResource extends Resource
             ->actions([
                 EditAction::make(),
                 Action::make('sell')
+                    ->modalHeading('Відмітити проданим Авто:')
+                    ->modalDescription(fn(Vehicle $record) => $record->title)
+                    ->label('Продаємо')
                     ->authorize('sell')
                     ->button()->color('success')
-                    ->label('Продано')
                     ->form([
                         TextInput::make('price')->label('Ціна продажу')->required(),
                         DatePicker::make('sale_date')->label('Дата продажу (не обов\'язково)'),
@@ -85,8 +88,8 @@ class VehicleResource extends Resource
                     ->action(function (array $data, Vehicle $record): void {
                         $record->price = $data['price'] * 100; // $data['price'] is in cents
                         $record->save();
-                        $calculationService = app(CalculationService::class);
-                        $calculationService->sellVehicle($record, $record->price);
+                        $vehicleService = app(VehicleService::class);
+                        $vehicleService->sellVehicle($record, $record->price);
                     })
                     ->modalWidth(MaxWidth::ExtraSmall)
                     ->modalCancelAction(fn(StaticAction $action) => $action->label('Поки що ні'))
