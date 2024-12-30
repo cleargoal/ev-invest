@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\VehicleResource\Pages;
 
 use App\Filament\Resources\VehicleResource;
-use App\Services\CalculationService;
-use Filament\Actions;
+use App\Services\VehicleService;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Database\Eloquent\Model;
 
 class CreateVehicle extends CreateRecord
 {
@@ -18,6 +18,12 @@ class CreateVehicle extends CreateRecord
         $data['cost'] = $data['cost'] * 100;
         $data['plan_sale'] = $data['plan_sale'] * 100;
         return $data;
+    }
+
+    protected function handleRecordCreation(array $data): Model
+    {
+        $vehicleService = app(VehicleService::class);
+        return $vehicleService->buyVehicle($data);
     }
 
     protected function getRedirectUrl(): string
