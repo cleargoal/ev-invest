@@ -15,7 +15,6 @@ class VehicleService
 {
 
     public function __construct(
-        protected VehicleService $vehicleService,
         protected PaymentService $paymentService,
         protected TotalService $totalService,
         protected Vehicle $vehicle
