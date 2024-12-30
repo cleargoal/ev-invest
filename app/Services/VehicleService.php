@@ -5,11 +5,21 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Events\BoughtAutoEvent;
+use App\Events\TotalChangedEvent;
+use App\Models\Payment;
+use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Support\Carbon;
 
 class VehicleService
 {
+
+    public function __construct(
+        protected VehicleService $vehicleService,
+        protected PaymentService $paymentService,
+        protected TotalService $totalService,
+        protected Vehicle $vehicle
+    ) {}
 
     public function buyVehicle(array $vehData): Vehicle
     {
@@ -44,6 +54,11 @@ class VehicleService
     {
         $vehicle = $this->updateVehicleWhenSold($vehicle, $actualPrice, $saleDate);
 
+        $payment = $this->companyCommissions($vehicle);
+        $totalAmount = $this->totalService->createTotal($payment);
+        $this->investIncome($vehicle);
+        TotalChangedEvent::dispatch($totalAmount, 'Продано авто. Прибуток:', $vehicle->profit);
+
         return $vehicle;
     }
 
@@ -66,6 +81,50 @@ class VehicleService
         $vehicle->sale_duration = $duration;
         $vehicle->save();
         return $vehicle;
+    }
+
+    /**
+     * Company commissions add to Payment
+     * @param Vehicle $vehicle
+     * @return Payment
+     */
+    public function companyCommissions(Vehicle $vehicle): Payment
+    {
+        $companyId = User::role('company')->first()->id;
+        $commissions = $vehicle->profit / 2; // 1/2 of profit is company's commissions
+        $payData = [
+            'user_id' => $companyId,
+            'operation_id' => 7, // company commissions
+            'amount' => $commissions,
+            'confirmed' => true,
+            'created_at' => $vehicle->sale_date,
+        ];
+
+        return $this->paymentService->createPayment((array)$payData, true); // true prevents to change the Total until all data have been stored
+    }
+
+    /**
+     * Calculate invest income for every investor
+     * @param Vehicle $vehicle
+     * @return int it's count investors (actually this return not necessary)
+     */
+    public function investIncome(Vehicle $vehicle): int
+    {
+        $profitForShare = $vehicle->profit / 2; // 1/2 of profit is company's commissions
+        $investors = User::with('lastContribution')->get();
+        foreach ($investors as $investor) {
+            if (isset($investor->lastContribution)) {
+                $payData = [
+                    'user_id' => $investor->lastContribution->user_id,
+                    'operation_id' => 6,
+                    'amount' => $profitForShare * $investor->lastContribution->percents / 1000000,
+                    'confirmed' => true,
+                    'created_at' => $vehicle->sale_date,
+                ];
+                $this->paymentService->createPayment((array)$payData, true); // true prevents to change the Total until all data have been stored
+            }
+        }
+        return $investors->count();
     }
 
 }
