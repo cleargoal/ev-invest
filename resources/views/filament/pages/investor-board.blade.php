@@ -12,17 +12,19 @@
         </div>
     </x-filament::section>
 
-    <x-filament::section
-     collapsed
-     collapsible
-     persist-collapsed
-     id="dashboard-overview-widget-personal"
-    >
-        <x-slot name="heading">Основна інформація - персональна</x-slot>
-        <div>
-            @livewire(App\Filament\Investor\Widgets\StatsOverviewPersonal::class)
-        </div>
-    </x-filament::section>
+    @if(!auth()->user()->hasRole('company'))
+        <x-filament::section
+         collapsed
+         collapsible
+         persist-collapsed
+         id="dashboard-overview-widget-personal"
+        >
+            <x-slot name="heading">Основна інформація - персональна</x-slot>
+            <div>
+                @livewire(App\Filament\Investor\Widgets\StatsOverviewPersonal::class)
+            </div>
+        </x-filament::section>
+    @endif
 
     <x-filament::section
      collapsed
