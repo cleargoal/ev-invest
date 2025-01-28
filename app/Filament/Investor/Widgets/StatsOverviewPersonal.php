@@ -20,7 +20,6 @@ class StatsOverviewPersonal extends BaseWidget
 
     protected function getStats(): array
     {
-        $total = Total::orderBy('id', 'desc')->first()->amount / 100;
         $myActualContribution = Contribution::where('user_id', auth()->user()->id)->orderBy('id', 'desc')->first();
         $myFirstContribution = Contribution::where('user_id', auth()->user()->id)->orderBy('id', 'asc')->first();
         $myPaymentsTotal = Payment::where('user_id', auth()->user()->id)->whereIn('operation_id', [1,4,5])->sum('amount');
@@ -39,16 +38,6 @@ class StatsOverviewPersonal extends BaseWidget
         $usersWithLastContributions = User::whereNot('id', $operatorId)->with('lastContribution')->get();
 
         return [
-//            Stat::make('Актуальна сума пулу, $$', Number::format($total, locale: 'sv'))->color('success'),
-//            Stat::make('Сума вартості автівок у закупівлі, $$', Number::format($vehicles, locale: 'sv')),
-//            Stat::make('Резерв пулу - доступний для закупівлі, $$', Number::format($total - $vehicles, locale: 'sv')),
-//            Stat::make('Загальна сума інвестицій без Мажор-інвестора, $$', Number::format($totalInvestAmount, locale: 'sv')),
-//            Stat::make('Спільна доля міноритарних інвестицій у пулі (%)', $totalPercents)
-//                ->extraAttributes([
-//                    'class' => 'cursor-pointer',
-//                    'onclick' => "window.location.href='investor/users'",
-//                ]),
-
             Stat::make('Актуальна сума мого внеску, $', Number::format($myActualContribution ? $myActualContribution->amount / 100 : 0, locale: 'sv'))
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : '',
