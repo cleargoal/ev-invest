@@ -22,7 +22,7 @@ class StatsOverviewPersonal extends BaseWidget
     {
         $myActualContribution = Contribution::where('user_id', auth()->user()->id)->orderBy('id', 'desc')->first();
         $myFirstContribution = Contribution::where('user_id', auth()->user()->id)->orderBy('id', 'asc')->first();
-        $myPaymentsTotal = Payment::where('user_id', auth()->user()->id)->whereIn('operation_id', [1,4,5])->sum('amount');
+        $myPaymentsTotal = Payment::where('user_id', auth()->user()->id)->where('confirmed', true)->whereIn('operation_id', [1,4,5])->sum('amount');
         $myTotalIncome = Payment::where('user_id', auth()->user()->id)->where('operation_id', 6)->sum('amount');
         $myTotalGrow = $myFirstContribution ? ($myTotalIncome * 100) / $myFirstContribution->amount * 100 : 0;
         $myLastYearIncome = Payment::where('user_id', auth()->user()->id)->where('operation_id', 6)->whereYear('created_at', '>=', now()->subDays(365))->sum('amount');
@@ -38,7 +38,7 @@ class StatsOverviewPersonal extends BaseWidget
         $usersWithLastContributions = User::whereNot('id', $operatorId)->with('lastContribution')->get();
 
         return [
-            Stat::make('Актуальна сума мого внеску, $', Number::format($myActualContribution ? $myActualContribution->amount / 100 : 0, locale: 'sv'))
+            Stat::make('Мій поточний баланс, $', Number::format($myActualContribution ? $myActualContribution->amount / 100 : 0, locale: 'sv'))
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : '',
                 ]),
