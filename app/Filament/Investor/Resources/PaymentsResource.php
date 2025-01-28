@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Radio;
+use Filament\Forms\Get;
 
 class PaymentsResource extends Resource
 {
@@ -40,8 +41,9 @@ class PaymentsResource extends Resource
                     ->options([
                         '4' => 'Додати до внеску',
                         '5' => 'Замовити вилучення',
-                    ]),
-                TextInput::make('amount')->label('Сума (можна з десятковими знаками)')->extraInputAttributes(['width' => 200]),
+                    ])->live(),
+                TextInput::make('amount')->visible(fn (Get $get): null|string => $get('operation_id'))
+                    ->label('Сума (можна з десятковими знаками)')->extraInputAttributes(['width' => 200]),
             ])->columns(2);
     }
 
