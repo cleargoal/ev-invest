@@ -4,6 +4,8 @@ namespace App\Filament\Investor\Resources\PaymentsResource\Pages;
 
 use App\Filament\Investor\Resources\PaymentsResource;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Database\Eloquent\Model;
+use App\Services\PaymentService;
 
 class CreatePayments extends CreateRecord
 {
@@ -19,6 +21,12 @@ class CreatePayments extends CreateRecord
         }
 
         return $data;
+    }
+
+    protected function afterCreate(): void
+    {
+        $paymentService = app(PaymentService::class);
+        $paymentService->notify();
     }
 
     protected function getRedirectUrl(): string
