@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Vehicle;
-use App\Services\CalculationService;
+use App\Services\VehicleService;
 use Carbon\Carbon;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -98,7 +98,7 @@ class VehicleSeeder extends Seeder
 
         $created = Carbon::createFromDate(2024, 1, 1);
         $companyId = User::role('company')->first()->id;
-        $calc = new CalculationService();
+        $calc = app(VehicleService::class);
 
         foreach ($vehicles as $vehicle) {
             $newVehicle = [

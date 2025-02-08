@@ -44,6 +44,16 @@
                         </td>
                     </tr>
                     <tr>
+                        <td class="body" width="100%" cellpadding="0" cellspacing="0" style="border: hidden !important;">
+                            <div style="font-size: x-large; margin: 1rem;">
+                                <span style="margin-right: 0.5rem;">{{ $description1 ?? '' }}</span>
+                                <span style="margin-right: 0.5rem;">{{ $description2 ?? '' }}</span>
+                                <span style="margin-right: 0.5rem;">{{ $description3 ?? '' }}</span>
+                                <span style="font-weight: bold;">{{ $amount ?? '' }}</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
                         <td>
                             <div style="font-size: large; margin: 1rem;">
                                 <a style="font-weight: bold;" href="{{ $url ?? '' }}">{{ $go_to ?? '' }}</a>

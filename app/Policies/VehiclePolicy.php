@@ -42,7 +42,6 @@ class VehiclePolicy
      */
     public function update(User $user): bool
     {
-//        return $user->id === $vehicle->user_id;
         return $user->hasRole(['company', 'admin']);
     }
 
@@ -51,7 +50,7 @@ class VehiclePolicy
      */
     public function delete(User $user, Vehicle $vehicle): bool
     {
-        return false;
+        return $user->hasRole(['company', 'admin']);
     }
 
     /**

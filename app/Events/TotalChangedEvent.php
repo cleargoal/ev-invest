@@ -18,7 +18,10 @@ class TotalChangedEvent
     /**
      * Create a new event instance.
      */
-    public function __construct(public Total $total)
+    public function __construct(
+        public int    $totalAmount,
+        public string $causeChange,
+        public int    $causeAmount)
     {
         //
     }

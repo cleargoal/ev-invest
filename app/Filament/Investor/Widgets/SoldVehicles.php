@@ -26,29 +26,20 @@ class SoldVehicles extends BaseWidget
     {
         return $table
             ->query(
-//                Vehicle::where('profit', '<>', null)->with('payments.user'),
-                Vehicle::whereNotNull('profit')
-                    ->whereHas('payments', function($query) {
-                        $query->where('operation', 6); // Replace 'specific_operation' with your actual operation condition
-                    })
-                    ->with(['payments' => function($query) {
-                        $query->where('operation', 6)->with('user'); // Eager load the user relation
-                    }])
-                    ->get(),
+                Vehicle::where('profit', '<>', null),
             )
             ->columns([
-                TextColumn::make('title')->label('Марка')->width('4rem'),
-                TextColumn::make('created_at')->date()->label(new HtmlString('Дата<br /> покупки'))->width('4rem'),
-                TextColumn::make('sale_date')->date()->label(new HtmlString('Дата<br /> продажу'))->width('4rem'),
-                TextColumn::make('sale_duration')->label(new HtmlString('Тривалість<br /> продажу,<br /> днів'))->width('4rem')->alignment(Alignment::Center),
-                TextColumn::make('cost')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> покупки')),
+                TextColumn::make('title')->label('Марка')->width('4rem')->sortable(),
+                TextColumn::make('created_at')->date()->label(new HtmlString('Дата<br /> покупки'))->width('4rem')->sortable(),
+                TextColumn::make('sale_date')->date()->label(new HtmlString('Дата<br /> продажу'))->width('4rem')->sortable(),
+                TextColumn::make('sale_duration')->label(new HtmlString('Тривалість<br /> продажу,<br /> днів'))->width('4rem')->alignment(Alignment::Center)->sortable(),
+                TextColumn::make('cost')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> покупки'))->sortable(),
                 TextColumn::make('plan_sale')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)
-                    ->label(new HtmlString('Планова <br />Сума<br /> продажу')),
-                TextColumn::make('price')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> продажу')),
+                    ->label(new HtmlString('Планова <br />Сума<br /> продажу'))->sortable(),
+                TextColumn::make('price')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> продажу'))->sortable(),
                 TextColumn::make('profit')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->weight(FontWeight::Bold)
-                    ->label('Прибуток'),
-                TextColumn::make('user_profit')->state(fn(Vehicle $record) => $record->payments->user)->money('USD', divideBy: 100)
-                    ->width('4rem')->alignment(Alignment::End)->weight(FontWeight::Bold)->color('success')->label('Мій Прибуток'),
-            ]);
+                    ->label('Прибуток')->sortable(),
+            ])
+            ->defaultSort('sale_date', 'desc')            ;
     }
 }

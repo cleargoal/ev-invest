@@ -8,14 +8,15 @@ use App\Models\Contribution;
 use App\Models\Operation;
 use App\Models\User;
 use Filament\Forms;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
 use Filament\Tables;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Navigation\NavigationItem;
@@ -27,10 +28,13 @@ class ContributionResource extends Resource
     protected static ?string $modelLabel = 'Внесок';
     protected static ?string $pluralModelLabel = 'Внески';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-arrow-trending-up';
 
-//    TODO: hide navigation of this resource for Company
-//    NavigationItem::make()->hidden(fn (): bool => ! auth()->user()->can('viewAny', Payment::class));
+    public static function shouldRegisterNavigation(): bool
+    {
+        return !auth()->user()->hasRole('company');
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -63,9 +67,18 @@ class ContributionResource extends Resource
                     ->label('Мій Ітого Внеску'),
                 ViewColumn::make('percents')->view('tables.columns.percents')->label('Мій Відсоток %')->width('5rem')->alignment(Alignment::Center),
             ])
+            ->defaultSort('id', 'desc')
             ->filters([
-                SelectFilter::make('payment.operation_id')->options($operationsFilterOptions)->label('Операція'),
-                SelectFilter::make('payment.user_id')->options(User::all()->pluck('name'))->label('Інвестор'),
+//                SelectFilter::make('payment.operation_id')->label('Операція')
+//                    ->relationship('payment.operation', 'title')
+//                    ->options(Operation::query()->pluck('title', 'id')->all()),
+
+//                Filter::make('operation')->form([
+//                    Select::make('operation_id')->label('Операція')
+//                        ->options(Operation::query()->pluck('title', 'id')->all())
+//                ])->query(function (Builder $query, array $data): Builder {
+//                    return $query->where(fn (Builder $query, $payment): Builder => $query->where($payment->operation_id, $data['operation_id']), $data['id']);
+//                }),
             ])
             ->actions([
             ])

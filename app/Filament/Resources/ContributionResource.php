@@ -44,10 +44,9 @@ class ContributionResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('payment.operation.title')
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('user.name')->sortable(),
+                Tables\Columns\TextColumn::make('payment.id')->sortable()->label('Payment ID'),
+                Tables\Columns\TextColumn::make('payment.operation.title')->sortable(),
                 Tables\Columns\TextColumn::make('amount')
                     ->money('USD', divideBy: 100)
                     ->sortable(),
@@ -56,6 +55,7 @@ class ContributionResource extends Resource
                     ->dateTime()
                     ->sortable(),
             ])
+            ->defaultSort('id', 'desc')
             ->filters([
                 //
             ])

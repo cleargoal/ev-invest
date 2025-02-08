@@ -4,11 +4,9 @@ namespace App\Listeners;
 
 use App\Events\TotalChangedEvent;
 use App\Mail\TotalChangedMail;
-use App\Models\Total;
 use App\Models\User;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class TotalListener
@@ -26,8 +24,12 @@ class TotalListener
      */
     public function handle(TotalChangedEvent $event): void
     {
-        $total = Total::orderBy('id', 'desc')->first()->amount/100;
-        $mailTo = User::role('investor')->get();
-            Mail::to($mailTo)->send(new TotalChangedMail($total));
+        if (config('app.env') !== 'local') {
+            $mailTo = User::role('investor')->get();
+        }
+        else {
+            $mailTo = 'cleargoal1@gmail.com';
+        }
+            Mail::to($mailTo)->send(new TotalChangedMail($event->totalAmount/100, $event->causeChange, $event->causeAmount/100));
     }
 }

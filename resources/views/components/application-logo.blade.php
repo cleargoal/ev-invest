@@ -1,1 +1,1 @@
-<img src="{{asset('images/ev-logo-rounded.webp')}}" {{ $attributes->merge([]) }} alt="app logo" />
+<img src="{{asset('images/ev-logo.webp')}}" {{ $attributes->merge([]) }} alt="app logo" />

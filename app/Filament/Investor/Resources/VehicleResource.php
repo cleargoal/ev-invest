@@ -10,16 +10,17 @@ use Filament\Forms\Form;
 use Filament\Forms\Components\Group;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
-use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\MaxWidth;
-use Filament\Tables;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
-use App\Services\CalculationService;
+use App\Services\VehicleService;
+use Illuminate\Support\Str;
 
 class VehicleResource extends Resource
 {
@@ -27,7 +28,7 @@ class VehicleResource extends Resource
     protected static ?string $modelLabel = 'Автівка';
     protected static ?string $pluralModelLabel = 'Автівки у продажі';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-truck';
 
     public static function getEloquentQuery(): Builder
     {
@@ -60,44 +61,43 @@ class VehicleResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('title')->label('Марка')->width('4rem'),
-                TextColumn::make('produced')->label(new HtmlString('Рік <br /> випуску'))->width('4rem'),
-                TextColumn::make('mileage')->label('Пробіг'),
-                TextColumn::make('created_at')->date()->label(new HtmlString('Дата<br /> покупки'))->width('4rem'),
-                TextColumn::make('sale_date')->date()->label(new HtmlString('Дата<br /> продажу'))->width('4rem'),
-                TextColumn::make('sale_duration')->label(new HtmlString('Тривалість<br /> продажу,<br /> днів'))->width('4rem')->alignment(Alignment::Center),
-                TextColumn::make('cost')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> покупки')),
+                TextColumn::make('title')->label('Марка')->width('4rem')->sortable(),
+                TextColumn::make('produced')->label(new HtmlString('Рік <br /> випуску'))->width('4rem')->sortable(),
+                TextColumn::make('mileage')->label('Пробіг')->width('4rem')->sortable(),
+                TextColumn::make('created_at')->date()->label(new HtmlString('Дата<br /> покупки'))->width('4rem')->sortable(),
+                TextColumn::make('cost')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> покупки'))->sortable(),
                 TextColumn::make('plan_sale')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)
-                    ->label(new HtmlString('Планова <br />Сума<br /> продажу')),
-                TextColumn::make('price')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> продажу')),
-                TextColumn::make('profit')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->weight(FontWeight::Bold)
-                    ->label('Прибуток'),
+                    ->label(new HtmlString('Планова <br />Сума<br /> продажу'))->sortable(),
             ])
+            ->defaultSort('id', 'desc')
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                EditAction::make(),
                 Action::make('sell')
+                    ->modalHeading('Відмітити проданим Авто:')
+                    ->modalDescription(fn(Vehicle $record) => $record->title)
+                    ->label('Продаємо')
                     ->authorize('sell')
                     ->button()->color('success')
-                    ->label('Продано')
                     ->form([
                         TextInput::make('price')->label('Ціна продажу')->required(),
+                        DatePicker::make('sale_date')->label('Дата продажу (не обов\'язково)'),
                     ])
                     ->action(function (array $data, Vehicle $record): void {
                         $record->price = $data['price'] * 100; // $data['price'] is in cents
                         $record->save();
-                        (new CalculationService())->sellVehicle($record, $record->price);
+                        $vehicleService = app(VehicleService::class);
+                        $vehicleService->sellVehicle($record, $record->price);
                     })
                     ->modalWidth(MaxWidth::ExtraSmall)
                     ->modalCancelAction(fn(StaticAction $action) => $action->label('Поки що ні'))
                     ->modalSubmitAction(fn(StaticAction $action) => $action->label('Дійсно Продано')),
+
+                DeleteAction::make(),
             ])
             ->bulkActions([
-//                Tables\Actions\BulkActionGroup::make([
-//                    Tables\Actions\DeleteBulkAction::make(),
-//                ]),
             ]);
     }
 

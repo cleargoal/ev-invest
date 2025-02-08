@@ -14,14 +14,18 @@ class TotalChangedMail extends Mailable
     use Queueable, SerializesModels;
 
     protected int|float $total;
+    protected string $cause;
+    protected int $amount;
 
     /**
      * Create a new message instance.
-     * @param int|float $total
+     * @param float|int $total
      */
-    public function __construct($total)
+    public function __construct(float|int $total, string $cause, int $amount)
     {
         $this->total = $total;
+        $this->cause = $cause;
+        $this->amount = $amount;
     }
 
     /**
@@ -30,7 +34,7 @@ class TotalChangedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address(config('mail.from.address'), 'Freedom Auto інвест калькулятор'),
+            from: new Address(config('mail.from.address'), config('mail.from.name')),
             subject: 'Змінився розмір інвестиційного пулу',
         );
     }
@@ -45,8 +49,11 @@ class TotalChangedMail extends Mailable
             with: [
                 'header' => 'Зміни в інвест пулу',
                 'sub_header' => 'Інвест пул змінився',
-                'explanation' => 'Нова сума пулу, $:',
+                'explanation' => 'Нова сума пулу, $: ',
                 'total' => number_format($this->total, 2, ',', ' '),
+                'description1' => 'Причина зміни: ',
+                'description2' => $this->cause,
+                'amount' => $this->amount,
                 'go_to' => 'Докладніше на сайті',
                 'url' => 'https://ev-invest.segment.best/investor'
             ],

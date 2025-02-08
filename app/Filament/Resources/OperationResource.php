@@ -6,6 +6,7 @@ use App\Filament\Resources\OperationResource\Pages;
 use App\Filament\Resources\OperationResource\RelationManagers;
 use App\Models\Operation;
 use Filament\Forms;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -24,6 +25,8 @@ class OperationResource extends Resource
     {
         return $form
             ->schema([
+                TextInput::make('title'),
+                TextInput::make('description'),
             ]);
     }
 
@@ -32,7 +35,8 @@ class OperationResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('id'),
-                TextColumn::make('title')
+                TextColumn::make('title'),
+                TextColumn::make('description')->limit(110),
             ])
             ->filters([
                 //

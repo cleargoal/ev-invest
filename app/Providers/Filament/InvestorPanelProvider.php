@@ -3,7 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Investor\Widgets\PayConfirmWidget;
-use App\Filament\Investor\Widgets\StatsOverview;
+use App\Filament\Investor\Widgets\StatsOverviewGeneral;
 use App\Filament\Resources\InvestorResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -27,6 +27,8 @@ class InvestorPanelProvider extends PanelProvider
         return $panel
             ->id('investor')
             ->path('investor')
+            ->collapsibleNavigationGroups(false)
+            ->sidebarCollapsibleOnDesktop()
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -40,7 +42,7 @@ class InvestorPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
-                StatsOverview::class,
+                StatsOverviewGeneral::class,
                 PayConfirmWidget::class,
             ])
             ->middleware([
@@ -58,6 +60,12 @@ class InvestorPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->favicon(asset('images/ev-logo.webp'))
-            ->viteTheme('resources/css/filament/investor/theme.css');
+            ->viteTheme('resources/css/filament/investor/theme.css')
+            ->profile(isSimple: false)
+            ->brandLogo(asset('images/ev-logo.webp'))
+            ->brandLogoHeight('3rem')
+//            ->navigationItems([
+//                NavigationItem::make('Analytics')->hidden(fn(): bool => ! auth()->user()->can('view-analytics'))])
+            ;
     }
 }
