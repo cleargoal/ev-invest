@@ -6,7 +6,6 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Log;
 
 class LeasingIncomeNotification extends Notification
 {
@@ -35,7 +34,6 @@ class LeasingIncomeNotification extends Notification
      */
     public function toMail($notifiable): MailMessage
     {
-        Log::info('notif', [$notifiable]);
         return (new MailMessage)
             ->subject('Новини сервісу Фрідом Авто')
             ->greeting('Вітаннячко!')
