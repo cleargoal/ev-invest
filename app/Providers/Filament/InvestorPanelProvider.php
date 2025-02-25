@@ -64,7 +64,7 @@ class InvestorPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/investor/theme.css')
             ->profile(isSimple: false)
             ->brandLogo(asset('images/ev-logo.webp'))
-            ->brandLogoHeight('3rem')
+            ->brandLogoHeight('4rem')
 //            ->navigationItems([
 //                NavigationItem::make('Analytics')->hidden(fn(): bool => ! auth()->user()->can('view-analytics'))])
             ;
