@@ -20,10 +20,22 @@ class StatsOverviewPersonal extends BaseWidget
 
     protected function getStats(): array
     {
-        $myActualContribution = Contribution::where('user_id', auth()->user()->id)->orderBy('id', 'desc')->first();
-        $myFirstContribution = Contribution::where('user_id', auth()->user()->id)->orderBy('id', 'asc')->first();
+        $commonTotal = (int) Payment::whereHas('user.roles', function ($query) {
+            $query->where('name', '!=', 'company');
+        })->where('confirmed', true)->sum('amount');
+
+        $myActualContributionAmount = (int) Payment::where('user_id', auth()->user()->id)->where('confirmed', true)->sum('amount');
+        $myActualContributionPercents = (int) round($myActualContributionAmount/$commonTotal * 1000000);
+
+        $myFirstContribution = Payment::where('user_id', auth()->user()->id)
+            ->whereHas('operation', function ($query) {
+                $query->where('key', 'first');
+            })
+            ->first();
+//        dd($myFirstContribution);
+
         $myPaymentsTotal = Payment::where('user_id', auth()->user()->id)->where('confirmed', true)->whereIn('operation_id', [1,4,5])->sum('amount');
-        $myTotalIncome = Payment::where('user_id', auth()->user()->id)->where('operation_id', 6)->sum('amount');
+        $myTotalIncome = Payment::where('user_id', auth()->user()->id)->whereIn('operation_id', [6,9])->sum('amount');
         $myTotalGrow = $myFirstContribution ? ($myTotalIncome * 100) / $myFirstContribution->amount * 100 : 0;
         $myLastYearIncome = Payment::where('user_id', auth()->user()->id)->where('operation_id', 6)->whereYear('created_at', '>=', now()->subDays(365))->sum('amount');
         $myLastYearGrow = $myFirstContribution ? ($myLastYearIncome * 100) / $myFirstContribution->amount * 100 : 0;
@@ -35,14 +47,12 @@ class StatsOverviewPersonal extends BaseWidget
             $query->where('name', 'company');
         })->first();
 
-        $usersWithLastContributions = User::whereNot('id', $operatorId)->with('lastContribution')->get();
-
         return [
-            Stat::make('Мій поточний баланс, $', Number::format($myActualContribution ? $myActualContribution->amount / 100 : 0, locale: 'sv'))
+            Stat::make('Мій поточний баланс, $', Number::format($myActualContributionAmount ? $myActualContributionAmount / 100 : 0, locale: 'sv'))
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : '',
                 ]),
-            Stat::make('Моя доля у сумі пулу (%)', $myActualContribution ? round($myActualContribution->percents / 10000, 2) : 0)
+            Stat::make('Моя доля у сумі пулу (%)', $myActualContributionPercents ? round($myActualContributionPercents / 10000, 2) : 0)
                 ->extraAttributes([
                 'class' => $company ? 'hidden' : '',
             ]),
@@ -71,7 +81,8 @@ class StatsOverviewPersonal extends BaseWidget
                     'onclick' => "window.location.href='investor/payments'",
                 ]),
 
-            // Last Year income widgets; TODO will be actual after May 2025
+            // TODO will be actual after May 2025
+// Last Year income widgets;
 //            Stat::make('Мій дохід за останній рік, $$', Number::format($myLastYearIncome / 100, locale: 'sv'))
 //                ->description('За 365 днів враховуючи сьогодні')
 //                ->extraAttributes([
