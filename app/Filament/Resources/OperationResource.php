@@ -26,6 +26,7 @@ class OperationResource extends Resource
         return $form
             ->schema([
                 TextInput::make('title'),
+                TextInput::make('key'),
                 TextInput::make('description'),
             ]);
     }
@@ -36,6 +37,7 @@ class OperationResource extends Resource
             ->columns([
                 TextColumn::make('id'),
                 TextColumn::make('title'),
+                TextColumn::make('key'),
                 TextColumn::make('description')->limit(110),
             ])
             ->filters([
