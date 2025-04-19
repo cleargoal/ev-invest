@@ -6,6 +6,9 @@ namespace App\Services;
 
 use App\Events\TotalChangedEvent;
 use App\Models\Payment;
+use App\Models\User;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\NewPaymentNotify;
 
 class PaymentService
 {
@@ -62,6 +65,17 @@ class PaymentService
         $this->manageContributions($payment);
         $totalAmount = $this->totalService->createTotal($payment);
         TotalChangedEvent::dispatch($totalAmount, 'Внесок інвестора', $payment->amount);
+    }
+
+    public function notify(): void
+    {
+        if (config('app.env') !== 'local') {
+            $users = User::role('company')->get();
+        }
+        else {
+            $users = User::role('admin')->get();
+        }
+        Notification::send($users, new NewPaymentNotify());
     }
 
 

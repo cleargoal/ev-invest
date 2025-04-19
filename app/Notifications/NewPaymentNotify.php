@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class LeasingIncomeNotification extends Notification
+class NewPaymentNotify extends Notification
 {
     use Queueable;
 
@@ -24,7 +24,7 @@ class LeasingIncomeNotification extends Notification
      *
      * @return array<int, string>
      */
-    public function via($notifiable): array
+    public function via(object $notifiable): array
     {
         return ['mail'];
     }
@@ -32,13 +32,14 @@ class LeasingIncomeNotification extends Notification
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail($notifiable): MailMessage
+    public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Новини сервісу Фрідом Авто')
+            ->subject('Новий внесок у сервісу Фрідом Авто')
             ->greeting('Вітаннячко!')
-            ->line('Ми отримали доход від здачі авто в оренду.')
-            ->action('Детально на сайті', url('/investor/leasings'))
+            ->line('Новий внесок у сервісу очікує на підтвердження.')
+            ->line('Коли гроші надійдуть на рахунок, просимо підтвердити це в застосунку.')
+            ->action('До підтвердження', url('/investor'))
             ->line('Приємного користування застосунком! :)');
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Investor\Pages\InvestorBoard;
 use App\Filament\Investor\Widgets\PayConfirmWidget;
 use App\Filament\Investor\Widgets\StatsOverviewGeneral;
 use App\Filament\Resources\InvestorResource;
@@ -36,7 +37,7 @@ class InvestorPanelProvider extends PanelProvider
             ->resources([])
             ->discoverPages(in: app_path('Filament/Investor/Pages'), for: 'App\\Filament\\Investor\\Pages')
             ->pages([
-                \App\Filament\Investor\Pages\InvestorBoard::class,
+                InvestorBoard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Investor/Widgets'), for: 'App\\Filament\\Investor\\Widgets')
             ->widgets([
@@ -63,7 +64,7 @@ class InvestorPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/investor/theme.css')
             ->profile(isSimple: false)
             ->brandLogo(asset('images/ev-logo.webp'))
-            ->brandLogoHeight('3rem')
+            ->brandLogoHeight('4rem')
 //            ->navigationItems([
 //                NavigationItem::make('Analytics')->hidden(fn(): bool => ! auth()->user()->can('view-analytics'))])
             ;
