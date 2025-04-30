@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Payment;
-use App\Services\CalculationService;
+use App\Services\PaymentService;
 use Illuminate\Database\Seeder;
 
 class PaymentSeeder extends Seeder
@@ -13,7 +13,7 @@ class PaymentSeeder extends Seeder
      */
     public function run(): void
     {
-        $calc = new CalculationService();
+        $calc = app (PaymentService::class);
 
         for ($i=2; $i <= 10; $i++) { // without 1st user, who is the operator
             $payment = Payment::factory()->make(['user_id' => $i]);

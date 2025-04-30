@@ -7,12 +7,10 @@ use App\Models\Vehicle;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
-use App\Services\CalculationService;
+use App\Services\VehicleService;
 
 class ComplexSeeder extends Seeder
 {
-
-    private CalculationService $calc;
 
     /**
      * Run the database seeds. Complex seeding for all models
@@ -21,7 +19,7 @@ class ComplexSeeder extends Seeder
     {
         $startDay = Carbon::createFromDate(2023, 1, 2);
         $today = Carbon::today();
-        $this->calc = new CalculationService();
+        $calc = app(VehicleService::class);
 
         $investment = [true, false, false, false, false, false, false, false,];
         $buyVehicle = [true, false, false, false, false, false, false, false, false, false, false, false, false,];
@@ -33,14 +31,14 @@ class ComplexSeeder extends Seeder
 
             if ($isInvestment) {
                 $payment = Payment::factory()->make(['created_at' => $currentDate]);
-                $this->calc->createPayment($payment->toArray());
+                $calc->createPayment($payment->toArray());
             }
 
             $isBuyVehicle = !$isInvestment && Arr::random($buyVehicle);
 
             if ($isBuyVehicle) {
                 $vehicle = Vehicle::factory()->make(['created_at' => $currentDate,]);
-                $this->calc->buyVehicle($vehicle->toArray());
+                $calc->buyVehicle($vehicle->toArray());
             }
 
             $isSaturday = (Carbon::parse($currentDate)->dayOfWeek === Carbon::SATURDAY); // it Works!
@@ -50,7 +48,7 @@ class ComplexSeeder extends Seeder
                 $sellVehicle = $existCars->count() > 0 ? $existCars->random() : null;
                 if ($sellVehicle) {
                     $price = $sellVehicle->cost + rand(5, 20) * 10000;
-                    $this->calc->sellVehicle($sellVehicle, $price, $currentDate);
+                    $calc->sellVehicle($sellVehicle, $price, $currentDate);
                 }
             }
 
