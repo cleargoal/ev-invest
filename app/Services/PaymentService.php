@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\OperationType;
 use App\Events\TotalChangedEvent;
 use App\Models\Payment;
 use App\Models\User;
@@ -30,7 +31,7 @@ class PaymentService
         $newPay->fill($payData);
         $newPay->save();
 
-        if ($payData['operation_id'] !== 7) {
+        if ($payData['operation_id'] !== OperationType::REVENUE) {
             $this->manageContributions($newPay, $addIncome);
         }
         return $newPay;
