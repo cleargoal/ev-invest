@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\OperationType;
 use App\Events\BoughtAutoEvent;
 use App\Events\TotalChangedEvent;
 use App\Models\Payment;
@@ -87,19 +88,21 @@ class VehicleService
      * @param Vehicle $vehicle
      * @return Payment
      */
+
     public function companyCommissions(Vehicle $vehicle): Payment
     {
         $companyId = User::role('company')->first()->id;
         $commissions = $vehicle->profit / 2; // 1/2 of profit is company's commissions
+
         $payData = [
             'user_id' => $companyId,
-            'operation_id' => 7, // company commissions
+            'operation_id' => OperationType::REVENUE,
             'amount' => $commissions,
             'confirmed' => true,
             'created_at' => $vehicle->sale_date,
         ];
 
-        return $this->paymentService->createPayment((array)$payData, true); // true prevents to change the Total until all data have been stored
+        return $this->paymentService->createPayment((array)$payData, true);
     }
 
     /**
@@ -115,7 +118,7 @@ class VehicleService
             if (isset($investor->lastContribution)) {
                 $payData = [
                     'user_id' => $investor->lastContribution->user_id,
-                    'operation_id' => 6,
+                    'operation_id' => OperationType::INCOME,
                     'amount' => $profitForShare * $investor->lastContribution->percents / 1000000,
                     'confirmed' => true,
                     'created_at' => $vehicle->sale_date,
