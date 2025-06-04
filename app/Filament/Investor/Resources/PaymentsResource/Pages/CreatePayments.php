@@ -2,9 +2,9 @@
 
 namespace App\Filament\Investor\Resources\PaymentsResource\Pages;
 
+use App\Enums\OperationType;
 use App\Filament\Investor\Resources\PaymentsResource;
 use Filament\Resources\Pages\CreateRecord;
-use Illuminate\Database\Eloquent\Model;
 use App\Services\PaymentService;
 
 class CreatePayments extends CreateRecord
@@ -16,7 +16,7 @@ class CreatePayments extends CreateRecord
     {
         $data['user_id'] = auth()->id();
         $data['amount'] = str_replace(',', '.', $data['amount']) * 100;
-        if($data['operation_id'] === 5 || $data['operation_id'] === '5') {
+        if($data['operation_id'] === OperationType::WITHDRAW) {
             $data['amount'] = $data['amount'] * -1;
         }
 
