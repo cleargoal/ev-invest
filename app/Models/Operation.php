@@ -10,7 +10,7 @@ class Operation extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'description'];
+    protected $fillable = ['title', 'key', 'description', 'car',];
 
     public function payments(): HasMany
     {
