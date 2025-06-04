@@ -76,8 +76,10 @@ class VehicleResource extends Resource
             ->actions([
                 EditAction::make(),
                 Action::make('sell')
+                    ->modalIcon('heroicon-o-truck')
+                    ->modalIconColor('warning')
                     ->modalHeading('Відмітити проданим Авто:')
-                    ->modalDescription(fn(Vehicle $record) => $record->title)
+                    ->modalDescription(fn(Vehicle $record) => new HtmlString('<div class="text-xl font-bold text-violet-800">' . $record->title . '</div>'))
                     ->label('Продаємо')
                     ->authorize('sell')
                     ->button()->color('success')
