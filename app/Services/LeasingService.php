@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\OperationType;
 use App\Models\Leasing;
 use App\Models\Payment;
 use App\Models\User;
@@ -63,7 +64,7 @@ class LeasingService
         $commissions = $leasing->price / 2; // 1/2 of profit is company's commissions
         $payData = [
             'user_id' => $companyId,
-            'operation_id' => 8, // company commissions
+            'operation_id' => OperationType::C_LEASING, // company commissions
             'amount' => $commissions,
             'confirmed' => true,
             'created_at' => $leasing->created_at, // TODO: date depends on when leasing data are recorded
@@ -85,7 +86,7 @@ class LeasingService
             if (isset($investor->lastContribution)) {
                 $payData = [
                     'user_id' => $investor->lastContribution->user_id,
-                    'operation_id' => 9,
+                    'operation_id' => OperationType::I_LEASING,
                     'amount' => $profitForShare * $investor->lastContribution->percents / 1000000,
                     'confirmed' => true,
                     'created_at' => $leasing->created_at,
