@@ -67,7 +67,7 @@ class LeasingService
             'operation_id' => OperationType::C_LEASING, // company commissions
             'amount' => $commissions,
             'confirmed' => true,
-            'created_at' => $leasing->created_at, // TODO: date depends on when leasing data are recorded
+            'created_at' => $leasing->created_at, // TODO: date depends on leasing date
         ];
 
         return $this->paymentService->createPayment((array)$payData, true); // true prevents to change the Total until all data have been stored
