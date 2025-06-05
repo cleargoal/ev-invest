@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import laravel, { refreshPaths } from 'laravel-vite-plugin'
 
 export default defineConfig({
-    base: process.env.VITE_BASE_URL || '/',
+    base: '/',
     plugins: [
         laravel({
             input: [
