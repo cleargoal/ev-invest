@@ -37,6 +37,11 @@ class VehiclePolicy
         return $user->hasRole('company');
     }
 
+    public function cancel(User $user): bool
+    {
+        return $user->hasRole('company');
+    }
+
     /**
      * Determine whether the user can update the model.
      */
