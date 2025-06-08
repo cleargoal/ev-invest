@@ -113,7 +113,11 @@ class VehicleService
     public function investIncome(Vehicle $vehicle): int
     {
         $profitForShare = $vehicle->profit / 2; // 1/2 of profit is company's commissions
-        $investors = User::with('lastContribution')->get();
+        $investors = User::with('lastContribution')
+            ->whereHas('roles', function ($query) {
+                $query->where('name', 'investor');
+            })
+            ->get();
         foreach ($investors as $investor) {
             if (isset($investor->lastContribution)) {
                 $payData = [
