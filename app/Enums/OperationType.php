@@ -10,8 +10,8 @@ enum OperationType: int
     case SELL_CAR = 3;
     case CONTRIB = 4;
     case WITHDRAW = 5;
-    case INCOME = 6;
-    case REVENUE = 7;
+    case INCOME = 6; // investor income
+    case REVENUE = 7; // company revenue
     case C_LEASING = 8;
     case I_LEASING = 9;
     case RECULC = 10;

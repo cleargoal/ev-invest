@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\MoneyCast;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +14,11 @@ class Payment extends Model
     use HasFactory;
 
     protected $fillable = ['amount', 'user_id', 'operation_id', 'confirmed', 'created_at'];
+
+    protected $casts = [
+        'amount' => MoneyCast::class,
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

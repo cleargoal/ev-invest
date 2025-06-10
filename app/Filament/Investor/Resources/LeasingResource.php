@@ -81,7 +81,7 @@ class LeasingResource extends Resource
                     ->numeric()->alignment(Alignment::Center)
                     ->sortable(),
                 TextColumn::make('price')->label('Дохід')
-                    ->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)
+                    ->money('USD')->width('5rem')->alignment(Alignment::End)
                     ->sortable(),
                 TextColumn::make('created_at')->dateTime()->label('Створено')
                     ->sortable()->toggleable(isToggledHiddenByDefault: true),

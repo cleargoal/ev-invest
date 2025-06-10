@@ -58,7 +58,7 @@ class ContributionService
                 $newContribution->save();
             }
         }
-        return $totalAmount;
+        return (int) $totalAmount;
     }
 
 }

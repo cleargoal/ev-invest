@@ -1,3 +1,7 @@
+@php
+    $hasUnconfirmedPayments = \App\Models\Payment::where('confirmed', false)->exists();
+@endphp
+
 <x-filament-panels::page>
 
     <x-filament::section
@@ -32,7 +36,11 @@
      persist-collapsed
      id="dashboard-confirm-widget"
     >
-        <x-slot name="heading">Підтвердження внеску</x-slot>
+        <x-slot name="heading">
+        <span class="{{ $hasUnconfirmedPayments ? 'text-red-600' : 'text-gray-900' }}">
+            Підтвердження внеску
+        </span>
+        </x-slot>
         <div>
             @livewire(App\Filament\Investor\Widgets\PayConfirmWidget::class)
         </div>

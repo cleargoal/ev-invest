@@ -22,20 +22,20 @@ class EditVehicle extends EditRecord
         return $this->getResource()::getUrl('index');
     }
 
-    protected function mutateFormDataBeforeFill(array $data): array
-    {
-        $data['cost'] = $data['cost'] / 100;
-        $data['plan_sale'] = $data['plan_sale'] / 100;
-//        $data['profit'] = $data['profit'] / 100;
+//    protected function mutateFormDataBeforeFill(array $data): array
+//    {
+//        $data['cost'] = $data['cost'];
+//        $data['plan_sale'] = $data['plan_sale'];
+//        $data['profit'] = $data['profit'];
 
-        return $data;
-    }
-    protected function mutateFormDataBeforeSave(array $data): array
-    {
-        $data['cost'] = $data['cost'] * 100;
-        $data['plan_sale'] = $data['plan_sale'] * 100;
-//        $data['profit'] = $data['profit'] * 100;
+//        return $data;
+//    }
+//    protected function mutateFormDataBeforeSave(array $data): array
+//    {
+//        $data['cost'] = $data['cost'];
+//        $data['plan_sale'] = $data['plan_sale'];
+//        $data['profit'] = $data['profit'];
 
-        return $data;
-    }
+//        return $data;
+//    }
 }

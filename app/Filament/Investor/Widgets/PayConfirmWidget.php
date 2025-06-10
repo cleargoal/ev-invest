@@ -33,7 +33,7 @@ class PayConfirmWidget extends BaseWidget
                 TextColumn::make('user.name')->width('5rem')->label('Інвестор'),
                 TextColumn::make('amount')
                     ->weight(FontWeight::Bold)
-                    ->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)
+                    ->money('USD')->width('5rem')->alignment(Alignment::End)
                     ->label('Сума'),
                 ToggleColumn::make('confirmed')->label('Підтвердження')->width('5rem')->alignment(Alignment::Center)
                     ->visible(auth()->user()->roles->contains('name', 'company'))

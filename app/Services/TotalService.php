@@ -24,6 +24,6 @@ class TotalService
         $total->created_at = $payment->created_at;
         $total->save();
 
-        return $total->amount;
+        return (int) $total->amount;
     }
 }

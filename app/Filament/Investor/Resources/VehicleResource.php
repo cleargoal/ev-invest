@@ -65,9 +65,9 @@ class VehicleResource extends Resource
                 TextColumn::make('produced')->label(new HtmlString('Рік <br /> випуску'))->width('4rem')->sortable(),
                 TextColumn::make('mileage')->label('Пробіг')->width('4rem')->sortable(),
                 TextColumn::make('created_at')->date()->label(new HtmlString('Дата<br /> покупки'))->width('4rem')->sortable(),
-                TextColumn::make('cost')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> покупки'))->sortable(),
-                TextColumn::make('plan_sale')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)
-                    ->label(new HtmlString('Планова <br />Сума<br /> продажу'))->sortable(),
+                TextColumn::make('cost')->money('USD')->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума <br />покупки'))->sortable(),
+                TextColumn::make('plan_sale')->money('USD')->width('4rem')->alignment(Alignment::End)
+                    ->label(new HtmlString('Планова <br />Сума <br />продажу'))->sortable(),
             ])
             ->defaultSort('id', 'desc')
             ->filters([
@@ -88,7 +88,7 @@ class VehicleResource extends Resource
                         DatePicker::make('sale_date')->label('Дата продажу (не обов\'язково)'),
                     ])
                     ->action(function (array $data, Vehicle $record): void {
-                        $record->price = $data['price'] * 100; // $data['price'] is in cents
+                        $record->price = $data['price']; // $data['price'] is in cents
                         $record->save();
                         $vehicleService = app(VehicleService::class);
                         $vehicleService->sellVehicle($record, $record->price);

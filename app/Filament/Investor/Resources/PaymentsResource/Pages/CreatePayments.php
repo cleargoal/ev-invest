@@ -15,7 +15,7 @@ class CreatePayments extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['user_id'] = auth()->id();
-        $data['amount'] = str_replace(',', '.', $data['amount']) * 100;
+        $data['amount'] = abs(str_replace(',', '.', $data['amount']));
         if($data['operation_id'] === OperationType::WITHDRAW) {
             $data['amount'] = $data['amount'] * -1;
         }
