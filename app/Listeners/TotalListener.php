@@ -30,6 +30,6 @@ class TotalListener
         else {
             $mailTo = 'cleargoal1@gmail.com';
         }
-            Mail::to($mailTo)->send(new TotalChangedMail($event->totalAmount/100, $event->causeChange, $event->causeAmount/100));
+            Mail::to($mailTo)->send(new TotalChangedMail($event->totalAmount, $event->causeChange, $event->causeAmount));
     }
 }
