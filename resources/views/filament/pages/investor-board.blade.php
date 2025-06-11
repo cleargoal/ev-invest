@@ -16,6 +16,18 @@
         </div>
     </x-filament::section>
 
+    <x-filament::section
+        collapsed
+        collapsible
+        persist-collapsed
+        id="dashboard-personal-charts"
+    >
+        <x-slot name="heading">Загальні графіки</x-slot>
+        <div class="w-full">
+            @livewire(App\Filament\Investor\Widgets\PoolReserveChart::class)
+        </div>
+    </x-filament::section>
+
     @if(!auth()->user()->hasRole('company'))
         <x-filament::section
          collapsed
@@ -29,6 +41,15 @@
             </div>
         </x-filament::section>
     @endif
+
+    <x-filament::section
+        collapsed
+        collapsible
+        persist-collapsed
+        id="dashboard-personal-charts"
+    >
+        <x-slot name="heading">Персональні графіки</x-slot>
+    </x-filament::section>
 
     <x-filament::section
      collapsed
@@ -45,6 +66,7 @@
             @livewire(App\Filament\Investor\Widgets\PayConfirmWidget::class)
         </div>
     </x-filament::section>
+
 
     <x-filament::section
         collapsed
