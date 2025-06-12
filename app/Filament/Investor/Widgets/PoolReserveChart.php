@@ -9,7 +9,7 @@ use Filament\Widgets\ChartWidget;
 
 class PoolReserveChart extends ChartWidget
 {
-    protected static ?string $heading = '2025: Весь пул/Резерв/Гроші в роботі';
+    protected static ?string $heading = 'Весь пул/Резерв/Гроші в роботі';
     protected static ?string $pollingInterval = null;
 
     protected function getData(): array
@@ -20,7 +20,7 @@ class PoolReserveChart extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => "Весь пул 2025",
+                    'label' => "Весь пул",
                     'data' => $data['poolAmounts'],
                     'backgroundColor' => '#36A2EB22',
                     'borderColor' => '#9BD0F5',
@@ -29,7 +29,7 @@ class PoolReserveChart extends ChartWidget
                     'borderWidth' => 2,
                 ],
                 [
-                    'label' => "Резерв 2025",
+                    'label' => "Резерв",
                     'data' => $data['differences'],
                     'backgroundColor' => '#aa449922',
                     'borderColor' => '#9999F5',
@@ -38,7 +38,7 @@ class PoolReserveChart extends ChartWidget
                     'borderWidth' => 2,
                 ],
                 [
-                    'label' => "Гроші в роботі 2025",
+                    'label' => "Гроші в роботі",
                     'data' => $data['vehiclesAmounts'],
                     'backgroundColor' => '#bbAc2222',
                     'borderColor' => '#bBab22',
