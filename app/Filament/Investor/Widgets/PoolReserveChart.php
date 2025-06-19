@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Investor\Widgets;
 
-use App\Services\WidgetChartService;
+use App\Services\WidgetGeneralChartsService;
 use Filament\Widgets\ChartWidget;
 
 class PoolReserveChart extends ChartWidget
@@ -14,7 +14,7 @@ class PoolReserveChart extends ChartWidget
 
     protected function getData(): array
     {
-        $widgetChartService = app(WidgetChartService::class);
+        $widgetChartService = app(WidgetGeneralChartsService::class);
         $data = $widgetChartService->getMergedChartData();
 
         return [

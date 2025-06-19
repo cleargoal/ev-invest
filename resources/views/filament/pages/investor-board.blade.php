@@ -20,7 +20,7 @@
         collapsed
         collapsible
         persist-collapsed
-        id="dashboard-personal-charts"
+        id="dashboard-general-charts"
     >
         <x-slot name="heading">Загальні графіки</x-slot>
         <div class="w-full">
@@ -49,6 +49,12 @@
         id="dashboard-personal-charts"
     >
         <x-slot name="heading">Персональні графіки</x-slot>
+        <div class="w-full">
+            @livewire(App\Filament\Investor\Widgets\UserBalanceChart::class)
+        </div>
+        <div class="w-full mt-8">
+            @livewire(App\Filament\Investor\Widgets\UserIncomeChart::class)
+        </div>
     </x-filament::section>
 
     <x-filament::section

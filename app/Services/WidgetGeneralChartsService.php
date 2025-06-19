@@ -9,8 +9,12 @@ use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
-class WidgetChartService
+class WidgetGeneralChartsService
 {
+    /**
+     * Total pool data
+     * @return array
+     */
     public function getMergedChartData(): array
     {
         // Pool data
