@@ -9,6 +9,13 @@ class UserBalanceChart extends ChartWidget
 {
     protected static ?string $heading = 'Баланс користувача';
     protected static ?string $maxHeight = '300px';
+    protected static ?array $options = [
+        'plugins' => [
+            'legend' => [
+                'display' => false,
+            ],
+        ],
+    ];
 
     protected function getData(): array
     {
@@ -17,6 +24,7 @@ class UserBalanceChart extends ChartWidget
         return [
             'datasets' => [
                 [
+                    'label' => "",
                     'data' => $data['allTotals'],
                     'backgroundColor' => '#36A2EB22',
                     'borderColor' => '#9BD0F5',

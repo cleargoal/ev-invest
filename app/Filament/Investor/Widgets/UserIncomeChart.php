@@ -9,6 +9,13 @@ class UserIncomeChart extends ChartWidget
 {
     protected static ?string $heading = 'Доходи користувача';
     protected static ?string $maxHeight = '300px';
+    protected static ?array $options = [
+        'plugins' => [
+            'legend' => [
+                'display' => false,
+            ],
+        ],
+    ];
 
     protected function getData(): array
     {
