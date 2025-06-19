@@ -52,8 +52,8 @@ class BoughtAutoMail extends Mailable
                 'explanation' => $this->vehicle->title,
                 'description1' => 'Рік виготовлення: ' . $this->vehicle->produced,
                 'description2' =>  'пробіг: '  . $this->vehicle->mileage,
-                'description3' => 'Ціна купівлі: '. $this->vehicle->cost/100,
-                'amount' =>  'план продажу:  ' . $this->vehicle->plan_sale/100,
+                'description3' => 'Ціна купівлі: '. $this->vehicle->cost,
+                'amount' =>  'план продажу:  ' . $this->vehicle->plan_sale,
                 'go_to' => 'Докладніше на сайті',
                 'url' => 'https://ev-invest.segment.best/investor/vehicles'
             ],
