@@ -39,10 +39,20 @@ class PaymentsResource extends Resource
         return $form
             ->schema([
                 Radio::make('operation_id')->label('Я хочу')->inline()->inlineLabel(false)
-                    ->options([
-                        OperationType::CONTRIB->value => 'Додати до внеску',
-                        OperationType::WITHDRAW->value => 'Замовити вилучення',
-                    ])->live(),
+                    ->options(function () {
+                        $balance = Payment::where('user_id', auth()->id())->sum('amount');
+
+                        if ($balance <= 0) {
+                            return [
+                                OperationType::FIRST->value => 'Внести 1-й внесок',
+                            ];
+                        }
+                        return [
+                            OperationType::CONTRIB->value => 'Внести гроші',
+                            OperationType::WITHDRAW->value => 'Замовити вилучення',
+                        ];
+                    })
+                    ->live(),
                 TextInput::make('amount')->visible(fn (Get $get): null|string => $get('operation_id'))
                     ->label('Сума (можна з десятковими знаками)')->extraInputAttributes(['width' => 200]),
             ])->columns(2);
