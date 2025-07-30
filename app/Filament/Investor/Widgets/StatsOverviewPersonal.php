@@ -11,7 +11,7 @@ use Illuminate\Support\Number;
 
 class StatsOverviewPersonal extends BaseWidget
 {
-    private const int CENTS_PER_DOLLAR = 100;
+    private const CENTS_PER_DOLLAR = 100;
 
     protected function getColumns(): int
     {
