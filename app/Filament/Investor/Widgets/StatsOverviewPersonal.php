@@ -39,13 +39,13 @@ class StatsOverviewPersonal extends BaseWidget
 
         $myLastYearIncome = Payment::where('user_id', auth()->user()->id)
             ->whereIn('operation_id', [OperationType::INCOME,OperationType::I_LEASING,])
-            ->whereYear('created_at', '>=', now()->subDays(365))
+            ->where('created_at', '>=', now()->subDays(365))
             ->sum('amount');
         $myLastYearGrow = $myFirstContribution ? $myLastYearIncome / $myFirstContribution->amount  : 0;
 
         $myCurrentYearIncome = Payment::where('user_id', auth()->user()->id)
             ->whereIn('operation_id', [OperationType::INCOME,OperationType::I_LEASING,])
-            ->whereYear('created_at', '>=', now()->year)
+            ->whereYear('created_at', now()->year)
             ->sum('amount');
             $myCurrentYearGrow = $myFirstContribution ? $myCurrentYearIncome / $myFirstContribution->amount  : 0;
 
