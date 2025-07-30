@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class MoneyCast implements CastsAttributes
 {
-    private const int CENTS_PER_DOLLAR = 100;
+    private const CENTS_PER_DOLLAR = 100;
 
     /**
      * Cast the given value.
