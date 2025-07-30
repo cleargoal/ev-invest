@@ -3,9 +3,7 @@
 namespace App\Filament\Investor\Widgets;
 
 use App\Enums\OperationType;
-use App\Models\Contribution;
 use App\Models\Payment;
-use App\Models\Total;
 use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -13,6 +11,7 @@ use Illuminate\Support\Number;
 
 class StatsOverviewPersonal extends BaseWidget
 {
+    private const int CENTS_PER_DOLLAR = 100;
 
     protected function getColumns(): int
     {
@@ -60,7 +59,7 @@ class StatsOverviewPersonal extends BaseWidget
 
         return [
             Stat::make('Мій поточний баланс, $',
-                Number::format($myActualContributionAmount ? $myActualContributionAmount / 100: 0, 2, locale: 'sv'))
+                Number::format($myActualContributionAmount ? $myActualContributionAmount / self::CENTS_PER_DOLLAR: 0, 2, locale: 'sv'))
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : '',
                 ]),
@@ -71,7 +70,7 @@ class StatsOverviewPersonal extends BaseWidget
                     'class' => $company ? 'hidden' : '',
                 ]),
             Stat::make('Сума всіх моїх внесків, $',
-                Number::format($myPaymentsTotal ? $myPaymentsTotal / 100: 0, 2, locale: 'sv'))
+                Number::format($myPaymentsTotal ? $myPaymentsTotal / self::CENTS_PER_DOLLAR: 0, 2, locale: 'sv'))
                 ->description('Враховуються тільки внесення та вилучення грошей, без інвест-доходу')
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : '',
@@ -85,7 +84,7 @@ class StatsOverviewPersonal extends BaseWidget
 
             // 2d row
             Stat::make('Мій дохід за весь час, $$',
-                Number::format(round($myTotalIncome / 100, 2), 2, locale: 'sv'))
+                Number::format(round($myTotalIncome / self::CENTS_PER_DOLLAR, 2), 2, locale: 'sv'))
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : 'cursor-pointer',
                     'onclick' => "window.location.href='investor/payments'",
@@ -99,7 +98,7 @@ class StatsOverviewPersonal extends BaseWidget
 
             // Last Year income widgets;
             Stat::make('Мій дохід за останній рік, $$',
-                Number::format($myLastYearIncome / 100, 2, locale: 'sv'))
+                Number::format($myLastYearIncome / self::CENTS_PER_DOLLAR, 2, locale: 'sv'))
                 ->description('За 365 днів враховуючи сьогодні')
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : 'cursor-pointer',
@@ -115,7 +114,7 @@ class StatsOverviewPersonal extends BaseWidget
 
             // Current Year income widgets;
             Stat::make('Мій дохід за поточний рік, $$',
-                Number::format($myCurrentYearIncome / 100, 2, locale: 'sv'))
+                Number::format($myCurrentYearIncome / self::CENTS_PER_DOLLAR, 2, locale: 'sv'))
                 ->description('З 1-го Січня до сьогодні')
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : 'cursor-pointer',

@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class MoneyCast implements CastsAttributes
 {
+    private const int CENTS_PER_DOLLAR = 100;
+
     /**
      * Cast the given value.
      *
@@ -16,7 +18,7 @@ class MoneyCast implements CastsAttributes
      */
     public function get(Model $model, string $key, mixed $value, array $attributes): mixed
     {
-        return round(floatval($value) / 100, precision: 2);
+        return round(floatval($value) / self::CENTS_PER_DOLLAR, precision: 2);
     }
 
     /**
@@ -26,6 +28,6 @@ class MoneyCast implements CastsAttributes
      */
     public function set(Model $model, string $key, mixed $value, array $attributes): mixed
     {
-        return round(floatval($value) * 100);
+        return round(floatval($value) * self::CENTS_PER_DOLLAR);
     }
 }
