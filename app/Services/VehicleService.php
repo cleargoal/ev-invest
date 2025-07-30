@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 
 class VehicleService
 {
+    private const PERCENTAGE_PRECISION = 1000000; // Percents have precision 99.9999
+    private const COMPANY_COMMISSION_RATE = 0.5; // 50% commission rate
 
     public function __construct(
         protected PaymentService $paymentService,
@@ -96,11 +98,19 @@ class VehicleService
 
     public function companyCommissions(Vehicle $vehicle): Payment
     {
-        $companyId = User::role('company')->first()->id;
-        $commissions = $vehicle->profit / 2; // 1/2 of profit is company's commissions
+        $companyUser = User::role('company')->first();
+        if (!$companyUser) {
+            throw new \InvalidArgumentException('Company user not found. Please ensure a user with "company" role exists.');
+        }
+
+        if (!$vehicle->profit || $vehicle->profit <= 0) {
+            throw new \InvalidArgumentException('Vehicle must have a positive profit to calculate commissions.');
+        }
+
+        $commissions = $vehicle->profit * self::COMPANY_COMMISSION_RATE;
 
         $payData = [
-            'user_id' => $companyId,
+            'user_id' => $companyUser->id,
             'operation_id' => OperationType::REVENUE,
             'amount' => $commissions,
             'confirmed' => true,
@@ -117,25 +127,38 @@ class VehicleService
      */
     public function investIncome(Vehicle $vehicle): int
     {
-        $profitForShare = $vehicle->profit / 2; // 1/2 of profit is company's commissions
+        if (!$vehicle->profit || $vehicle->profit <= 0) {
+            // No profit to distribute, return 0 investors processed
+            return 0;
+        }
+
+        $profitForShare = $vehicle->profit * self::COMPANY_COMMISSION_RATE; // Remaining profit for investor distribution
         $investors = User::with('lastContribution')
             ->whereHas('roles', function ($query) {
                 $query->where('name', 'investor');
             })
             ->get();
+            
+        $processedInvestors = 0;
         foreach ($investors as $investor) {
-            if (isset($investor->lastContribution)) {
-                $payData = [
-                    'user_id' => $investor->lastContribution->user_id,
-                    'operation_id' => OperationType::INCOME,
-                    'amount' => $profitForShare * $investor->lastContribution->percents / 1000000,
-                    'confirmed' => true,
-                    'created_at' => $vehicle->sale_date,
-                ];
-                $this->paymentService->createPayment((array)$payData, true); // true prevents to change the Total until all data have been stored
+            if (isset($investor->lastContribution) && $investor->lastContribution->percents > 0) {
+                $incomeAmount = $profitForShare * $investor->lastContribution->percents / self::PERCENTAGE_PRECISION;
+                
+                // Only create payment if income amount is meaningful (> 0.01)
+                if ($incomeAmount >= 0.01) {
+                    $payData = [
+                        'user_id' => $investor->lastContribution->user_id,
+                        'operation_id' => OperationType::INCOME,
+                        'amount' => $incomeAmount,
+                        'confirmed' => true,
+                        'created_at' => $vehicle->sale_date,
+                    ];
+                    $this->paymentService->createPayment((array)$payData, true);
+                    $processedInvestors++;
+                }
             }
         }
-        return $investors->count();
+        return $processedInvestors;
     }
 
 }

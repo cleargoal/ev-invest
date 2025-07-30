@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 
 class LeasingService
 {
+    private const PERCENTAGE_PRECISION = 1000000; // Percents have precision 99.9999
+    private const COMPANY_COMMISSION_RATE = 0.5; // 50% commission rate
 
     public function __construct(
         protected PaymentService $paymentService,
@@ -65,17 +67,25 @@ class LeasingService
      */
     public function companyCommissions(Leasing $leasing): Payment
     {
-        $companyId = User::role('company')->first()->id;
-        $commissions = $leasing->price / 2; // 1/2 of profit is company's commissions
+        $companyUser = User::role('company')->first();
+        if (!$companyUser) {
+            throw new \InvalidArgumentException('Company user not found. Please ensure a user with "company" role exists.');
+        }
+
+        if (!$leasing->price || $leasing->price <= 0) {
+            throw new \InvalidArgumentException('Leasing must have a positive price to calculate commissions.');
+        }
+
+        $commissions = $leasing->price * self::COMPANY_COMMISSION_RATE;
         $payData = [
-            'user_id' => $companyId,
+            'user_id' => $companyUser->id,
             'operation_id' => OperationType::C_LEASING, // company commissions
             'amount' => $commissions,
             'confirmed' => true,
-            'created_at' => $leasing->created_at, // TODO: date depends on leasing date
+            'created_at' => $leasing->created_at,
         ];
 
-        return $this->paymentService->createPayment((array)$payData, true); // true prevents to change the Total until all data have been stored
+        return $this->paymentService->createPayment((array)$payData, true);
     }
 
     /**
@@ -85,21 +95,38 @@ class LeasingService
      */
     public function investIncome(Leasing $leasing): int
     {
-        $profitForShare = $leasing->price / 2; // 1/2 of profit is company's commissions
-        $investors = User::with('lastContribution')->get();
+        if (!$leasing->price || $leasing->price <= 0) {
+            // No income to distribute, return 0 investors processed
+            return 0;
+        }
+
+        $profitForShare = $leasing->price * self::COMPANY_COMMISSION_RATE; // Remaining income for investor distribution
+        $investors = User::with('lastContribution')
+            ->whereHas('roles', function ($query) {
+                $query->where('name', 'investor');
+            })
+            ->get();
+            
+        $processedInvestors = 0;
         foreach ($investors as $investor) {
-            if (isset($investor->lastContribution)) {
-                $payData = [
-                    'user_id' => $investor->lastContribution->user_id,
-                    'operation_id' => OperationType::I_LEASING,
-                    'amount' => $profitForShare * $investor->lastContribution->percents / 1000000,
-                    'confirmed' => true,
-                    'created_at' => $leasing->created_at,
-                ];
-                $this->paymentService->createPayment((array)$payData, true); // true prevents to change the Total until all data have been stored
+            if (isset($investor->lastContribution) && $investor->lastContribution->percents > 0) {
+                $incomeAmount = $profitForShare * $investor->lastContribution->percents / self::PERCENTAGE_PRECISION;
+                
+                // Only create payment if income amount is meaningful (> 0.01)
+                if ($incomeAmount >= 0.01) {
+                    $payData = [
+                        'user_id' => $investor->lastContribution->user_id,
+                        'operation_id' => OperationType::I_LEASING,
+                        'amount' => $incomeAmount,
+                        'confirmed' => true,
+                        'created_at' => $leasing->created_at,
+                    ];
+                    $this->paymentService->createPayment((array)$payData, true);
+                    $processedInvestors++;
+                }
             }
         }
-        return $investors->count();
+        return $processedInvestors;
     }
 
 }

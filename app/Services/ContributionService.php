@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 
 class ContributionService
 {
+    private const PERCENTAGE_PRECISION = 1000000; // Percents have precision 99.9999
 
     /**
      * Create contribution
@@ -48,7 +49,7 @@ class ContributionService
             $lastContribution = $user->lastContribution;
 
             if ($lastContribution && $totalAmount > 0) {
-                $userContributionPercent = ($lastContribution->amount / $totalAmount) * 1000000; // Percents have precision 99.9999
+                $userContributionPercent = ($lastContribution->amount / $totalAmount) * self::PERCENTAGE_PRECISION;
                 $newContribution = new Contribution();
                 $newContribution->user_id = $lastContribution->user_id;
                 $newContribution->payment_id = $paymentId;
