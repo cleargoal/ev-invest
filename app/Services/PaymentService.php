@@ -10,6 +10,7 @@ use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\NewPaymentNotify;
+use Illuminate\Support\Facades\DB;
 
 class PaymentService
 {
@@ -45,13 +46,15 @@ class PaymentService
      */
     public function manageContributions(Payment $payment, bool $addIncome = false): true
     {
-        if ($payment->confirmed) {
-            $this->contributionService->createContribution($payment);
-        }
+        DB::transaction(function () use ($payment, $addIncome) {
+            if ($payment->confirmed) {
+                $this->contributionService->createContribution($payment);
+            }
 
-        if (!$addIncome && $payment->confirmed) { // IF not add investors income when car sold. Just for operations of investors add or withdrawal
-            $this->contributionService->contributions($payment->id, $payment->created_at);
-        }
+            if (!$addIncome && $payment->confirmed) { // IF not add investors income when car sold. Just for operations of investors add or withdrawal
+                $this->contributionService->contributions($payment->id, $payment->created_at);
+            }
+        });
 
         return true;
     }
@@ -63,9 +66,13 @@ class PaymentService
      */
     public function paymentConfirmation(Payment $payment): void
     {
-        $this->manageContributions($payment);
-        $totalAmount = $this->totalService->createTotal($payment);
-        TotalChangedEvent::dispatch($totalAmount, 'Внесок інвестора', $payment->amount);
+        DB::transaction(function () use ($payment) {
+            $this->manageContributions($payment);
+            $totalAmount = $this->totalService->createTotal($payment);
+            
+            // Events are dispatched after successful transaction
+            TotalChangedEvent::dispatch($totalAmount, 'Внесок інвестора', $payment->amount);
+        });
     }
 
     public function notify(): void

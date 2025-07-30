@@ -15,7 +15,7 @@ class Leasing extends Model
     protected $casts = [
         'price' => MoneyCast::class,
     ];
-    protected $fillable = ['vehicle_id', 'start_date', 'end_date', 'duration', 'price'];
+    protected $fillable = ['vehicle_id', 'start_date', 'end_date', 'duration', 'price', 'title', 'description', 'created_at'];
 
     public function vehicle(): BelongsTo
     {

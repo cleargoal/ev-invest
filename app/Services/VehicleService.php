@@ -11,6 +11,7 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class VehicleService
 {
@@ -52,14 +53,18 @@ class VehicleService
      */
     public function sellVehicle(Vehicle $vehicle, int $actualPrice, Carbon $saleDate = null): Vehicle
     {
-        $vehicle = $this->updateVehicleWhenSold($vehicle, $actualPrice, $saleDate);
+        return DB::transaction(function () use ($vehicle, $actualPrice, $saleDate) {
+            $vehicle = $this->updateVehicleWhenSold($vehicle, $actualPrice, $saleDate);
 
-        $payment = $this->companyCommissions($vehicle);
-        $totalAmount = $this->totalService->createTotal($payment);
-        $this->investIncome($vehicle);
-        TotalChangedEvent::dispatch($totalAmount, 'Продано авто. Прибуток:', $vehicle->profit);
+            $payment = $this->companyCommissions($vehicle);
+            $totalAmount = $this->totalService->createTotal($payment);
+            $this->investIncome($vehicle);
+            
+            // Events are dispatched after successful transaction
+            TotalChangedEvent::dispatch($totalAmount, 'Продано авто. Прибуток:', $vehicle->profit);
 
-        return $vehicle;
+            return $vehicle;
+        });
     }
 
     /**

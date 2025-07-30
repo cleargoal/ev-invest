@@ -11,6 +11,8 @@ class Contribution extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['user_id', 'payment_id', 'percents', 'amount'];
+
     protected $casts = [
         'amount' => MoneyCast::class,
     ];

@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Notifications\LeasingIncomeNotification;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class LeasingService
 {
@@ -24,15 +25,19 @@ class LeasingService
 
     public function getLeasing(array $data): Leasing
     {
-        $data['created_at'] = $data['created_at'] ?? Carbon::now();
-        $leasing = $this->createLeasing($data);
+        return DB::transaction(function () use ($data) {
+            $data['created_at'] = $data['created_at'] ?? Carbon::now();
+            $leasing = $this->createLeasing($data);
 
-        $payment = $this->companyCommissions($leasing);
-        $totalAmount = $this->totalService->createTotal($payment);
-        $this->investIncome($leasing);
+            $payment = $this->companyCommissions($leasing);
+            $totalAmount = $this->totalService->createTotal($payment);
+            $this->investIncome($leasing);
 
-        $this->notify();
-        return $leasing;
+            // Notifications are sent after successful transaction
+            $this->notify();
+            
+            return $leasing;
+        });
     }
 
     protected function createLeasing(array $data): Leasing
