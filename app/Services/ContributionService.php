@@ -40,26 +40,46 @@ class ContributionService
      */
     public function contributions(int $paymentId, Carbon $createdAt): int
     {
-        $usersWithLastContributions = User::with('lastContribution')->get();
+        // Only load users who actually have contributions for better performance
+        $usersWithLastContributions = User::whereHas('contributions')
+            ->with('lastContribution')
+            ->get();
+        
         $totalAmount = $usersWithLastContributions->sum(function ($user) {
             return optional($user->lastContribution)->amount ?? 0;
         });
+        
 
+        if ($totalAmount <= 0) {
+            return 0;
+        }
+
+        // Prepare bulk insert data instead of individual saves
+        $contributionsData = [];
+        $now = $createdAt->format('Y-m-d H:i:s');
+        
         foreach ($usersWithLastContributions as $user) {
             $lastContribution = $user->lastContribution;
 
-            if ($lastContribution && $totalAmount > 0) {
+            if ($lastContribution) {
                 $userContributionPercent = ($lastContribution->amount / $totalAmount) * self::PERCENTAGE_PRECISION;
-                $newContribution = new Contribution();
-                $newContribution->user_id = $lastContribution->user_id;
-                $newContribution->payment_id = $paymentId;
-                $newContribution->percents = $userContributionPercent;
-                $newContribution->amount = $lastContribution->amount;
-                $newContribution->created_at = $createdAt;
-                $newContribution->save();
+                $contributionsData[] = [
+                    'user_id' => $lastContribution->user_id,
+                    'payment_id' => $paymentId,
+                    'percents' => $userContributionPercent,
+                    'amount' => (int) round($lastContribution->amount * 100), // Convert dollar amount back to cents for bulk insert
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
             }
         }
-        return (int) $totalAmount;
+
+        // Single bulk insert operation instead of N individual saves
+        if (!empty($contributionsData)) {
+            Contribution::insert($contributionsData);
+        }
+        
+        return (int) round($totalAmount * 100); // Convert total to cents for consistency
     }
 
 }

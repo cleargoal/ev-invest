@@ -31,14 +31,15 @@ trait HandlesInvestmentCalculations
     }
 
     /**
-     * Get all investors with their last contributions
+     * Get all investors with their last contributions (optimized)
      */
     protected function getInvestorsWithContributions(): Collection
     {
-        return User::with('lastContribution')
-            ->whereHas('roles', function ($query) {
+        return User::whereHas('roles', function ($query) {
                 $query->where('name', 'investor');
             })
+            ->whereHas('contributions') // Only investors with contributions
+            ->with('lastContribution')
             ->get();
     }
 
@@ -51,7 +52,7 @@ trait HandlesInvestmentCalculations
     }
 
     /**
-     * Distribute income to investors based on their contribution percentages
+     * Distribute income to investors based on their contribution percentages (optimized with bulk insert)
      * 
      * @param float $totalAmount Total amount to distribute
      * @param OperationType $operationType Type of operation (INCOME or I_LEASING)
@@ -71,6 +72,14 @@ trait HandlesInvestmentCalculations
 
         $profitForShare = $this->calculateCompanyCommission($totalAmount);
         $investors = $this->getInvestorsWithContributions();
+        
+        if ($investors->isEmpty()) {
+            return 0;
+        }
+
+        // Prepare bulk insert data instead of individual payment creations
+        $paymentsData = [];
+        $now = $paymentDate->format('Y-m-d H:i:s');
         $processedInvestors = 0;
 
         foreach ($investors as $investor) {
@@ -79,17 +88,22 @@ trait HandlesInvestmentCalculations
                 
                 // Only create payment if income amount is meaningful
                 if ($incomeAmount >= self::MINIMUM_PAYMENT_AMOUNT) {
-                    $payData = [
+                    $paymentsData[] = [
                         'user_id' => $investor->lastContribution->user_id,
-                        'operation_id' => $operationType,
-                        'amount' => $incomeAmount,
+                        'operation_id' => $operationType->value,
+                        'amount' => (int) round($incomeAmount * 100), // Convert to cents for MoneyCast
                         'confirmed' => true,
-                        'created_at' => $paymentDate,
+                        'created_at' => $now,
+                        'updated_at' => $now,
                     ];
-                    $paymentService->createPayment($payData, true);
                     $processedInvestors++;
                 }
             }
+        }
+
+        // Single bulk insert operation instead of N individual creates
+        if (!empty($paymentsData)) {
+            \App\Models\Payment::insert($paymentsData);
         }
 
         return $processedInvestors;
