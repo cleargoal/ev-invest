@@ -17,6 +17,7 @@ class Payment extends Model
 
     protected $casts = [
         'amount' => MoneyCast::class,
+        'confirmed' => 'boolean',
     ];
 
     public function user(): BelongsTo

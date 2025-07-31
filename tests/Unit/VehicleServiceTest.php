@@ -9,7 +9,7 @@ use App\Models\Total;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\VehicleService;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -129,8 +129,8 @@ class VehicleServiceTest extends TestCase
             // Verify that the vehicle was NOT updated due to transaction rollback
             $this->vehicle->refresh();
             $this->assertNull($this->vehicle->sale_date);
-            $this->assertNull($this->vehicle->price);
-            $this->assertNull($this->vehicle->profit);
+            $this->assertEquals(0.0, $this->vehicle->price); // Vehicle price defaults to 0.0
+            $this->assertEquals(0.0, $this->vehicle->profit); // MoneyCast returns 0.0 for null
 
             // Verify no payments were created
             $this->assertEquals(0, Payment::count());

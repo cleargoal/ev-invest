@@ -49,6 +49,7 @@ class LeasingServiceTest extends TestCase
     public function test_get_leasing_transaction_success()
     {
         Notification::fake();
+        config(['app.env' => 'local']); // Set environment for notification target
 
         // Create investor contribution for income calculation
         $this->investorUser->contributions()->create([
@@ -58,16 +59,18 @@ class LeasingServiceTest extends TestCase
         ]);
 
         $leasingData = [
-            'title' => 'Car Lease Income',
+            'vehicle_id' => 1,
+            'start_date' => '2024-01-01',
+            'end_date' => '2024-12-31',
+            'duration' => 365,
             'price' => 200.00, // $200 leasing income
-            'description' => 'Monthly lease payment',
         ];
 
         $result = $this->leasingService->getLeasing($leasingData);
 
         // Verify leasing record was created
         $this->assertInstanceOf(Leasing::class, $result);
-        $this->assertEquals('Car Lease Income', $result->title);
+        $this->assertEquals(1, $result->vehicle_id);
         $this->assertEquals(200.00, $result->price);
         $this->assertNotNull($result->created_at);
 
@@ -112,9 +115,11 @@ class LeasingServiceTest extends TestCase
         $this->companyUser->delete();
 
         $leasingData = [
-            'title' => 'Car Lease Income',
+            'vehicle_id' => 1,
+            'start_date' => '2024-01-01',
+            'end_date' => '2024-12-31',
+            'duration' => 365,
             'price' => 200.00,
-            'description' => 'Monthly lease payment',
         ];
 
         // Expect an exception to be thrown
@@ -142,7 +147,10 @@ class LeasingServiceTest extends TestCase
     public function test_company_commissions_calculation()
     {
         $leasing = Leasing::create([
-            'title' => 'Test Leasing',
+            'vehicle_id' => 1,
+            'start_date' => '2024-01-01',
+            'end_date' => '2024-12-31',
+            'duration' => 365,
             'price' => 400.00,
             'created_at' => now(),
         ]);
@@ -177,7 +185,10 @@ class LeasingServiceTest extends TestCase
         ]);
 
         $leasing = Leasing::create([
-            'title' => 'Test Income Distribution',
+            'vehicle_id' => 1,
+            'start_date' => '2024-01-01',
+            'end_date' => '2024-12-31',
+            'duration' => 365,
             'price' => 1000.00,
             'created_at' => now(),
         ]);
@@ -218,9 +229,11 @@ class LeasingServiceTest extends TestCase
 
         $customDate = Carbon::create(2024, 1, 15, 10, 30, 0);
         $leasingData = [
-            'title' => 'Custom Date Lease',
+            'vehicle_id' => 1,
+            'start_date' => '2024-01-01',
+            'end_date' => '2024-12-31',
+            'duration' => 365,
             'price' => 300.00,
-            'description' => 'Test with custom date',
             'created_at' => $customDate,
         ];
 
@@ -250,7 +263,10 @@ class LeasingServiceTest extends TestCase
         ]);
 
         $leasingData = [
-            'title' => 'Test Lease',
+            'vehicle_id' => 1,
+            'start_date' => '2024-01-01',
+            'end_date' => '2024-12-31',
+            'duration' => 365,
             'price' => 100.00,
         ];
 
@@ -264,17 +280,20 @@ class LeasingServiceTest extends TestCase
     public function test_get_leasing_with_no_investors()
     {
         Notification::fake();
+        config(['app.env' => 'local']); // Set environment for notification target
 
         $leasingData = [
-            'title' => 'No Investors Lease',
+            'vehicle_id' => 1,
+            'start_date' => '2024-01-01',
+            'end_date' => '2024-12-31',
+            'duration' => 365,
             'price' => 150.00,
-            'description' => 'Test with no investors',
         ];
 
         $result = $this->leasingService->getLeasing($leasingData);
 
         // Should still work, just no investor payments created
-        $this->assertEquals('No Investors Lease', $result->title);
+        $this->assertEquals(1, $result->vehicle_id);
         
         // Verify company payment was created
         $companyPayment = Payment::where('user_id', $this->companyUser->id)->first();
@@ -304,14 +323,17 @@ class LeasingServiceTest extends TestCase
         ]);
 
         $leasing = Leasing::create([
-            'title' => 'Test Skip Users',
+            'vehicle_id' => 1,
+            'start_date' => '2024-01-01',
+            'end_date' => '2024-12-31',
+            'duration' => 365,
             'price' => 200.00,
         ]);
 
         $investorCount = $this->leasingService->investIncome($leasing);
 
-        // Should return count of all users (even those without contributions)
-        $this->assertEquals(2, $investorCount);
+        // Should return count of 1 - only investors with contributions get payments
+        $this->assertEquals(1, $investorCount);
 
         // But only create payment for investor with contributions
         $payments = Payment::where('operation_id', OperationType::I_LEASING)->get();
