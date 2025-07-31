@@ -7,10 +7,7 @@ namespace App\Services;
 use App\Enums\OperationType;
 use App\Models\Leasing;
 use App\Models\Payment;
-use App\Models\User;
-use App\Notifications\LeasingIncomeNotification;
 use App\Services\Traits\HandlesInvestmentCalculations;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -21,6 +18,7 @@ class LeasingService
     public function __construct(
         protected PaymentService $paymentService,
         protected TotalService $totalService,
+        protected NotificationService $notificationService,
         protected Leasing $leasing
     ) {}
 
@@ -52,13 +50,7 @@ class LeasingService
 
     protected function notify(): void
     {
-        if (config('app.env') !== 'local') {
-            $users = User::role('investor')->get();
-        }
-        else {
-            $users = User::role('admin')->get();
-        }
-        Notification::send($users, new LeasingIncomeNotification());
+        $this->notificationService->notifyLeasingIncome();
     }
     /**
      * Company commissions add to Payment

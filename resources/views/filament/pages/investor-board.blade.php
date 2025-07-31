@@ -86,4 +86,18 @@
         </div>
     </x-filament::section>
 
+    @if(auth()->user()->hasRole('company'))
+        <x-filament::section
+            collapsed
+            collapsible
+            persist-collapsed
+            id="dashboard-cancelled-vehicles-widget"
+        >
+            <x-slot name="heading">Скасовані продажі</x-slot>
+            <div>
+                @livewire(App\Filament\Investor\Widgets\CancelledVehicles::class)
+            </div>
+        </x-filament::section>
+    @endif
+
 </x-filament-panels::page>

@@ -21,6 +21,7 @@ class VehicleService
     public function __construct(
         protected PaymentService $paymentService,
         protected TotalService $totalService,
+        protected VehicleCancellationService $cancellationService,
         protected Vehicle $vehicle
     ) {}
 
@@ -123,6 +124,34 @@ class VehicleService
             $vehicle->sale_date,
             $this->paymentService
         );
+    }
+
+    /**
+     * Cancel a vehicle sale ("unsell" the vehicle)
+     * This is a high-level wrapper around the cancellation service
+     * 
+     * @param Vehicle $vehicle
+     * @param string|null $reason
+     * @return bool
+     * @throws \Throwable
+     */
+    public function unsellVehicle(Vehicle $vehicle, ?string $reason = null): bool
+    {
+        $cancelledBy = auth()->user();
+        
+        return $this->cancellationService->cancelVehicleSale($vehicle, $reason, $cancelledBy);
+    }
+
+    /**
+     * Restore a cancelled vehicle sale
+     * 
+     * @param Vehicle $vehicle
+     * @return bool
+     * @throws \Throwable
+     */
+    public function restoreVehicleSale(Vehicle $vehicle): bool
+    {
+        return $this->cancellationService->restoreVehicleSale($vehicle);
     }
 
 }

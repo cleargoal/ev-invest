@@ -7,9 +7,6 @@ namespace App\Services;
 use App\Enums\OperationType;
 use App\Events\TotalChangedEvent;
 use App\Models\Payment;
-use App\Models\User;
-use Illuminate\Support\Facades\Notification;
-use App\Notifications\NewPaymentNotify;
 use Illuminate\Support\Facades\DB;
 
 class PaymentService
@@ -17,7 +14,8 @@ class PaymentService
 
     public function __construct(
         protected ContributionService $contributionService,
-        protected TotalService $totalService
+        protected TotalService $totalService,
+        protected NotificationService $notificationService
     ) {}
 
     /**
@@ -42,9 +40,9 @@ class PaymentService
      * Process calculation of Total and contributions
      * @param Payment $payment
      * @param bool $addIncome
-     * @return true
+     * @return bool
      */
-    public function manageContributions(Payment $payment, bool $addIncome = false): true
+    public function manageContributions(Payment $payment, bool $addIncome = false): bool
     {
         DB::transaction(function () use ($payment, $addIncome) {
             if ($payment->confirmed) {
@@ -75,15 +73,12 @@ class PaymentService
         });
     }
 
+    /**
+     * Send new payment notification
+     */
     public function notify(): void
     {
-        if (config('app.env') !== 'local') {
-            $users = User::role('company')->get();
-        }
-        else {
-            $users = User::role('admin')->get();
-        }
-        Notification::send($users, new NewPaymentNotify());
+        $this->notificationService->notifyNewPayment();
     }
 
 

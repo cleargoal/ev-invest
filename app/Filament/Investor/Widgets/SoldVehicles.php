@@ -3,6 +3,9 @@
 namespace App\Filament\Investor\Widgets;
 
 use App\Models\Vehicle;
+use App\Services\VehicleService;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
@@ -27,7 +30,7 @@ class SoldVehicles extends BaseWidget
     {
         return $table
             ->query(
-                Vehicle::where('profit', '<>', null),
+                Vehicle::sold(), // Use sold scope to get only sold and not cancelled vehicles
             )
             ->columns([
                 TextColumn::make('title')->label('Марка')->width('4rem')->sortable(),
@@ -43,14 +46,57 @@ class SoldVehicles extends BaseWidget
             ])
             ->defaultSort('sale_date', 'desc')
             ->actions([
-                Action::make('cancel')
-                    ->modalIcon('heroicon-o-truck')
-                    ->modalIconColor('error')
-                    ->modalHeading('Відмінити продаж Авто:')
-                    ->modalDescription(fn(Vehicle $record) => new HtmlString('<div class="text-xl font-bold text-violet-800">' . $record->title . '</div>'))
-                    ->label('Скасувати')
-                    ->authorize('cancel')
-                    ->button()->color('danger')
+                Action::make('unsell')
+                    ->modalIcon('heroicon-o-arrow-uturn-left')
+                    ->modalIconColor('warning')
+                    ->modalHeading('Скасувати продаж автомобіля')
+                    ->modalDescription(fn(Vehicle $record) => new HtmlString(
+                        '<div class="space-y-2">' .
+                        '<div class="text-lg font-semibold text-gray-900">' . $record->title . '</div>' .
+                        '<div class="text-sm text-gray-600">Дата продажу: ' . $record->sale_date?->format('d.m.Y') . '</div>' .
+                        '<div class="text-sm text-gray-600">Сума продажу: $' . number_format($record->price ?? 0, 2) . '</div>' .
+                        '<div class="text-sm text-red-600 font-medium">Увага: Ця дія скасує всі пов\'язані платежі та перерахування!</div>' .
+                        '</div>'
+                    ))
+                    ->label('Скасувати продаж')
+                    ->button()
+                    ->color('warning')
+                    ->visible(fn() => auth()->user()?->hasRole('company')) // Only show to company role
+                    ->form([
+                        Textarea::make('reason')
+                            ->label('Причина скасування')
+                            ->placeholder('Вкажіть причину скасування продажу (наприклад: повернення покупцем, помилка в документах, тощо)')
+                            ->required()
+                            ->maxLength(500)
+                            ->rows(3)
+                            ->columnSpanFull(),
+                    ])
+                    ->action(function (Vehicle $record, array $data) {
+                        try {
+                            $vehicleService = app(VehicleService::class);
+                            $result = $vehicleService->unsellVehicle($record, $data['reason']);
+                            
+                            if ($result) {
+                                Notification::make()
+                                    ->title('Продаж скасовано')
+                                    ->body("Продаж автомобіля \"{$record->title}\" успішно скасовано")
+                                    ->success()
+                                    ->send();
+                                    
+                                // Refresh the table to remove the unsold vehicle
+                                $this->dispatch('$refresh');
+                            }
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Помилка')
+                                ->body('Не вдалося скасувати продаж: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    })
+                    ->requiresConfirmation()
+                    ->modalSubmitActionLabel('Так, скасувати продаж')
+                    ->modalCancelActionLabel('Скасувати')
             ])
             ;
     }

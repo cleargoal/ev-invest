@@ -6,16 +6,14 @@ namespace App\Services;
 
 use App\Enums\OperationType;
 use App\Models\Payment;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class WidgetPersonalChartsService
 {
     public function collectUserPayments(): array
     {
         $userId = Auth::id();
-        $userPayments = Payment::where('user_id', $userId)->orderBy('created_at')->get();
+        $userPayments = Payment::where('user_id', $userId)->notCancelled()->orderBy('created_at')->get();
         $labels = [];
         $allTotals = [];
         $incomeTotals = [];
@@ -26,7 +24,8 @@ class WidgetPersonalChartsService
         foreach ($userPayments as $payment) {
             $runningTotal += $payment->amount;
 
-            if ($payment->operation_id === OperationType::INCOME->value) {
+            // Include both INCOME and I_LEASING operations in income calculations
+            if (in_array($payment->operation_id, [OperationType::INCOME->value, OperationType::I_LEASING->value])) {
                 $incomeTotal += $payment->amount;
             }
 

@@ -22,27 +22,29 @@ class StatsOverviewPersonal extends BaseWidget
     {
         $commonTotal = (int) Payment::whereHas('user.roles', function ($query) {
             $query->where('name', 'investor');
-        })->where('confirmed', true)->sum('amount');
+        })->active()->sum('amount'); // Use active scope to exclude cancelled payments
 
-        $myActualContributionAmount = Payment::where('user_id', auth()->user()->id)->where('confirmed', true)->sum('amount'); // !!! cast can not work here
+        $myActualContributionAmount = Payment::where('user_id', auth()->user()->id)->active()->sum('amount'); // Use active scope to exclude cancelled payments
         $myActualContributionPercents = round($myActualContributionAmount * FinancialConstants::PERCENTAGE_PRECISION /$commonTotal);
 
         $myFirstContribution = Payment::where('user_id', auth()->user()->id)->where('operation_id', OperationType::FIRST)->first();
 
-        $myPaymentsTotal = Payment::where('user_id', auth()->user()->id)->where('confirmed', true)->whereIn('operation_id',
+        $myPaymentsTotal = Payment::where('user_id', auth()->user()->id)->active()->whereIn('operation_id',
             [OperationType::FIRST,OperationType::CONTRIB,OperationType::WITHDRAW])
             ->sum('amount');
 
-        $myTotalIncome = Payment::where('user_id', auth()->user()->id)->whereIn('operation_id', [OperationType::INCOME,OperationType::I_LEASING,])->sum('amount');
+        $myTotalIncome = Payment::where('user_id', auth()->user()->id)->notCancelled()->whereIn('operation_id', [OperationType::INCOME,OperationType::I_LEASING,])->sum('amount');
         $myTotalGrow = $myFirstContribution ? $myTotalIncome / $myFirstContribution->amount : 0;
 
         $myLastYearIncome = Payment::where('user_id', auth()->user()->id)
+            ->notCancelled()
             ->whereIn('operation_id', [OperationType::INCOME,OperationType::I_LEASING,])
             ->where('created_at', '>=', now()->subDays(FinancialConstants::DAYS_IN_YEAR))
             ->sum('amount');
         $myLastYearGrow = $myFirstContribution ? $myLastYearIncome / $myFirstContribution->amount  : 0;
 
         $myCurrentYearIncome = Payment::where('user_id', auth()->user()->id)
+            ->notCancelled()
             ->whereIn('operation_id', [OperationType::INCOME,OperationType::I_LEASING,])
             ->whereYear('created_at', now()->year)
             ->sum('amount');

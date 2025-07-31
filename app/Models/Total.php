@@ -12,6 +12,8 @@ class Total extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['payment_id', 'amount', 'created_at'];
+
     protected $casts = [
         'amount' => MoneyCast::class,
     ];
