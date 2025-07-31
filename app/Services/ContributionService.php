@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Constants\FinancialConstants;
 use App\Models\Contribution;
 use App\Models\Payment;
 use App\Models\User;
@@ -11,7 +12,6 @@ use Illuminate\Support\Carbon;
 
 class ContributionService
 {
-    private const PERCENTAGE_PRECISION = 1000000; // Percents have precision 99.9999
 
     /**
      * Create contribution
@@ -62,12 +62,12 @@ class ContributionService
             $lastContribution = $user->lastContribution;
 
             if ($lastContribution) {
-                $userContributionPercent = ($lastContribution->amount / $totalAmount) * self::PERCENTAGE_PRECISION;
+                $userContributionPercent = ($lastContribution->amount / $totalAmount) * FinancialConstants::PERCENTAGE_PRECISION;
                 $contributionsData[] = [
                     'user_id' => $lastContribution->user_id,
                     'payment_id' => $paymentId,
                     'percents' => $userContributionPercent,
-                    'amount' => (int) round($lastContribution->amount * 100), // Convert dollar amount back to cents for bulk insert
+                    'amount' => (int) round($lastContribution->amount * FinancialConstants::CENTS_PER_DOLLAR), // Convert dollar amount back to cents for bulk insert
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
@@ -79,7 +79,7 @@ class ContributionService
             Contribution::insert($contributionsData);
         }
         
-        return (int) round($totalAmount * 100); // Convert total to cents for consistency
+        return (int) round($totalAmount * FinancialConstants::CENTS_PER_DOLLAR); // Convert total to cents for consistency
     }
 
 }

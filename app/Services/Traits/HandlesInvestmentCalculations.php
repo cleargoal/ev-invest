@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Traits;
 
+use App\Constants\FinancialConstants;
 use App\Enums\OperationType;
 use App\Models\User;
 use App\Services\PaymentService;
@@ -12,9 +13,6 @@ use Illuminate\Support\Collection;
 
 trait HandlesInvestmentCalculations
 {
-    protected const PERCENTAGE_PRECISION = 1000000; // Percents have precision 99.9999
-    protected const COMPANY_COMMISSION_RATE = 0.5; // 50% commission rate
-    protected const MINIMUM_PAYMENT_AMOUNT = 0.01; // Minimum meaningful payment amount
 
     /**
      * Get company user with validation
@@ -48,7 +46,7 @@ trait HandlesInvestmentCalculations
      */
     protected function calculateCompanyCommission(float $amount): float
     {
-        return $amount * self::COMPANY_COMMISSION_RATE;
+        return $amount * FinancialConstants::COMPANY_COMMISSION_RATE;
     }
 
     /**
@@ -84,14 +82,14 @@ trait HandlesInvestmentCalculations
 
         foreach ($investors as $investor) {
             if (isset($investor->lastContribution) && $investor->lastContribution->percents > 0) {
-                $incomeAmount = $profitForShare * $investor->lastContribution->percents / self::PERCENTAGE_PRECISION;
+                $incomeAmount = $profitForShare * $investor->lastContribution->percents / FinancialConstants::PERCENTAGE_PRECISION;
                 
                 // Only create payment if income amount is meaningful
-                if ($incomeAmount >= self::MINIMUM_PAYMENT_AMOUNT) {
+                if ($incomeAmount >= FinancialConstants::MINIMUM_PAYMENT_AMOUNT) {
                     $paymentsData[] = [
                         'user_id' => $investor->lastContribution->user_id,
                         'operation_id' => $operationType->value,
-                        'amount' => (int) round($incomeAmount * 100), // Convert to cents for MoneyCast
+                        'amount' => (int) round($incomeAmount * FinancialConstants::CENTS_PER_DOLLAR), // Convert to cents for MoneyCast
                         'confirmed' => true,
                         'created_at' => $now,
                         'updated_at' => $now,

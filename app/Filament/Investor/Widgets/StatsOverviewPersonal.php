@@ -2,6 +2,7 @@
 
 namespace App\Filament\Investor\Widgets;
 
+use App\Constants\FinancialConstants;
 use App\Enums\OperationType;
 use App\Models\Payment;
 use App\Models\User;
@@ -11,7 +12,6 @@ use Illuminate\Support\Number;
 
 class StatsOverviewPersonal extends BaseWidget
 {
-    private const CENTS_PER_DOLLAR = 100;
 
     protected function getColumns(): int
     {
@@ -25,7 +25,7 @@ class StatsOverviewPersonal extends BaseWidget
         })->where('confirmed', true)->sum('amount');
 
         $myActualContributionAmount = Payment::where('user_id', auth()->user()->id)->where('confirmed', true)->sum('amount'); // !!! cast can not work here
-        $myActualContributionPercents = round($myActualContributionAmount * 1000000 /$commonTotal);
+        $myActualContributionPercents = round($myActualContributionAmount * FinancialConstants::PERCENTAGE_PRECISION /$commonTotal);
 
         $myFirstContribution = Payment::where('user_id', auth()->user()->id)->where('operation_id', OperationType::FIRST)->first();
 
@@ -38,7 +38,7 @@ class StatsOverviewPersonal extends BaseWidget
 
         $myLastYearIncome = Payment::where('user_id', auth()->user()->id)
             ->whereIn('operation_id', [OperationType::INCOME,OperationType::I_LEASING,])
-            ->where('created_at', '>=', now()->subDays(365))
+            ->where('created_at', '>=', now()->subDays(FinancialConstants::DAYS_IN_YEAR))
             ->sum('amount');
         $myLastYearGrow = $myFirstContribution ? $myLastYearIncome / $myFirstContribution->amount  : 0;
 
@@ -59,38 +59,38 @@ class StatsOverviewPersonal extends BaseWidget
 
         return [
             Stat::make('Мій поточний баланс, $',
-                Number::format($myActualContributionAmount ? $myActualContributionAmount / self::CENTS_PER_DOLLAR: 0, 2, locale: 'sv'))
+                Number::format($myActualContributionAmount ? $myActualContributionAmount / FinancialConstants::CENTS_PER_DOLLAR: 0, FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : '',
                 ]),
             Stat::make('Мій початковий внесок, $',
-                Number::format($myFirstContribution ? $myFirstContribution->amount: 0, 2, locale: 'sv'))
+                Number::format($myFirstContribution ? $myFirstContribution->amount: 0, FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
                 ->description($myFirstContribution ? $myFirstContribution->created_at : '')
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : '',
                 ]),
             Stat::make('Сума всіх моїх внесків, $',
-                Number::format($myPaymentsTotal ? $myPaymentsTotal / self::CENTS_PER_DOLLAR: 0, 2, locale: 'sv'))
+                Number::format($myPaymentsTotal ? $myPaymentsTotal / FinancialConstants::CENTS_PER_DOLLAR: 0, FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
                 ->description('Враховуються тільки внесення та вилучення грошей, без інвест-доходу')
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : '',
                 ]),
             Stat::make('Моя доля у сумі пулу (%)',
                 $myActualContributionPercents ?
-                    Number::format(round($myActualContributionPercents / 10000, 2), 2, locale: 'sv') : 0)
+                    Number::format(round($myActualContributionPercents / FinancialConstants::PERCENTAGE_DISPLAY_DIVISOR, FinancialConstants::DECIMAL_PRECISION), FinancialConstants::DECIMAL_PRECISION, locale: 'sv') : 0)
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : '',
                 ]),
 
             // 2d row
             Stat::make('Мій дохід за весь час, $$',
-                Number::format(round($myTotalIncome / self::CENTS_PER_DOLLAR, 2), 2, locale: 'sv'))
+                Number::format(round($myTotalIncome / FinancialConstants::CENTS_PER_DOLLAR, FinancialConstants::DECIMAL_PRECISION), FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : 'cursor-pointer',
                     'onclick' => "window.location.href='investor/payments'",
                 ]),
             Stat::make('Мій дохід за весь час, %%',
-                Number::format(round($myTotalGrow, 2), 2, locale: 'sv'))
+                Number::format(round($myTotalGrow, FinancialConstants::DECIMAL_PRECISION), FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : 'cursor-pointer',
                     'onclick' => "window.location.href='investor/payments'",
@@ -98,14 +98,14 @@ class StatsOverviewPersonal extends BaseWidget
 
             // Last Year income widgets;
             Stat::make('Мій дохід за останній рік, $$',
-                Number::format($myLastYearIncome / self::CENTS_PER_DOLLAR, 2, locale: 'sv'))
+                Number::format($myLastYearIncome / FinancialConstants::CENTS_PER_DOLLAR, FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
                 ->description('За 365 днів враховуючи сьогодні')
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : 'cursor-pointer',
                     'onclick' => "window.location.href='investor/payments'",
                 ]),
             Stat::make('Мій дохід за останній рік, %%',
-                Number::format($myLastYearGrow, 2, locale: 'sv'))
+                Number::format($myLastYearGrow, FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
                 ->description('За 365 днів враховуючи сьогодні')
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : 'cursor-pointer',
@@ -114,14 +114,14 @@ class StatsOverviewPersonal extends BaseWidget
 
             // Current Year income widgets;
             Stat::make('Мій дохід за поточний рік, $$',
-                Number::format($myCurrentYearIncome / self::CENTS_PER_DOLLAR, 2, locale: 'sv'))
+                Number::format($myCurrentYearIncome / FinancialConstants::CENTS_PER_DOLLAR, FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
                 ->description('З 1-го Січня до сьогодні')
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : 'cursor-pointer',
                     'onclick' => "window.location.href='investor/payments'",
                 ]),
             Stat::make('Мій дохід за поточний рік, %%',
-                Number::format($myCurrentYearGrow, 2, locale: 'sv'))
+                Number::format($myCurrentYearGrow, FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
                 ->description('З 1-го Січня до сьогодні')
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : 'cursor-pointer',
