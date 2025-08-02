@@ -30,7 +30,27 @@ class PaymentService
         $newPay->fill($payData);
         $newPay->save();
 
-        if ($payData['operation_id'] !== OperationType::REVENUE) {
+        // Only create contributions for operations that affect investor balances
+        $contributionOperations = [
+            OperationType::FIRST,
+            OperationType::CONTRIB,
+            OperationType::WITHDRAW,
+            OperationType::INCOME,
+            OperationType::C_LEASING,
+            OperationType::I_LEASING,
+            OperationType::RECULC,
+        ];
+        
+        // Handle both enum objects and integer values
+        $operationId = $payData['operation_id'];
+        if ($operationId instanceof OperationType) {
+            $shouldCreateContribution = in_array($operationId, $contributionOperations);
+        } else {
+            $contributionOperationValues = array_map(fn($op) => $op->value, $contributionOperations);
+            $shouldCreateContribution = in_array($operationId, $contributionOperationValues);
+        }
+        
+        if ($shouldCreateContribution) {
             $this->manageContributions($newPay, $addIncome);
         }
         return $newPay;

@@ -77,9 +77,7 @@ trait HandlesInvestmentCalculations
             return 0;
         }
 
-        // Prepare bulk insert data instead of individual payment creations
-        $paymentsData = [];
-        $now = $paymentDate->format('Y-m-d H:i:s');
+        // Create individual payments using PaymentService to ensure contributions are handled
         $processedInvestors = 0;
 
         foreach ($investors as $investor) {
@@ -91,10 +89,9 @@ trait HandlesInvestmentCalculations
                     $paymentData = [
                         'user_id' => $investor->lastContribution->user_id,
                         'operation_id' => $operationType->value,
-                        'amount' => (int) round($incomeAmount * FinancialConstants::CENTS_PER_DOLLAR), // Convert to cents for MoneyCast
+                        'amount' => $incomeAmount, // PaymentService handles MoneyCast conversion
                         'confirmed' => true,
-                        'created_at' => $now,
-                        'updated_at' => $now,
+                        'created_at' => $paymentDate,
                     ];
                     
                     // Add vehicle_id if provided
@@ -102,15 +99,11 @@ trait HandlesInvestmentCalculations
                         $paymentData['vehicle_id'] = $vehicleId;
                     }
                     
-                    $paymentsData[] = $paymentData;
+                    // Use PaymentService to ensure contributions are created
+                    $paymentService->createPayment($paymentData, true);
                     $processedInvestors++;
                 }
             }
-        }
-
-        // Single bulk insert operation instead of N individual creates
-        if (!empty($paymentsData)) {
-            \App\Models\Payment::insert($paymentsData);
         }
 
         return $processedInvestors;

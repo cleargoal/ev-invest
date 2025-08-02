@@ -4,31 +4,28 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Constants\FinancialConstants;
 use App\Enums\OperationType;
+use App\Models\Contribution;
 use App\Models\Payment;
-use App\Models\Total;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class VehicleCancellationService
 {
-    public function __construct(
-        protected TotalService $totalService
-    ) {}
 
     /**
      * Cancel a vehicle sale (preserves sale data for audit purposes)
      * This marks the sale as cancelled and reverses all related financial transactions
      * Unlike unsellVehicle, this keeps sale_date, price, profit for audit trail
-     * 
+     *
      * @param Vehicle $vehicle
      * @param string|null $reason
      * @param User|null $cancelledBy
      * @return bool
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function cancelVehicleSale(Vehicle $vehicle, ?string $reason = null, ?User $cancelledBy = null): bool
     {
@@ -42,15 +39,21 @@ class VehicleCancellationService
 
         return DB::transaction(function () use ($vehicle, $reason, $cancelledBy) {
             $now = Carbon::now();
-            
-            // 1. Find and cancel all related payments
+
+            // 1. Find all related payments BEFORE any modifications
             $relatedPayments = $this->findVehicleRelatedPayments($vehicle);
-            
+
+            // 2. Clean up existing contributions FIRST to prevent data integrity issues
+            foreach ($relatedPayments as $payment) {
+                $this->cleanupPaymentContributions($payment);
+            }
+
+            // 3. Cancel the payments
             foreach ($relatedPayments as $payment) {
                 $this->cancelPayment($payment, $now, $cancelledBy);
-                
-                // 2. Create compensating total entries to reverse the financial impact
-                $this->createCompensatingTotal($payment);
+
+                // Note: For cancelVehicleSale, we only cancel payments without creating compensating contributions
+                // because the sale data remains for audit purposes
             }
 
             // 3. Mark as cancelled but KEEP sale data for audit purposes
@@ -67,12 +70,12 @@ class VehicleCancellationService
     /**
      * Unsell a vehicle (cancel sale and clear all sale data)
      * This is used when you want the vehicle to return to "for sale" state
-     * 
+     *
      * @param Vehicle $vehicle
      * @param string|null $reason
      * @param User|null $cancelledBy
      * @return bool
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function unsellVehicle(Vehicle $vehicle, ?string $reason = null, ?User $cancelledBy = null): bool
     {
@@ -86,15 +89,22 @@ class VehicleCancellationService
 
         return DB::transaction(function () use ($vehicle, $reason, $cancelledBy) {
             $now = Carbon::now();
-            
-            // 1. Find and cancel all related payments BEFORE clearing sale data
+
+            // 1. Find all related payments BEFORE any modifications
             $relatedPayments = $this->findVehicleRelatedPayments($vehicle);
-            
+
+            // 2. Clean up existing contributions FIRST to prevent data integrity issues
+            foreach ($relatedPayments as $payment) {
+                $this->cleanupPaymentContributions($payment);
+            }
+
+            // 3. Cancel the payments and create compensating entries
             foreach ($relatedPayments as $payment) {
                 $this->cancelPayment($payment, $now, $cancelledBy);
-                
-                // 2. Create compensating total entries to reverse the financial impact
-                $this->createCompensatingTotal($payment);
+
+                // 4. Create compensating contributions to reverse income impact on investor balances
+                // This also handles the total calculation via PaymentService
+                $this->createCompensatingContribution($payment, $now);
             }
 
             // 3. Clear all sale data and reset vehicle to "for sale" state
@@ -115,10 +125,10 @@ class VehicleCancellationService
     /**
      * Restore a cancelled vehicle sale
      * This removes the cancellation and restores all related financial transactions
-     * 
+     *
      * @param Vehicle $vehicle
      * @return bool
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function restoreVehicleSale(Vehicle $vehicle): bool
     {
@@ -138,12 +148,11 @@ class VehicleCancellationService
             $cancelledPayments = Payment::where('vehicle_id', $vehicle->id)
                 ->cancelled()
                 ->get();
-                
+
             foreach ($cancelledPayments as $payment) {
                 $this->restorePayment($payment);
-                
-                // 3. Create compensating total entries to restore the financial impact
-                $this->createCompensatingTotal($payment, true);
+
+                // 3. Restore payments - this will be handled by payment restoration
             }
 
             return true;
@@ -153,7 +162,7 @@ class VehicleCancellationService
     /**
      * Find all payments related to a vehicle sale
      * This includes company commissions and investor income payments
-     * 
+     *
      * @param Vehicle $vehicle
      * @return \Illuminate\Database\Eloquent\Collection
      */
@@ -170,26 +179,32 @@ class VehicleCancellationService
             return $directPayments;
         }
 
-        // Fallback: Find payments created around the same time as the sale
-        $saleDate = $vehicle->sale_date;
-        if (!$saleDate) {
-            return collect(); // Return empty collection if no sale date
-        }
+        // No fallback needed - only use direct vehicle_id relationships
+        // Time-based searches are unreliable and not needed
+        return collect();
+    }
 
-        $searchStart = $saleDate->copy()->subMinutes(5);
-        $searchEnd = $saleDate->copy()->addMinutes(5);
-
-        return Payment::where(function ($query) use ($searchStart, $searchEnd) {
-                $query->whereBetween('created_at', [$searchStart, $searchEnd]);
-            })
-            ->whereIn('operation_id', [OperationType::REVENUE, OperationType::INCOME])
-            ->notCancelled()
-            ->get();
+    /**
+     * Clean up contributions associated with a payment before cancelling
+     * This prevents data integrity issues
+     *
+     * @param Payment $payment
+     */
+    protected function cleanupPaymentContributions(Payment $payment): void
+    {
+        // Remove any contributions that reference this payment
+        Contribution::where('payment_id', $payment->id)->delete();
+        
+        \Log::info("Cleaned up contributions for payment", [
+            'payment_id' => $payment->id,
+            'user_id' => $payment->user_id,
+            'amount' => $payment->amount
+        ]);
     }
 
     /**
      * Cancel a specific payment
-     * 
+     *
      * @param Payment $payment
      * @param Carbon $cancelledAt
      * @param User|null $cancelledBy
@@ -205,7 +220,7 @@ class VehicleCancellationService
 
     /**
      * Restore a cancelled payment
-     * 
+     *
      * @param Payment $payment
      */
     protected function restorePayment(Payment $payment): void
@@ -217,33 +232,53 @@ class VehicleCancellationService
         ]);
     }
 
-    /**
-     * Create a compensating total entry to reverse/restore financial impact
-     * 
-     * @param Payment $payment
-     * @param bool $restore Whether this is a restoration (positive) or cancellation (negative)
-     */
-    protected function createCompensatingTotal(Payment $payment, bool $restore = false): void
-    {
-        // Create a compensating payment with opposite amount
-        $compensatingAmount = $restore ? $payment->amount : -$payment->amount;
-        
-        // Create and save a compensating payment record for the total calculation
-        $compensatingPayment = Payment::create([
-            'user_id' => $payment->user_id,
-            'operation_id' => $payment->operation_id,
-            'amount' => $compensatingAmount,
-            'confirmed' => true,
-            'created_at' => now(),
-        ]);
 
-        // Update the total
-        $this->totalService->createTotal($compensatingPayment);
+    /**
+     * Create compensating contribution to reverse income impact on investor balances
+     *
+     * @param Payment $originalPayment
+     * @param Carbon $cancelledAt
+     */
+    protected function createCompensatingContribution(Payment $originalPayment, Carbon $cancelledAt): void
+    {
+        // Only create compensating contributions for operations that affect investor balances
+        $contributionOperations = [
+            \App\Enums\OperationType::FIRST->value,
+            \App\Enums\OperationType::CONTRIB->value,
+            \App\Enums\OperationType::WITHDRAW->value,
+            \App\Enums\OperationType::INCOME->value,
+            \App\Enums\OperationType::C_LEASING->value,
+            \App\Enums\OperationType::I_LEASING->value,
+            \App\Enums\OperationType::RECULC->value,
+        ];
+
+        if (!in_array($originalPayment->operation_id, $contributionOperations)) {
+            return; // No contribution needed for non-contribution operations
+        }
+
+        // Create a compensating payment with negative amount to reverse the contribution
+        // Using INCOME operation type with negative amount because:
+        // 1. WITHDRAW is for manual user withdrawals only
+        // 2. INCOME with negative amount properly reverses investor income
+        // 3. ContributionService will add the negative amount (effectively subtracting)
+        $compensatingPaymentData = [
+            'user_id' => $originalPayment->user_id,
+            'operation_id' => \App\Enums\OperationType::INCOME->value, // Use INCOME for system reversals
+            'amount' => -$originalPayment->amount, // NEGATIVE amount to reverse the original income
+            'confirmed' => true,
+            'created_at' => $cancelledAt,
+            'vehicle_id' => $originalPayment->vehicle_id,
+            'is_cancelled' => false,
+        ];
+
+        // Use PaymentService to create the payment (ensures totals and contributions are handled correctly)
+        $paymentService = app(\App\Services\PaymentService::class);
+        $paymentService->createPayment($compensatingPaymentData, true);
     }
 
     /**
      * Get cancellation statistics
-     * 
+     *
      * @return array
      */
     public function getCancellationStats(): array

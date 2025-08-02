@@ -33,7 +33,18 @@ class ContributionService
         $newContribution->payment_id = $payment->id;
         $newContribution->user_id = $payment->user_id;
         $newContribution->percents = $lastContrib ? $lastContrib->percents : 0;
-        $newContribution->amount = $lastContrib ? $lastContrib->amount + $payment->amount : $payment->amount;
+        
+        // Handle different operation types correctly
+        $baseAmount = $lastContrib ? $lastContrib->amount : 0;
+        
+        // WITHDRAW operations should subtract from the contribution amount
+        if ($payment->operation_id === \App\Enums\OperationType::WITHDRAW->value) {
+            $newContribution->amount = $baseAmount - $payment->amount;
+        } else {
+            // All other operations add to the contribution amount
+            $newContribution->amount = $baseAmount + $payment->amount;
+        }
+        
         $newContribution->save();
         
         // Update user's actual contribution
@@ -72,15 +83,31 @@ class ContributionService
             $lastContribution = $user->lastContribution;
 
             if ($lastContribution) {
+                // Verify data integrity
+                if ($lastContribution->user_id !== $user->id) {
+                    \Log::warning("Contribution user_id mismatch detected", [
+                        'user_id' => $user->id,
+                        'contribution_user_id' => $lastContribution->user_id,
+                        'contribution_id' => $lastContribution->id
+                    ]);
+                }
+                
                 $userContributionPercent = ($lastContribution->amount / $totalAmount) * FinancialConstants::PERCENTAGE_PRECISION;
                 $contributionsData[] = [
-                    'user_id' => $lastContribution->user_id,
+                    'user_id' => $user->id, // Fixed: Use the user ID from the loop, not from lastContribution
                     'payment_id' => $paymentId,
                     'percents' => $userContributionPercent,
                     'amount' => (int) round($lastContribution->amount * FinancialConstants::CENTS_PER_DOLLAR), // Convert dollar amount back to cents for bulk insert
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
+            } else {
+                // Log users who were found by whereHas but have no lastContribution
+                \Log::warning("User found by whereHas('contributions') but lastContribution is null", [
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'contribution_count' => $user->contributions()->count()
+                ]);
             }
         }
 
