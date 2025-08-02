@@ -48,6 +48,7 @@ class ContributionService
         $newContribution->save();
         
         // Update user's actual contribution
+        // Both newContribution->amount and actual_contribution use MoneyCast, so we can assign directly
         $user->update(['actual_contribution' => $newContribution->amount]);
         
         return $newContribution;
@@ -114,6 +115,16 @@ class ContributionService
         // Single bulk insert operation instead of N individual saves
         if (!empty($contributionsData)) {
             Contribution::insert($contributionsData);
+            
+            // Update actual_contribution for all affected users
+            // contributionsData contains amounts in cents, but MoneyCast expects dollars and converts to cents
+            // So we need to convert back to dollars for the MoneyCast to work correctly
+            foreach ($contributionsData as $contributionData) {
+                $userId = $contributionData['user_id'];
+                $newAmountInDollars = $contributionData['amount'] / FinancialConstants::CENTS_PER_DOLLAR;
+                
+                User::where('id', $userId)->update(['actual_contribution' => $newAmountInDollars]);
+            }
         }
         
         return (int) round($totalAmount * FinancialConstants::CENTS_PER_DOLLAR); // Convert total to cents for consistency
