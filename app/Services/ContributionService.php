@@ -17,9 +17,16 @@ class ContributionService
      * Create contribution
      * @param Payment $payment
      * @return Contribution
+     * @throws \InvalidArgumentException
      */
     public function createContribution(Payment $payment): Contribution
     {
+        // Validate that the user exists
+        $user = User::find($payment->user_id);
+        if (!$user) {
+            throw new \InvalidArgumentException("User with ID {$payment->user_id} does not exist");
+        }
+
         $lastContrib = Contribution::where('user_id', $payment->user_id)->orderBy('id', 'desc')->first();
 
         $newContribution = new Contribution();
@@ -28,7 +35,10 @@ class ContributionService
         $newContribution->percents = $lastContrib ? $lastContrib->percents : 0;
         $newContribution->amount = $lastContrib ? $lastContrib->amount + $payment->amount : $payment->amount;
         $newContribution->save();
-        User::where('id', $payment->user_id)->update(['actual_contribution' => $newContribution->amount]);
+        
+        // Update user's actual contribution
+        $user->update(['actual_contribution' => $newContribution->amount]);
+        
         return $newContribution;
     }
 

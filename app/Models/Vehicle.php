@@ -64,11 +64,17 @@ class Vehicle extends Model
     }
 
     /**
-     * Scope to get only sold vehicles (not cancelled)
+     * Scope to get only sold vehicles (including those sold after being cancelled)
      */
     public function scopeSold($query)
     {
-        return $query->whereNotNull('sale_date')->whereNull('cancelled_at');
+        return $query->whereNotNull('sale_date')
+            ->where(function ($q) {
+                // Either never cancelled
+                $q->whereNull('cancelled_at')
+                  // Or sold after cancellation (sold again)
+                  ->orWhereRaw('sale_date > cancelled_at');
+            });
     }
 
     /**
@@ -76,15 +82,28 @@ class Vehicle extends Model
      */
     public function isCancelled(): bool
     {
-        return !is_null($this->cancelled_at) && !is_null($this->sale_date);
+        return !is_null($this->cancelled_at) && 
+               !is_null($this->sale_date) &&
+               $this->cancelled_at >= $this->sale_date;
     }
 
     /**
-     * Check if the vehicle is sold and not cancelled
+     * Check if the vehicle is sold and not currently cancelled
      */
     public function isSold(): bool
     {
-        return !is_null($this->sale_date) && is_null($this->cancelled_at);
+        if (is_null($this->sale_date)) {
+            return false;
+        }
+        
+        // If never cancelled, it's sold
+        if (is_null($this->cancelled_at)) {
+            return true;
+        }
+        
+        // If cancelled after the sale date, it's cancelled
+        // If sold after the cancellation date, it's sold again
+        return $this->sale_date > $this->cancelled_at;
     }
 
     /**

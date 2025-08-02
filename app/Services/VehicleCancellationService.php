@@ -20,8 +20,9 @@ class VehicleCancellationService
     ) {}
 
     /**
-     * Cancel a vehicle sale ("unsell" the vehicle)
+     * Cancel a vehicle sale (preserves sale data for audit purposes)
      * This marks the sale as cancelled and reverses all related financial transactions
+     * Unlike unsellVehicle, this keeps sale_date, price, profit for audit trail
      * 
      * @param Vehicle $vehicle
      * @param string|null $reason
@@ -37,6 +38,50 @@ class VehicleCancellationService
 
         if ($vehicle->isCancelled()) {
             throw new \InvalidArgumentException('Cannot cancel sale: Vehicle sale is already cancelled');
+        }
+
+        return DB::transaction(function () use ($vehicle, $reason, $cancelledBy) {
+            $now = Carbon::now();
+            
+            // 1. Find and cancel all related payments
+            $relatedPayments = $this->findVehicleRelatedPayments($vehicle);
+            
+            foreach ($relatedPayments as $payment) {
+                $this->cancelPayment($payment, $now, $cancelledBy);
+                
+                // 2. Create compensating total entries to reverse the financial impact
+                $this->createCompensatingTotal($payment);
+            }
+
+            // 3. Mark as cancelled but KEEP sale data for audit purposes
+            $vehicle->update([
+                'cancelled_at' => $now,
+                'cancellation_reason' => $reason,
+                'cancelled_by' => $cancelledBy?->id,
+            ]);
+
+            return true;
+        });
+    }
+
+    /**
+     * Unsell a vehicle (cancel sale and clear all sale data)
+     * This is used when you want the vehicle to return to "for sale" state
+     * 
+     * @param Vehicle $vehicle
+     * @param string|null $reason
+     * @param User|null $cancelledBy
+     * @return bool
+     * @throws \Throwable
+     */
+    public function unsellVehicle(Vehicle $vehicle, ?string $reason = null, ?User $cancelledBy = null): bool
+    {
+        if (is_null($vehicle->sale_date)) {
+            throw new \InvalidArgumentException('Cannot unsell: Vehicle is not sold');
+        }
+
+        if ($vehicle->isCancelled()) {
+            throw new \InvalidArgumentException('Cannot unsell: Vehicle sale is already cancelled');
         }
 
         return DB::transaction(function () use ($vehicle, $reason, $cancelledBy) {

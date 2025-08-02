@@ -83,7 +83,7 @@ class VehicleService
         $createdAt = Carbon::parse($vehicle->created_at);
         $duration = $createdAt->diffInDays($soldDate); // sale duration in days
 
-        $vehicle->sale_date ??= $soldDate;
+        $vehicle->sale_date = $soldDate;
         $vehicle->price = $actualPrice;
         $vehicle->profit = $vehicle->price - $vehicle->cost;
         $vehicle->sale_duration = $duration;
@@ -129,7 +129,7 @@ class VehicleService
     }
 
     /**
-     * Cancel a vehicle sale ("unsell" the vehicle)
+     * Unsell a vehicle (clear sale data and return to "for sale" state)
      * This is a high-level wrapper around the cancellation service
      * 
      * @param Vehicle $vehicle
@@ -141,7 +141,7 @@ class VehicleService
     {
         $cancelledBy = auth()->user();
         
-        return $this->cancellationService->cancelVehicleSale($vehicle, $reason, $cancelledBy);
+        return $this->cancellationService->unsellVehicle($vehicle, $reason, $cancelledBy);
     }
 
     /**
