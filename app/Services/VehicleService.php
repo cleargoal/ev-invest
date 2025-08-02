@@ -107,7 +107,8 @@ class VehicleService
             $vehicle->profit,
             OperationType::REVENUE,
             $vehicle->sale_date,
-            $this->paymentService
+            $this->paymentService,
+            $vehicle->id
         );
     }
 
@@ -122,7 +123,8 @@ class VehicleService
             $vehicle->profit ?? 0,
             OperationType::INCOME,
             $vehicle->sale_date,
-            $this->paymentService
+            $this->paymentService,
+            $vehicle->id
         );
     }
 

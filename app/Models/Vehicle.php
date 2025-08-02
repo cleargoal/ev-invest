@@ -40,19 +40,27 @@ class Vehicle extends Model
     }
 
     /**
-     * Scope to filter out cancelled vehicles
+     * Scope to filter out cancelled vehicles that still have sale data
      */
     public function scopeNotCancelled($query)
     {
-        return $query->whereNull('cancelled_at');
+        return $query->where(function ($q) {
+            $q->whereNull('cancelled_at')
+              ->orWhere(function ($subQ) {
+                  // Include cancelled vehicles that were "unsold" (no sale data)
+                  $subQ->whereNotNull('cancelled_at')
+                       ->whereNull('sale_date');
+              });
+        });
     }
 
     /**
-     * Scope to get only cancelled vehicles
+     * Scope to get only cancelled vehicles that still have sale data
      */
     public function scopeCancelled($query)
     {
-        return $query->whereNotNull('cancelled_at');
+        return $query->whereNotNull('cancelled_at')
+                    ->whereNotNull('sale_date');
     }
 
     /**
@@ -64,11 +72,11 @@ class Vehicle extends Model
     }
 
     /**
-     * Check if the vehicle sale is cancelled
+     * Check if the vehicle sale is cancelled (and still has sale data)
      */
     public function isCancelled(): bool
     {
-        return !is_null($this->cancelled_at);
+        return !is_null($this->cancelled_at) && !is_null($this->sale_date);
     }
 
     /**
@@ -77,5 +85,13 @@ class Vehicle extends Model
     public function isSold(): bool
     {
         return !is_null($this->sale_date) && is_null($this->cancelled_at);
+    }
+
+    /**
+     * Check if the vehicle was unsold (cancelled but sale data cleared)
+     */
+    public function isUnsold(): bool
+    {
+        return !is_null($this->cancelled_at) && is_null($this->sale_date);
     }
 }

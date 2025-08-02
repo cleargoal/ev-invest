@@ -42,22 +42,26 @@ class VehicleCancellationService
         return DB::transaction(function () use ($vehicle, $reason, $cancelledBy) {
             $now = Carbon::now();
             
-            // 1. Mark vehicle sale as cancelled
-            $vehicle->update([
-                'cancelled_at' => $now,
-                'cancellation_reason' => $reason,
-                'cancelled_by' => $cancelledBy?->id,
-            ]);
-
-            // 2. Find and cancel all related payments from this vehicle sale
+            // 1. Find and cancel all related payments BEFORE clearing sale data
             $relatedPayments = $this->findVehicleRelatedPayments($vehicle);
             
             foreach ($relatedPayments as $payment) {
                 $this->cancelPayment($payment, $now, $cancelledBy);
                 
-                // 3. Create compensating total entries to reverse the financial impact
+                // 2. Create compensating total entries to reverse the financial impact
                 $this->createCompensatingTotal($payment);
             }
+
+            // 3. Clear all sale data and reset vehicle to "for sale" state
+            $vehicle->update([
+                'sale_date' => null,
+                'price' => null,
+                'profit' => null,
+                'sale_duration' => null,
+                'cancelled_at' => $now,
+                'cancellation_reason' => $reason,
+                'cancelled_by' => $cancelledBy?->id,
+            ]);
 
             return true;
         });
@@ -110,8 +114,23 @@ class VehicleCancellationService
      */
     protected function findVehicleRelatedPayments(Vehicle $vehicle): \Illuminate\Database\Eloquent\Collection
     {
-        // Find payments created around the same time as the sale
+        // First try to find payments directly linked to this vehicle
+        $directPayments = Payment::where('vehicle_id', $vehicle->id)
+            ->whereIn('operation_id', [OperationType::REVENUE, OperationType::INCOME])
+            ->notCancelled()
+            ->get();
+
+        // If we found payments with direct vehicle_id, use those
+        if ($directPayments->isNotEmpty()) {
+            return $directPayments;
+        }
+
+        // Fallback: Find payments created around the same time as the sale
         $saleDate = $vehicle->sale_date;
+        if (!$saleDate) {
+            return collect(); // Return empty collection if no sale date
+        }
+
         $searchStart = $saleDate->copy()->subMinutes(5);
         $searchEnd = $saleDate->copy()->addMinutes(5);
 

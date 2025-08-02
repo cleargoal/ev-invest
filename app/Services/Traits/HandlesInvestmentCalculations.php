@@ -56,13 +56,15 @@ trait HandlesInvestmentCalculations
      * @param OperationType $operationType Type of operation (INCOME or I_LEASING)
      * @param Carbon $paymentDate Date for the payments
      * @param PaymentService $paymentService Service to create payments
+     * @param int|null $vehicleId Optional vehicle ID to link payments to
      * @return int Number of investors who received payments
      */
     protected function distributeIncomeToInvestors(
         float $totalAmount,
         OperationType $operationType,
         Carbon $paymentDate,
-        PaymentService $paymentService
+        PaymentService $paymentService,
+        ?int $vehicleId = null
     ): int {
         if ($totalAmount <= 0) {
             return 0;
@@ -86,7 +88,7 @@ trait HandlesInvestmentCalculations
                 
                 // Only create payment if income amount is meaningful
                 if ($incomeAmount >= FinancialConstants::MINIMUM_PAYMENT_AMOUNT) {
-                    $paymentsData[] = [
+                    $paymentData = [
                         'user_id' => $investor->lastContribution->user_id,
                         'operation_id' => $operationType->value,
                         'amount' => (int) round($incomeAmount * FinancialConstants::CENTS_PER_DOLLAR), // Convert to cents for MoneyCast
@@ -94,6 +96,13 @@ trait HandlesInvestmentCalculations
                         'created_at' => $now,
                         'updated_at' => $now,
                     ];
+                    
+                    // Add vehicle_id if provided
+                    if ($vehicleId) {
+                        $paymentData['vehicle_id'] = $vehicleId;
+                    }
+                    
+                    $paymentsData[] = $paymentData;
                     $processedInvestors++;
                 }
             }
@@ -114,6 +123,7 @@ trait HandlesInvestmentCalculations
      * @param OperationType $operationType Type of operation
      * @param Carbon $paymentDate Date for the payment
      * @param PaymentService $paymentService Service to create payment
+     * @param int|null $vehicleId Optional vehicle ID to link payment to
      * @return \App\Models\Payment
      * 
      * @throws \InvalidArgumentException
@@ -122,7 +132,8 @@ trait HandlesInvestmentCalculations
         float $amount,
         OperationType $operationType,
         Carbon $paymentDate,
-        PaymentService $paymentService
+        PaymentService $paymentService,
+        ?int $vehicleId = null
     ): \App\Models\Payment {
         if ($amount <= 0) {
             throw new \InvalidArgumentException('Amount must be positive to calculate commissions.');
@@ -138,6 +149,11 @@ trait HandlesInvestmentCalculations
             'confirmed' => true,
             'created_at' => $paymentDate,
         ];
+
+        // Add vehicle_id if provided
+        if ($vehicleId) {
+            $payData['vehicle_id'] = $vehicleId;
+        }
 
         return $paymentService->createPayment($payData, true);
     }

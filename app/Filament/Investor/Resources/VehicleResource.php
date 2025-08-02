@@ -21,6 +21,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
 use App\Services\VehicleService;
 use Illuminate\Support\Str;
+use Filament\Support\Enums\FontWeight;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
 
 class VehicleResource extends Resource
 {
@@ -32,7 +35,8 @@ class VehicleResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->where('profit', null);
+        // Show only vehicles for sale (not sold and not cancelled)
+        return parent::getEloquentQuery()->where('profit', null)->orWhere('sale_date', null, );
     }
 
 

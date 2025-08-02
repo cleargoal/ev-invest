@@ -15,7 +15,7 @@ class Payment extends Model
 
     protected $fillable = [
         'amount', 'user_id', 'operation_id', 'confirmed', 'created_at',
-        'is_cancelled', 'cancelled_at', 'cancelled_by'
+        'is_cancelled', 'cancelled_at', 'cancelled_by', 'vehicle_id'
     ];
 
     protected $casts = [
