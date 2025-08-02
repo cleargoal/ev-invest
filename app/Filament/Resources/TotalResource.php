@@ -43,7 +43,7 @@ class TotalResource extends Resource
                 Tables\Columns\TextColumn::make('payment.user.name')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('amount')
-                    ->money('USD', divideBy: 100)
+                    ->money('USD')
                     ->sortable(),
             ])
             ->defaultSort('id', 'desc')

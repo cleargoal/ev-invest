@@ -51,7 +51,7 @@ class PaymentResource extends Resource
                 Tables\Columns\TextColumn::make('user.name')->sortable(),
                 Tables\Columns\TextColumn::make('operation.title')->sortable(),
                 Tables\Columns\TextColumn::make('amount')
-                    ->money('USD', divideBy: 100)
+                    ->money('USD')
                     ->sortable(),
                 Tables\Columns\IconColumn::make('confirmed')->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
