@@ -288,9 +288,13 @@ class VehicleCancellationService
             'is_cancelled' => false,
         ];
 
-        // Use PaymentService to create the payment (ensures totals and contributions are handled correctly)
+        // Use PaymentService to create the payment (ensures contributions are handled correctly)
         $paymentService = app(\App\Services\PaymentService::class);
-        $paymentService->createPayment($compensatingPaymentData, true);
+        $compensatingPayment = $paymentService->createPayment($compensatingPaymentData, true);
+        
+        // Explicitly create the Total for this compensating payment to update the pool balance
+        $totalService = app(\App\Services\TotalService::class);
+        $totalService->createTotal($compensatingPayment);
     }
 
     /**
