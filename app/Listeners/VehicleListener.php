@@ -20,7 +20,7 @@ class VehicleListener
     }
 
     /**
-     * Handle the event.
+     * Handle the bought auto event.
      */
     public function handle(BoughtAutoEvent $event): void
     {

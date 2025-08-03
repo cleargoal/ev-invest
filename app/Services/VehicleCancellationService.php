@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\OperationType;
+use App\Events\TotalChangedEvent;
 use App\Models\Contribution;
 use App\Models\Payment;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Notifications\VehicleUnsoldNotification;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Throwable;
 
 class VehicleCancellationService
@@ -109,6 +112,7 @@ class VehicleCancellationService
             }
 
             // 3. Clear all sale data and reset vehicle to "for sale" state
+            $originalProfit = $vehicle->profit; // Store profit before clearing
             $vehicle->update([
                 'sale_date' => null,
                 'price' => null,
@@ -118,6 +122,21 @@ class VehicleCancellationService
                 'cancellation_reason' => $reason,
                 'cancelled_by' => $cancelledBy?->id,
             ]);
+
+            // 4. Get final total amount for notification
+            $finalTotal = \App\Models\Total::orderBy('id', 'desc')->first();
+            $finalTotalAmount = $finalTotal ? $finalTotal->amount : 0;
+
+            // 5. Dispatch event notifications about vehicle unsell
+            TotalChangedEvent::dispatch(
+                $finalTotalAmount, 
+                'Скасовано продаж авто. Відкат прибутку:', 
+                -($originalProfit ?? 0) // Negative profit to show reversal
+            );
+
+            // 6. Send vehicle unsell notification to investors
+            $investors = User::role('investor')->get();
+            Notification::send($investors, new VehicleUnsoldNotification($vehicle, $reason));
 
             return true;
         });
