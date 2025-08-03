@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class VehicleCancellationService
@@ -168,20 +169,36 @@ class VehicleCancellationService
      */
     protected function findVehicleRelatedPayments(Vehicle $vehicle): \Illuminate\Database\Eloquent\Collection
     {
+        \Log::info("Finding payments for vehicle", [
+            'vehicle_id' => $vehicle->id,
+            'sale_date' => $vehicle->sale_date,
+        ]);
+
         // First try to find payments directly linked to this vehicle
         $directPayments = Payment::where('vehicle_id', $vehicle->id)
             ->whereIn('operation_id', [OperationType::REVENUE, OperationType::INCOME])
             ->notCancelled()
             ->get();
 
+        \Log::info("Direct payments found", [
+            'count' => $directPayments->count(),
+            'payment_ids' => $directPayments->pluck('id')->toArray(),
+        ]);
+
         // If we found payments with direct vehicle_id, use those
         if ($directPayments->isNotEmpty()) {
             return $directPayments;
         }
 
-        // No fallback needed - only use direct vehicle_id relationships
-        // Time-based searches are unreliable and not needed
-        return collect();
+        \Log::warning("No direct payments found for vehicle", [
+            'vehicle_id' => $vehicle->id,
+            'sale_date' => $vehicle->sale_date,
+            'message' => 'Vehicle payments must have vehicle_id set to be unsold properly'
+        ]);
+
+        // Do NOT return random payments - this causes data corruption
+        // The original vehicle sale payments MUST have vehicle_id set for unselling to work
+        return Payment::whereRaw('1 = 0')->get(); // Return empty Eloquent Collection
     }
 
     /**
@@ -257,13 +274,13 @@ class VehicleCancellationService
         }
 
         // Create a compensating payment with negative amount to reverse the contribution
-        // Using INCOME operation type with negative amount because:
-        // 1. WITHDRAW is for manual user withdrawals only
-        // 2. INCOME with negative amount properly reverses investor income
+        // Using RECULC operation type with negative amount because:
+        // 1. Unselling a car triggers a recalculation of investor contributions
+        // 2. RECULC with negative amount properly reverses the original income from the sale
         // 3. ContributionService will add the negative amount (effectively subtracting)
         $compensatingPaymentData = [
             'user_id' => $originalPayment->user_id,
-            'operation_id' => \App\Enums\OperationType::INCOME->value, // Use INCOME for system reversals
+            'operation_id' => \App\Enums\OperationType::RECULC->value, // Use RECULC for unsell operations
             'amount' => -$originalPayment->amount, // NEGATIVE amount to reverse the original income
             'confirmed' => true,
             'created_at' => $cancelledAt,

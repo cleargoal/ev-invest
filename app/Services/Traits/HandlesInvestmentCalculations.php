@@ -70,10 +70,19 @@ trait HandlesInvestmentCalculations
             return 0;
         }
 
-        $profitForShare = $this->calculateCompanyCommission($totalAmount);
+        // Calculate investor share (remaining amount after company commission)
+        $profitForShare = $totalAmount - $this->calculateCompanyCommission($totalAmount);
         $investors = $this->getInvestorsWithContributions();
         
+        \Log::info('Distributing income to investors', [
+            'total_amount' => $totalAmount,
+            'profit_for_share' => $profitForShare,
+            'investors_count' => $investors->count(),
+            'investor_ids' => $investors->pluck('id')->toArray(),
+        ]);
+        
         if ($investors->isEmpty()) {
+            \Log::warning('No investors with contributions found for income distribution');
             return 0;
         }
 
@@ -83,6 +92,13 @@ trait HandlesInvestmentCalculations
         foreach ($investors as $investor) {
             if (isset($investor->lastContribution) && $investor->lastContribution->percents > 0) {
                 $incomeAmount = $profitForShare * $investor->lastContribution->percents / FinancialConstants::PERCENTAGE_PRECISION;
+                
+                \Log::info('Processing investor income', [
+                    'investor_id' => $investor->id,
+                    'investor_name' => $investor->name,
+                    'percents' => $investor->lastContribution->percents,
+                    'calculated_income' => $incomeAmount,
+                ]);
                 
                 // Only create payment if income amount is meaningful
                 if ($incomeAmount >= FinancialConstants::MINIMUM_PAYMENT_AMOUNT) {
@@ -102,7 +118,25 @@ trait HandlesInvestmentCalculations
                     // Use PaymentService to ensure contributions are created
                     $paymentService->createPayment($paymentData, true);
                     $processedInvestors++;
+                    
+                    \Log::info('Created income payment for investor', [
+                        'investor_id' => $investor->id,
+                        'amount' => $incomeAmount,
+                        'payment_created' => true,
+                    ]);
+                } else {
+                    \Log::info('Income amount too small, skipping', [
+                        'investor_id' => $investor->id,
+                        'amount' => $incomeAmount,
+                        'minimum_required' => FinancialConstants::MINIMUM_PAYMENT_AMOUNT,
+                    ]);
                 }
+            } else {
+                \Log::warning('Investor missing contribution data', [
+                    'investor_id' => $investor->id,
+                    'has_last_contribution' => isset($investor->lastContribution),
+                    'percents' => $investor->lastContribution->percents ?? 'N/A',
+                ]);
             }
         }
 

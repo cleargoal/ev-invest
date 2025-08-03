@@ -35,5 +35,10 @@ class DatabaseSeeder extends Seeder
         $this->command->info('Vehicles');
         $this->call(VehicleSeeder::class);
 
+        $this->command->info('Vehicle - Payments');
+        $this->call(PaymentSeeder::class);
+
+        $this->command->info('Totals');
+        $this->call(TotalSeeder::class);
     }
 }

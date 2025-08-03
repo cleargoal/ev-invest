@@ -8,6 +8,7 @@ use App\Enums\OperationType;
 use App\Events\TotalChangedEvent;
 use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class PaymentService
 {
@@ -23,6 +24,7 @@ class PaymentService
      * @param array $payData
      * @param bool $addIncome - gets true, when income calculated; in this case 'processing' method run from sellVehicle method
      * @return Payment
+     * @throws Throwable
      */
     public function createPayment(array $payData, bool $addIncome = false): Payment
     {
@@ -40,7 +42,7 @@ class PaymentService
             OperationType::I_LEASING,
             OperationType::RECULC,
         ];
-        
+
         // Handle both enum objects and integer values
         $operationId = $payData['operation_id'];
         if ($operationId instanceof OperationType) {
@@ -49,7 +51,7 @@ class PaymentService
             $contributionOperationValues = array_map(fn($op) => $op->value, $contributionOperations);
             $shouldCreateContribution = in_array($operationId, $contributionOperationValues);
         }
-        
+
         if ($shouldCreateContribution) {
             $this->manageContributions($newPay, $addIncome);
         }
@@ -61,7 +63,7 @@ class PaymentService
      * @param Payment $payment
      * @param bool $addIncome
      * @return bool
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function manageContributions(Payment $payment, bool $addIncome = false): bool
     {
@@ -88,7 +90,7 @@ class PaymentService
         DB::transaction(function () use ($payment) {
             $this->manageContributions($payment);
             $totalAmount = $this->totalService->createTotal($payment);
-            
+
             // Events are dispatched after successful transaction
             TotalChangedEvent::dispatch($totalAmount, 'Внесок інвестора', $payment->amount);
         });

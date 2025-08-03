@@ -97,7 +97,7 @@ class VehicleSeeder extends Seeder
         ];
 
         $created = Carbon::createFromDate(2024, 1, 1);
-        $companyId = User::role('company')->first()->id;
+        $companyId = User::role('operator')->first()->id;
         $calc = app(VehicleService::class);
 
         foreach ($vehicles as $vehicle) {
@@ -106,8 +106,8 @@ class VehicleSeeder extends Seeder
                 'title' => $vehicle['title'],
                 'produced' => $vehicle['produced'],
                 'mileage' => $vehicle['mileage'],
-                'cost' => $vehicle['cost'] * 100,
-                'plan_sale' => $vehicle['plan_sale'] * 100,
+                'cost' => $vehicle['cost'],
+                'plan_sale' => $vehicle['plan_sale'],
                 'created_at' => $created,
             ];
             $calc->buyVehicle($newVehicle);

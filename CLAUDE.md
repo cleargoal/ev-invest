@@ -17,6 +17,9 @@ This is a Laravel 11 application with Filament admin panels for managing an inve
 - `composer install` - Install PHP dependencies
 - `vendor/bin/pint` - Run Laravel Pint code formatter
 
+### Custom Diagnostic Commands
+- `php artisan diagnose:missing-contributions --investors=1,7` - Diagnose missing contribution records for specific investors
+
 ### Frontend Commands  
 - `npm run dev` - Start Vite development server with hot reload
 - `npm run build` - Build production assets
@@ -45,9 +48,10 @@ The project uses Laravel Sail with custom ports to avoid conflicts:
 ### Service Layer Architecture
 Key services handle business logic:
 - `TotalService` - Manages investment pool calculations and running totals
-- `ContributionService` - Handles user contribution processing
-- `PaymentService` - Processes payment validations and confirmations  
-- `VehicleService` - Manages vehicle lifecycle (creation, editing, marking as sold)
+- `ContributionService` - Handles user contribution processing and percentage recalculations
+- `PaymentService` - Processes payment validations, confirmations, and contribution creation  
+- `VehicleService` - Manages vehicle lifecycle (creation, buying, selling, unselling)
+- `VehicleCancellationService` - Handles vehicle sale cancellations and unselling operations
 - `LeasingService` - Handles leasing income calculations
 - `WidgetGeneralChartsService` & `WidgetPersonalChartsService` - Chart data generation
 
@@ -58,20 +62,41 @@ Key services handle business logic:
 - Panel access controlled in `User::canAccessPanel()`
 
 ### Business Logic Flow
-1. Investors make payments through the system
-2. Operators confirm/validate payments when funds are received  
-3. System calculates running totals and user percentages
-4. Profit distribution calculated based on contribution percentages
-5. Vehicle sales trigger profit calculations and distributions
+1. **Investment Process**: Investors make payments (FIRST/CONTRIB operations) through the system
+2. **Payment Confirmation**: Operators confirm/validate payments when funds are received  
+3. **Contribution Tracking**: System creates contribution records and calculates user percentages
+4. **Vehicle Operations**: Company buys vehicles (BUY_CAR), sells them (SELL_CAR), or unsells them
+5. **Profit Distribution**: Vehicle sales trigger automatic income distribution to investors and company revenue
+6. **Pool Management**: Running totals track available investment pool balance
+
+### Operation Types & Money Flow
+- **FIRST/CONTRIB** (Positive): Initial investments and additional contributions
+- **BUY_CAR** (Positive): Pool money spent on vehicle purchases  
+- **INCOME** (Positive): Investor share of vehicle sale profits (50% total, distributed by percentage)
+- **REVENUE** (Positive): Company commission from vehicle sales (50%)
+- **WITHDRAW** (Positive): Investor withdrawals (decreases their contribution balance)
+- **RECULC** (Negative): System reversals for unsold vehicles
 
 ### Database Structure
 - Uses SQLite for development (`database/database.sqlite`)
 - Key tables: users, payments, totals, contributions, vehicles, leasings, operations
 - Relationships managed through Eloquent models with proper foreign keys
 
+### Money Handling & Casts
+- **MoneyCast**: Used across models (Vehicle, Payment, Contribution, Total, User.actual_contribution)
+- **Database Storage**: All monetary values stored in cents for precision
+- **Application Display**: MoneyCast automatically converts cents ↔ dollars
+- **Important**: Database aggregations (sum/avg) bypass MoneyCast and return raw cents
+- **Widget Calculations**: Manual conversion required for sum() operations (`/ 100`)
+
 ### Testing
 - PHPUnit configured with Feature and Unit test directories
-- Includes authentication tests and business logic tests (e.g., `InvestIncomeTest`)
+- Comprehensive test coverage including:
+  - `AllOperationsContributionTest` - Verifies all operation types create proper contributions
+  - `UnsoldVehicleContributionTest` - Tests vehicle unselling and contribution reversals
+  - `ContributionAlgorithmExplanationTest` - Documents contribution calculation behavior
+  - `CompleteUnsoldContributionFlowTest` - End-to-end unselling workflow tests
+  - `MissingInvestorsContributionBugTest` - Regression tests for contribution edge cases
 - Run tests with `php artisan test`
 
 ## Development Notes
@@ -85,14 +110,29 @@ Default test accounts (password: 'password'):
 
 ### Key Directories
 - `app/Filament/` - Filament admin panel configurations (separate Admin/Investor directories)
-- `app/Services/` - Business logic services
-- `app/Models/` - Eloquent models with relationships
-- `database/seeders/` - Database seeders including ComplexSeeder for comprehensive test data
+- `app/Services/` - Business logic services including VehicleCancellationService for unselling
+- `app/Models/` - Eloquent models with relationships and MoneyCast integration
+- `database/seeders/` - Realistic database seeders:
+  - `VehicleSeeder` - Creates test vehicles with costs and planned sales prices
+  - `PaymentSeeder` - Creates BUY_CAR payments for vehicles + initial investor payments
+  - `TotalSeeder` - Processes all payments to create running pool totals
 - `resources/views/filament/` - Custom Filament view templates
 
 ### Widget System
 Filament widgets for dashboard analytics:
-- Investment pool charts and statistics
+- `StatsOverviewGeneral` - Investment pool summary with proper money unit handling
 - Personal investor performance tracking  
-- Vehicle sales monitoring
+- Vehicle sales monitoring with profit calculations
 - Payment confirmation interfaces
+
+### Data Seeding Order
+For realistic test data, run seeders in this order:
+1. `UserSeeder` - Creates users with roles
+2. `VehicleSeeder` - Creates test vehicles  
+3. `PaymentSeeder` - Creates vehicle purchase payments + investor payments
+4. `TotalSeeder` - Calculates running pool totals
+
+### Important Notes
+- **Contribution Percentages**: After seeding investor payments, manually set contribution percentages in the admin interface for profit distribution to work
+- **Vehicle Unselling**: Requires original sale payments to have `vehicle_id` properly set
+- **Money Display**: Always check widget calculations handle cents→dollars conversion for database sum() operations
