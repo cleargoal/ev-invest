@@ -60,11 +60,22 @@ class VehicleService
             $vehicle = $this->updateVehicleWhenSold($vehicle, $actualPrice, $saleDate);
 
             $payment = $this->companyCommissions($vehicle);
-            $totalAmount = $this->totalService->createTotal($payment);
+            $totalAmount = null;
+            
+            // Only create total if there's a commission payment (positive profit)
+            if ($payment) {
+                $totalAmount = $this->totalService->createTotal($payment);
+            }
+            
             $this->investIncome($vehicle);
             
             // Events are dispatched after successful transaction
-            TotalChangedEvent::dispatch($totalAmount, 'Продано авто. Прибуток:', $vehicle->profit);
+            $profitAmount = $vehicle->profit ?? 0;
+            if ($totalAmount) {
+                TotalChangedEvent::dispatch($totalAmount, 'Продано авто. Прибуток:', $profitAmount);
+            } else {
+                TotalChangedEvent::dispatch(0, 'Продано авто без прибутку:', $profitAmount);
+            }
 
             return $vehicle;
         });
@@ -97,10 +108,17 @@ class VehicleService
      * @return Payment
      */
 
-    public function companyCommissions(Vehicle $vehicle): Payment
+    public function companyCommissions(Vehicle $vehicle): ?Payment
     {
         if (!$vehicle->profit || $vehicle->profit <= 0) {
-            throw new \InvalidArgumentException('Vehicle must have a positive profit to calculate commissions.');
+            \Log::warning('Vehicle sold with zero or negative profit, skipping commission calculation', [
+                'vehicle_id' => $vehicle->id,
+                'profit' => $vehicle->profit,
+                'cost' => $vehicle->cost,
+                'price' => $vehicle->price,
+                'user_id' => auth()->id()
+            ]);
+            return null;
         }
 
         return $this->createCompanyCommissionPayment(

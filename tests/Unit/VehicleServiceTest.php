@@ -249,4 +249,92 @@ class VehicleServiceTest extends TestCase
         $investorPayments = Payment::where('operation_id', OperationType::INCOME)->count();
         $this->assertEquals(0, $investorPayments);
     }
+
+    public function test_sell_vehicle_with_zero_profit_does_not_crash()
+    {
+        Event::fake([TotalChangedEvent::class]);
+
+        // Create investor contribution
+        $this->investorUser->contributions()->create([
+            'payment_id' => 1,
+            'percents' => 500000,
+            'amount' => 500.00,
+        ]);
+
+        // Sell vehicle at cost price (zero profit)
+        $salePrice = $this->vehicle->cost; // Same as cost = 0 profit
+        
+        $result = $this->vehicleService->sellVehicle($this->vehicle, $salePrice);
+
+        // Verify vehicle was updated
+        $this->vehicle->refresh();
+        $this->assertEquals($salePrice, $this->vehicle->price);
+        $this->assertEquals(0.0, $this->vehicle->profit); // Zero profit
+        $this->assertNotNull($this->vehicle->sale_date);
+
+        // Verify NO company commission payment was created (zero profit)
+        $companyPayment = Payment::where('user_id', $this->companyUser->id)
+            ->where('operation_id', OperationType::REVENUE)
+            ->first();
+        
+        $this->assertNull($companyPayment);
+
+        // Verify NO investor income payment was created (zero profit)
+        $investorPayment = Payment::where('user_id', $this->investorUser->id)
+            ->where('operation_id', OperationType::INCOME)
+            ->first();
+        
+        $this->assertNull($investorPayment);
+
+        // Verify NO total was created (no commission payment)
+        $total = Total::count();
+        $this->assertEquals(0, $total);
+
+        // Verify event was still dispatched (but with zero amount)
+        Event::assertDispatched(TotalChangedEvent::class);
+    }
+
+    public function test_sell_vehicle_with_negative_profit_does_not_crash()
+    {
+        Event::fake([TotalChangedEvent::class]);
+
+        // Create investor contribution
+        $this->investorUser->contributions()->create([
+            'payment_id' => 1,
+            'percents' => 500000,
+            'amount' => 500.00,
+        ]);
+
+        // Sell vehicle below cost price (negative profit)
+        $salePrice = $this->vehicle->cost - 200.00; // Loss of $200
+        
+        $result = $this->vehicleService->sellVehicle($this->vehicle, $salePrice);
+
+        // Verify vehicle was updated
+        $this->vehicle->refresh();
+        $this->assertEquals($salePrice, $this->vehicle->price);
+        $this->assertEquals(-200.0, $this->vehicle->profit); // Negative profit
+        $this->assertNotNull($this->vehicle->sale_date);
+
+        // Verify NO company commission payment was created (negative profit)
+        $companyPayment = Payment::where('user_id', $this->companyUser->id)
+            ->where('operation_id', OperationType::REVENUE)
+            ->first();
+        
+        $this->assertNull($companyPayment);
+
+        // Verify NO investor income payment was created (negative profit)
+        $investorPayment = Payment::where('user_id', $this->investorUser->id)
+            ->where('operation_id', OperationType::INCOME)
+            ->first();
+        
+        $this->assertNull($investorPayment);
+
+        // Verify NO total was created (no commission payment)
+        $total = Total::count();
+        $this->assertEquals(0, $total);
+
+        // Verify event was still dispatched (but with zero amount)
+        Event::assertDispatched(TotalChangedEvent::class);
+    }
 }
