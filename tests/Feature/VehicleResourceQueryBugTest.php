@@ -84,49 +84,42 @@ class VehicleResourceQueryBugTest extends TestCase
             'cost' => 700000,
             'plan_sale' => 800000,
             'sale_date' => null,
-            'profit' => -50000, // Cancelled with loss
+            'profit' => null,
+            'cancelled_at' => now(), // Properly cancelled vehicle
+            'cancellation_reason' => 'Test cancellation',
         ]);
 
         echo "\n=== VEHICLE RESOURCE QUERY FILTER TEST ===\n";
         echo "Created vehicles:\n";
         echo "  For Sale: ID:{$forSaleVehicle->id} - {$forSaleVehicle->title} (sale_date: null, profit: null)\n";
         echo "  Sold: ID:{$soldVehicle->id} - {$soldVehicle->title} (sale_date: {$soldVehicle->sale_date}, profit: {$soldVehicle->profit})\n";
-        echo "  Cancelled: ID:{$cancelledVehicle->id} - {$cancelledVehicle->title} (sale_date: null, profit: {$cancelledVehicle->profit})\n";
+        echo "  Cancelled: ID:{$cancelledVehicle->id} - {$cancelledVehicle->title} (sale_date: null, cancelled_at: {$cancelledVehicle->cancelled_at})\n";
 
-        // Test the CURRENT (potentially buggy) query from VehicleResource
-        $currentQuery = Vehicle::where('profit', null)->orWhere('sale_date', null);
+        // Test the CURRENT VehicleResource query (now FIXED)
+        $currentQuery = \App\Filament\Investor\Resources\VehicleResource::getEloquentQuery();
         $currentResults = $currentQuery->get();
         
         echo "\nCurrent VehicleResource query results:\n";
         foreach ($currentResults as $vehicle) {
-            echo "  ID:{$vehicle->id} - {$vehicle->title} (sale_date: {$vehicle->sale_date}, profit: {$vehicle->profit})\n";
+            echo "  ID:{$vehicle->id} - {$vehicle->title} (sale_date: {$vehicle->sale_date}, cancelled_at: {$vehicle->cancelled_at})\n";
         }
         
-        // This query should ONLY return the for-sale vehicle, but it might return others due to the OR logic
+        // This query should ONLY return truly for-sale vehicles using AND logic
         echo "\nAnalyzing query logic:\n";
-        echo "  For Sale Vehicle: profit=null ✓, sale_date=null ✓ → Should appear\n";
-        echo "  Sold Vehicle: profit≠null ✗, sale_date≠null ✗ → Should NOT appear\n";
-        echo "  Cancelled Vehicle: profit≠null ✗, sale_date=null ✓ → INCORRECTLY appears due to OR logic!\n";
+        echo "  For Sale Vehicle: sale_date=null ✓, cancelled_at=null ✓ → Should appear\n";
+        echo "  Sold Vehicle: sale_date≠null ✗ → Should NOT appear\n";
+        echo "  Cancelled Vehicle: sale_date=null ✓, cancelled_at≠null ✗ → Should NOT appear (correctly excluded)\n";
 
-        // The bug: OR logic includes cancelled vehicles because they have sale_date=null
+        // The FIXED logic: AND logic correctly excludes cancelled vehicles
         $this->assertContains($forSaleVehicle->id, $currentResults->pluck('id'));
-        $this->assertContains($cancelledVehicle->id, $currentResults->pluck('id'), 'Cancelled vehicle incorrectly included due to OR logic');
+        $this->assertNotContains($cancelledVehicle->id, $currentResults->pluck('id'), 'Cancelled vehicle correctly excluded');
         $this->assertNotContains($soldVehicle->id, $currentResults->pluck('id'));
 
-        // Test the CORRECT query that should be used
-        $correctQuery = Vehicle::where('profit', null)->where('sale_date', null);
-        $correctResults = $correctQuery->get();
+        // The VehicleResource query is now correct and matches our logic
+        // No need for separate "correct query" since the current one is fixed
         
-        echo "\nCorrect query (AND logic) results:\n";
-        foreach ($correctResults as $vehicle) {
-            echo "  ID:{$vehicle->id} - {$vehicle->title} (sale_date: {$vehicle->sale_date}, profit: {$vehicle->profit})\n";
-        }
-        
-        $this->assertContains($forSaleVehicle->id, $correctResults->pluck('id'));
-        $this->assertNotContains($cancelledVehicle->id, $correctResults->pluck('id'));
-        $this->assertNotContains($soldVehicle->id, $correctResults->pluck('id'));
-        
-        echo "\n✅ Identified the bug: OR logic in VehicleResource query includes cancelled vehicles\n";
+        echo "\n✅ VehicleResource query now correctly uses AND logic to exclude cancelled vehicles\n";
+        echo "✅ Only truly for-sale vehicles (never sold OR properly unsold) appear in the list\n";
     }
 
     /** @test */

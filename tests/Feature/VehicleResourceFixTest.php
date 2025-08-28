@@ -102,12 +102,14 @@ class VehicleResourceFixTest extends TestCase
             echo "  ID:{$vehicle->id} - {$vehicle->title}\n";
         }
         
-        // The fixed query should ONLY return the for-sale vehicle
-        $this->assertCount(1, $fixedResourceVehicles, 'Only for-sale vehicles should appear');
+        // The fixed query should return only truly for-sale vehicles (never sold OR properly unsold)
+        // Since the cancelled vehicle in this test still has cancelled_at set, it won't appear
+        // Only properly unsold vehicles (with all fields reset to null) should appear
+        $this->assertCount(1, $fixedResourceVehicles, 'Only never-sold vehicles should appear');
         $this->assertEquals($forSaleVehicle->id, $fixedResourceVehicles->first()->id);
         $this->assertEquals('Mazda For Sale', $fixedResourceVehicles->first()->title);
         
-        echo "\n✅ Fixed query correctly shows only for-sale vehicles\n";
+        echo "\n✅ Fixed query correctly shows only for-sale vehicles (never-sold and properly unsold)\n";
     }
 
     /** @test */
@@ -151,11 +153,11 @@ class VehicleResourceFixTest extends TestCase
             echo "  Position {$index}: ID:{$vehicle->id} - {$vehicle->title}\n";
         }
 
-        // Now only the Mazda should be visible
-        $this->assertCount(1, $visibleVehicles, 'Only one vehicle should be visible');
+        // Now only the Mazda should be visible (cancelled vehicle won't appear since cancelled_at is set)
+        $this->assertCount(1, $visibleVehicles, 'Only never-sold vehicle should be visible');
         $this->assertEquals($mazda->id, $visibleVehicles->first()->id, 'Mazda should be the only visible vehicle');
 
-        // When user clicks "sell" on the Mazda, the correct vehicle gets the action
+        // When user clicks "sell" on the first vehicle (Mazda), the correct vehicle gets the action
         $targetVehicle = $visibleVehicles->first();
         $this->assertEquals('Mazda MX-30 Red', $targetVehicle->title);
 
@@ -169,7 +171,7 @@ class VehicleResourceFixTest extends TestCase
 
         $this->assertNotNull($mazda->sale_date, 'Mazda should be sold');
         $this->assertEquals($salePrice, $mazda->price, 'Mazda should have correct price');
-        $this->assertNull($cancelledTesla->sale_date, 'Tesla should remain unsold');
+        $this->assertNull($cancelledTesla->sale_date, 'Tesla should remain unsold (cancelled)');
 
         echo "\n✅ Sell button now correctly targets the intended vehicle\n";
         echo "✅ Cancelled vehicles no longer interfere with the UI\n";

@@ -58,9 +58,16 @@ class VehicleServiceTest extends TestCase
     {
         Event::fake([TotalChangedEvent::class]);
 
-        // Create investor contribution for income calculation
+        // Create investor payment first, then contribution for income calculation
+        $payment = Payment::create([
+            'user_id' => $this->investorUser->id,
+            'operation_id' => OperationType::CONTRIB,
+            'amount' => 500.00,
+            'confirmed' => true,
+        ]);
+        
         $this->investorUser->contributions()->create([
-            'payment_id' => 1,
+            'payment_id' => $payment->id,
             'percents' => 500000, // 50% share
             'amount' => 500.00,
         ]);
@@ -106,9 +113,16 @@ class VehicleServiceTest extends TestCase
     {
         Event::fake([TotalChangedEvent::class]);
 
-        // Create investor contribution
+        // Create investor payment first, then contribution
+        $payment = Payment::create([
+            'user_id' => $this->investorUser->id,
+            'operation_id' => OperationType::CONTRIB,
+            'amount' => 500.00,
+            'confirmed' => true,
+        ]);
+        
         $this->investorUser->contributions()->create([
-            'payment_id' => 1,
+            'payment_id' => $payment->id,
             'percents' => 500000,
             'amount' => 500.00,
         ]);
@@ -132,8 +146,8 @@ class VehicleServiceTest extends TestCase
             $this->assertEquals(0.0, $this->vehicle->price); // Vehicle price defaults to 0.0
             $this->assertEquals(0.0, $this->vehicle->profit); // MoneyCast returns 0.0 for null
 
-            // Verify no payments were created
-            $this->assertEquals(0, Payment::count());
+            // Verify only the setup payment exists (transaction was rolled back)
+            $this->assertEquals(1, Payment::count());
 
             // Verify no totals were created
             $this->assertEquals(0, Total::count());
@@ -189,16 +203,32 @@ class VehicleServiceTest extends TestCase
         // Create multiple investors with different contribution percentages
         $investor1 = User::factory()->create();
         $investor1->assignRole('investor');
+        // Create payments first, then contributions
+        $payment1 = Payment::create([
+            'user_id' => $investor1->id,
+            'operation_id' => OperationType::CONTRIB,
+            'amount' => 600.00,
+            'confirmed' => true,
+        ]);
+        
         $investor1->contributions()->create([
-            'payment_id' => 1,
+            'payment_id' => $payment1->id,
             'percents' => 600000, // 60%
             'amount' => 600.00,
         ]);
 
         $investor2 = User::factory()->create();
         $investor2->assignRole('investor');
+        
+        $payment2 = Payment::create([
+            'user_id' => $investor2->id,
+            'operation_id' => OperationType::CONTRIB,
+            'amount' => 400.00,
+            'confirmed' => true,
+        ]);
+        
         $investor2->contributions()->create([
-            'payment_id' => 2,
+            'payment_id' => $payment2->id,
             'percents' => 400000, // 40%
             'amount' => 400.00,
         ]);
@@ -254,9 +284,16 @@ class VehicleServiceTest extends TestCase
     {
         Event::fake([TotalChangedEvent::class]);
 
-        // Create investor contribution
+        // Create investor payment first, then contribution
+        $payment = Payment::create([
+            'user_id' => $this->investorUser->id,
+            'operation_id' => OperationType::CONTRIB,
+            'amount' => 500.00,
+            'confirmed' => true,
+        ]);
+        
         $this->investorUser->contributions()->create([
-            'payment_id' => 1,
+            'payment_id' => $payment->id,
             'percents' => 500000,
             'amount' => 500.00,
         ]);
@@ -298,9 +335,16 @@ class VehicleServiceTest extends TestCase
     {
         Event::fake([TotalChangedEvent::class]);
 
-        // Create investor contribution
+        // Create investor payment first, then contribution
+        $payment = Payment::create([
+            'user_id' => $this->investorUser->id,
+            'operation_id' => OperationType::CONTRIB,
+            'amount' => 500.00,
+            'confirmed' => true,
+        ]);
+        
         $this->investorUser->contributions()->create([
-            'payment_id' => 1,
+            'payment_id' => $payment->id,
             'percents' => 500000,
             'amount' => 500.00,
         ]);

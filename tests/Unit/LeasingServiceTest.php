@@ -51,9 +51,16 @@ class LeasingServiceTest extends TestCase
         Notification::fake();
         config(['app.env' => 'local']); // Set environment for notification target
 
-        // Create investor contribution for income calculation
+        // Create investor payment first, then contribution for income calculation
+        $payment = Payment::create([
+            'user_id' => $this->investorUser->id,
+            'operation_id' => OperationType::CONTRIB,
+            'amount' => 500.00,
+            'confirmed' => true,
+        ]);
+        
         $this->investorUser->contributions()->create([
-            'payment_id' => 1,
+            'payment_id' => $payment->id,
             'percents' => 500000, // 50% share
             'amount' => 500.00,
         ]);
@@ -104,9 +111,16 @@ class LeasingServiceTest extends TestCase
     {
         Notification::fake();
 
-        // Create investor contribution
+        // Create investor payment first, then contribution
+        $payment = Payment::create([
+            'user_id' => $this->investorUser->id,
+            'operation_id' => OperationType::CONTRIB,
+            'amount' => 500.00,
+            'confirmed' => true,
+        ]);
+        
         $this->investorUser->contributions()->create([
-            'payment_id' => 1,
+            'payment_id' => $payment->id,
             'percents' => 500000,
             'amount' => 500.00,
         ]);
@@ -131,8 +145,8 @@ class LeasingServiceTest extends TestCase
             // Verify that no leasing record was created due to transaction rollback
             $this->assertEquals(0, Leasing::count());
 
-            // Verify no payments were created
-            $this->assertEquals(0, Payment::count());
+            // Verify only the setup payment exists (transaction was rolled back)
+            $this->assertEquals(1, Payment::count());
 
             // Verify no totals were created
             $this->assertEquals(0, Total::count());
@@ -170,16 +184,33 @@ class LeasingServiceTest extends TestCase
         // Create multiple investors with different contribution percentages
         $investor1 = User::factory()->create();
         $investor1->assignRole('investor');
+        
+        // Create payments first, then contributions
+        $payment1 = Payment::create([
+            'user_id' => $investor1->id,
+            'operation_id' => OperationType::CONTRIB,
+            'amount' => 700.00,
+            'confirmed' => true,
+        ]);
+        
         $investor1->contributions()->create([
-            'payment_id' => 1,
+            'payment_id' => $payment1->id,
             'percents' => 700000, // 70%
             'amount' => 700.00,
         ]);
 
         $investor2 = User::factory()->create();
         $investor2->assignRole('investor');
+        
+        $payment2 = Payment::create([
+            'user_id' => $investor2->id,
+            'operation_id' => OperationType::CONTRIB,
+            'amount' => 300.00,
+            'confirmed' => true,
+        ]);
+        
         $investor2->contributions()->create([
-            'payment_id' => 2,
+            'payment_id' => $payment2->id,
             'percents' => 300000, // 30%
             'amount' => 300.00,
         ]);
@@ -220,9 +251,16 @@ class LeasingServiceTest extends TestCase
     {
         Notification::fake();
 
-        // Create investor contribution
+        // Create investor payment first, then contribution
+        $payment = Payment::create([
+            'user_id' => $this->investorUser->id,
+            'operation_id' => OperationType::CONTRIB,
+            'amount' => 1000.00,
+            'confirmed' => true,
+        ]);
+        
         $this->investorUser->contributions()->create([
-            'payment_id' => 1,
+            'payment_id' => $payment->id,
             'percents' => 1000000, // 100% share
             'amount' => 1000.00,
         ]);
@@ -242,11 +280,15 @@ class LeasingServiceTest extends TestCase
         $this->assertEquals($customDate, $result->created_at);
 
         // Verify payments have the same custom date
-        $companyPayment = Payment::where('user_id', $this->companyUser->id)->first();
-        $investorPayment = Payment::where('user_id', $this->investorUser->id)->first();
+        $companyPayment = Payment::where('user_id', $this->companyUser->id)
+            ->where('operation_id', OperationType::C_LEASING)
+            ->first();
+        $investorIncomePayment = Payment::where('user_id', $this->investorUser->id)
+            ->where('operation_id', OperationType::I_LEASING)
+            ->first();
 
         $this->assertEquals($customDate, $companyPayment->created_at);
-        $this->assertEquals($customDate, $investorPayment->created_at);
+        $this->assertEquals($customDate, $investorIncomePayment->created_at);
     }
 
     public function test_notification_sent_to_correct_users_based_on_environment()
@@ -256,8 +298,16 @@ class LeasingServiceTest extends TestCase
         // Test local environment (should notify admin)
         config(['app.env' => 'local']);
 
+        // Create investor payment first, then contribution
+        $payment = Payment::create([
+            'user_id' => $this->investorUser->id,
+            'operation_id' => OperationType::CONTRIB,
+            'amount' => 500.00,
+            'confirmed' => true,
+        ]);
+        
         $this->investorUser->contributions()->create([
-            'payment_id' => 1,
+            'payment_id' => $payment->id,
             'percents' => 500000,
             'amount' => 500.00,
         ]);
@@ -316,8 +366,16 @@ class LeasingServiceTest extends TestCase
         // Create investor with contributions
         $investorWithContrib = User::factory()->create();
         $investorWithContrib->assignRole('investor');
+        // Create payment first, then contribution
+        $payment = Payment::create([
+            'user_id' => $investorWithContrib->id,
+            'operation_id' => OperationType::CONTRIB,
+            'amount' => 1000.00,
+            'confirmed' => true,
+        ]);
+        
         $investorWithContrib->contributions()->create([
-            'payment_id' => 1,
+            'payment_id' => $payment->id,
             'percents' => 1000000, // 100%
             'amount' => 1000.00,
         ]);

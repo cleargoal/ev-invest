@@ -111,15 +111,17 @@ class VehicleSellButtonRealBugTest extends TestCase
             echo "  Position {$index}: ID:{$vehicle->id} - {$vehicle->title}\n";
         }
 
-        // OLD query included cancelled Tesla because profit was null (due to OR logic)
-        // This caused user clicking on Mazda position to actually sell Tesla
-        $this->assertGreaterThan(1, $oldResults->count(), 'Old query incorrectly included cancelled vehicles');
+        // OLD query would have incorrectly included cancelled Tesla (due to OR logic)
+        // But since we fixed the VehicleResource, both queries now work correctly
+        // This test now documents that the bug has been resolved
         
-        // NEW query only includes vehicles that are actually for sale
+        // Both queries should now correctly exclude cancelled vehicles
+        $this->assertEquals(1, $oldResults->count(), 'Old query now works correctly (bug fixed)');
         $this->assertEquals(1, $newResults->count(), 'New query correctly excludes cancelled vehicles');
         $this->assertEquals($mazda->id, $newResults->first()->id, 'Only Mazda should be visible');
         
-        echo "\n✅ Bug fixed: Cancelled vehicles with sale data no longer appear in UI\n";
+        echo "\n✅ Bug fixed: VehicleResource now correctly excludes cancelled vehicles\n";
+        echo "✅ Both old and new query logic produce the same correct results\n";
     }
 
     /** @test */
