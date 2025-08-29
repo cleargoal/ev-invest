@@ -13,6 +13,7 @@ use App\Models\Vehicle;
 use App\Services\Traits\HandlesInvestmentCalculations;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class VehicleService
 {
@@ -61,14 +62,14 @@ class VehicleService
 
             $payment = $this->companyCommissions($vehicle);
             $totalAmount = null;
-            
+
             // Only create total if there's a commission payment (positive profit)
             if ($payment) {
                 $totalAmount = $this->totalService->createTotal($payment);
             }
-            
+
             $this->investIncome($vehicle);
-            
+
             // Events are dispatched after successful transaction
             $profitAmount = $vehicle->profit ?? 0;
             if ($totalAmount) {
@@ -111,7 +112,7 @@ class VehicleService
     public function companyCommissions(Vehicle $vehicle): ?Payment
     {
         if (!$vehicle->profit || $vehicle->profit <= 0) {
-            \Log::warning('Vehicle sold with zero or negative profit, skipping commission calculation', [
+            Log::warning('Vehicle sold with zero or negative profit, skipping commission calculation', [
                 'vehicle_id' => $vehicle->id,
                 'profit' => $vehicle->profit,
                 'cost' => $vehicle->cost,
@@ -149,7 +150,7 @@ class VehicleService
     /**
      * Unsell a vehicle (clear sale data and return to "for sale" state)
      * This is a high-level wrapper around the cancellation service
-     * 
+     *
      * @param Vehicle $vehicle
      * @param string|null $reason
      * @return bool
@@ -158,13 +159,13 @@ class VehicleService
     public function unsellVehicle(Vehicle $vehicle, ?string $reason = null): bool
     {
         $cancelledBy = auth()->user();
-        
+
         return $this->cancellationService->unsellVehicle($vehicle, $reason, $cancelledBy);
     }
 
     /**
      * Restore a cancelled vehicle sale
-     * 
+     *
      * @param Vehicle $vehicle
      * @return bool
      * @throws \Throwable

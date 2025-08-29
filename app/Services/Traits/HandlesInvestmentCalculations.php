@@ -10,13 +10,14 @@ use App\Models\User;
 use App\Services\PaymentService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 trait HandlesInvestmentCalculations
 {
 
     /**
      * Get company user with validation
-     * 
+     *
      * @throws \InvalidArgumentException
      */
     protected function getCompanyUser(): User
@@ -51,7 +52,7 @@ trait HandlesInvestmentCalculations
 
     /**
      * Distribute income to investors based on their contribution percentages (optimized with bulk insert)
-     * 
+     *
      * @param float $totalAmount Total amount to distribute
      * @param OperationType $operationType Type of operation (INCOME or I_LEASING)
      * @param Carbon $paymentDate Date for the payments
@@ -73,16 +74,9 @@ trait HandlesInvestmentCalculations
         // Calculate investor share (remaining amount after company commission)
         $profitForShare = $totalAmount - $this->calculateCompanyCommission($totalAmount);
         $investors = $this->getInvestorsWithContributions();
-        
-        \Log::info('Distributing income to investors', [
-            'total_amount' => $totalAmount,
-            'profit_for_share' => $profitForShare,
-            'investors_count' => $investors->count(),
-            'investor_ids' => $investors->pluck('id')->toArray(),
-        ]);
-        
+
         if ($investors->isEmpty()) {
-            \Log::warning('No investors with contributions found for income distribution');
+            Log::warning('No investors with contributions found for income distribution');
             return 0;
         }
 
@@ -92,14 +86,7 @@ trait HandlesInvestmentCalculations
         foreach ($investors as $investor) {
             if (isset($investor->lastContribution) && $investor->lastContribution->percents > 0) {
                 $incomeAmount = $profitForShare * $investor->lastContribution->percents / FinancialConstants::PERCENTAGE_PRECISION;
-                
-                \Log::info('Processing investor income', [
-                    'investor_id' => $investor->id,
-                    'investor_name' => $investor->name,
-                    'percents' => $investor->lastContribution->percents,
-                    'calculated_income' => $incomeAmount,
-                ]);
-                
+
                 // Only create payment if income amount is meaningful
                 if ($incomeAmount >= FinancialConstants::MINIMUM_PAYMENT_AMOUNT) {
                     $paymentData = [
@@ -109,30 +96,24 @@ trait HandlesInvestmentCalculations
                         'confirmed' => true,
                         'created_at' => $paymentDate,
                     ];
-                    
+
                     // Add vehicle_id if provided
                     if ($vehicleId) {
                         $paymentData['vehicle_id'] = $vehicleId;
                     }
-                    
+
                     // Use PaymentService to ensure contributions are created
                     $paymentService->createPayment($paymentData, true);
                     $processedInvestors++;
-                    
-                    \Log::info('Created income payment for investor', [
-                        'investor_id' => $investor->id,
-                        'amount' => $incomeAmount,
-                        'payment_created' => true,
-                    ]);
                 } else {
-                    \Log::info('Income amount too small, skipping', [
+                    Log::info('Income amount too small, skipping', [
                         'investor_id' => $investor->id,
                         'amount' => $incomeAmount,
                         'minimum_required' => FinancialConstants::MINIMUM_PAYMENT_AMOUNT,
                     ]);
                 }
             } else {
-                \Log::warning('Investor missing contribution data', [
+                Log::warning('Investor missing contribution data', [
                     'investor_id' => $investor->id,
                     'has_last_contribution' => isset($investor->lastContribution),
                     'percents' => $investor->lastContribution->percents ?? 'N/A',
@@ -145,14 +126,14 @@ trait HandlesInvestmentCalculations
 
     /**
      * Create company commission payment
-     * 
+     *
      * @param float $amount Amount to calculate commission from
      * @param OperationType $operationType Type of operation
      * @param Carbon $paymentDate Date for the payment
      * @param PaymentService $paymentService Service to create payment
      * @param int|null $vehicleId Optional vehicle ID to link payment to
      * @return \App\Models\Payment
-     * 
+     *
      * @throws \InvalidArgumentException
      */
     protected function createCompanyCommissionPayment(

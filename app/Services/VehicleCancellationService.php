@@ -11,6 +11,7 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Notifications\VehicleUnsoldNotification;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -131,8 +132,8 @@ class VehicleCancellationService
 
             // 5. Dispatch event notifications about vehicle unsell
             TotalChangedEvent::dispatch(
-                $finalTotalAmount, 
-                'Скасовано продаж авто. Відкат прибутку:', 
+                $finalTotalAmount,
+                'Скасовано продаж авто. Відкат прибутку:',
                 -($originalProfit ?? 0) // Negative profit to show reversal
             );
 
@@ -186,36 +187,20 @@ class VehicleCancellationService
      * This includes company commissions and investor income payments
      *
      * @param Vehicle $vehicle
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return Collection
      */
-    protected function findVehicleRelatedPayments(Vehicle $vehicle): \Illuminate\Database\Eloquent\Collection
+    protected function findVehicleRelatedPayments(Vehicle $vehicle): Collection
     {
-        \Log::info("Finding payments for vehicle", [
-            'vehicle_id' => $vehicle->id,
-            'sale_date' => $vehicle->sale_date,
-        ]);
-
         // First try to find payments directly linked to this vehicle
         $directPayments = Payment::where('vehicle_id', $vehicle->id)
             ->whereIn('operation_id', [OperationType::REVENUE, OperationType::INCOME])
             ->notCancelled()
             ->get();
 
-        \Log::info("Direct payments found", [
-            'count' => $directPayments->count(),
-            'payment_ids' => $directPayments->pluck('id')->toArray(),
-        ]);
-
         // If we found payments with direct vehicle_id, use those
         if ($directPayments->isNotEmpty()) {
             return $directPayments;
         }
-
-        \Log::warning("No direct payments found for vehicle", [
-            'vehicle_id' => $vehicle->id,
-            'sale_date' => $vehicle->sale_date,
-            'message' => 'Vehicle payments must have vehicle_id set to be unsold properly'
-        ]);
 
         // Do NOT return random payments - this causes data corruption
         // The original vehicle sale payments MUST have vehicle_id set for unselling to work
@@ -232,12 +217,7 @@ class VehicleCancellationService
     {
         // Remove any contributions that reference this payment
         Contribution::where('payment_id', $payment->id)->delete();
-        
-        \Log::info("Cleaned up contributions for payment", [
-            'payment_id' => $payment->id,
-            'user_id' => $payment->user_id,
-            'amount' => $payment->amount
-        ]);
+
     }
 
     /**
@@ -276,6 +256,7 @@ class VehicleCancellationService
      *
      * @param Payment $originalPayment
      * @param Carbon $cancelledAt
+     * @throws Throwable
      */
     protected function createCompensatingContribution(Payment $originalPayment, Carbon $cancelledAt): void
     {
@@ -300,23 +281,10 @@ class VehicleCancellationService
             'is_cancelled' => false,
         ];
 
-        \Log::info("Creating compensating WITHDRAW payment for unsold vehicle", [
-            'original_payment_id' => $originalPayment->id,
-            'original_amount' => $originalPayment->amount,
-            'original_operation' => $originalPayment->operation_id,
-            'user_id' => $originalPayment->user_id,
-            'vehicle_id' => $originalPayment->vehicle_id,
-        ]);
-
         // Use PaymentService to create the payment (ensures contributions are handled correctly)
         // Use addIncome = false so that contribution percentages are recalculated for all investors
         $paymentService = app(\App\Services\PaymentService::class);
         $compensatingPayment = $paymentService->createPayment($compensatingPaymentData, false);
-        
-        \Log::info("Created compensating WITHDRAW payment", [
-            'compensating_payment_id' => $compensatingPayment->id,
-            'amount' => $compensatingPayment->amount,
-        ]);
     }
 
     /**
