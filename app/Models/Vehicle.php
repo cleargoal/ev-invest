@@ -107,10 +107,28 @@ class Vehicle extends Model
     }
 
     /**
-     * Check if the vehicle was unsold (cancelled but sale data cleared)
+     * Check if the vehicle was unsold (sold then unsold, sale data cleared)
+     * An unsold vehicle is one that has been through a sell-unsell cycle:
+     * - Currently has no sale data (sale_date, price, profit are null)
+     * - But has cancelled payments indicating it was previously sold
      */
     public function isUnsold(): bool
     {
-        return !is_null($this->cancelled_at) && is_null($this->sale_date);
+        // If vehicle currently has sale data, it's not unsold
+        // Use raw values to avoid MoneyCast issues (null vs 0.0)
+        $rawProfit = $this->getRawOriginal('profit');
+        if (!is_null($this->sale_date) || (!is_null($rawProfit) && $rawProfit != 0)) {
+            return false;
+        }
+        
+        // Check if there are any cancelled payments for this vehicle
+        // This indicates the vehicle went through a sell-unsell cycle
+        return \App\Models\Payment::where('vehicle_id', $this->id)
+            ->where('is_cancelled', true)
+            ->whereIn('operation_id', [
+                \App\Enums\OperationType::INCOME->value,
+                \App\Enums\OperationType::REVENUE->value
+            ])
+            ->exists();
     }
 }

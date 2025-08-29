@@ -121,9 +121,14 @@ class VehicleUnsellingTest extends TestCase
         $this->assertEquals(0, $vehicle->profit); // MoneyCast converts null to 0
         $this->assertNull($vehicle->sale_duration);
 
-        // Verify cancellation audit trail
-        $this->assertNotNull($vehicle->cancelled_at);
-        $this->assertEquals('Test cancellation reason', $vehicle->cancellation_reason);
+        // Verify vehicle is completely reset (appears never sold)
+        // The new business logic clears cancellation data to make vehicle appear "for sale" again
+        $this->assertNull($vehicle->cancelled_at);
+        $this->assertNull($vehicle->cancellation_reason);
+        $this->assertNull($vehicle->cancelled_by);
+        
+        // However, audit trail is preserved at the payment level (cancelled payments)
+        $this->assertTrue($vehicle->isUnsold(), 'Vehicle should be identified as unsold based on cancelled payments');
 
         // Verify related payments are cancelled
         $vehiclePayments = Payment::where('vehicle_id', $vehicle->id)->get();
@@ -138,8 +143,12 @@ class VehicleUnsellingTest extends TestCase
         $this->assertGreaterThan($totalPaymentsBefore, $totalPaymentsAfter);
 
         // Verify financial impact is reversed (totals should be adjusted)
-        $compensatingPayments = Payment::where('created_at', '>=', $vehicle->cancelled_at)->get();
-        $this->assertGreaterThan(0, $compensatingPayments->count());
+        // Since cancelled_at is now null, look for WITHDRAW payments created during unselling
+        $compensatingPayments = Payment::where('vehicle_id', $vehicle->id)
+            ->where('operation_id', \App\Enums\OperationType::WITHDRAW->value)
+            ->where('is_cancelled', false)
+            ->get();
+        $this->assertGreaterThan(0, $compensatingPayments->count(), 'Should have compensating WITHDRAW payments');
 
         echo "\n=== UNSELLING TEST RESULTS ===\n";
         echo "Vehicle ID: {$vehicle->id}\n";

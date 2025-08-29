@@ -35,9 +35,12 @@ class VehicleResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        // Show vehicles for sale: those without sale_date (either never sold or unsold)
-        // Excludes: sold vehicles (with sale_date) and cancelled vehicles (with sale_date + cancelled_at)
-        return parent::getEloquentQuery()->whereNull('sale_date');
+        // Show vehicles for sale: never sold OR properly unsold (both sale_date and cancelled_at are null)
+        // Properly unsold vehicles are fully reset to look like never-sold vehicles
+        // Excludes: sold vehicles (with sale_date) and cancelled vehicles (with cancelled_at)
+        return parent::getEloquentQuery()
+            ->whereNull('sale_date')
+            ->whereNull('cancelled_at');
     }
 
 

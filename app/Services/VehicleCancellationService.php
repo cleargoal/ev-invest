@@ -97,30 +97,32 @@ class VehicleCancellationService
             // 1. Find all related payments BEFORE any modifications
             $relatedPayments = $this->findVehicleRelatedPayments($vehicle);
 
-            // 2. Clean up existing contributions FIRST to prevent data integrity issues
+            // 2. Create compensating contributions FIRST (before cleaning up or cancelling)
+            // This ensures we work with the current contribution state
+            foreach ($relatedPayments as $payment) {
+                $this->createCompensatingContribution($payment, $now);
+            }
+
+            // 3. Clean up existing contributions AFTER compensation is created
             foreach ($relatedPayments as $payment) {
                 $this->cleanupPaymentContributions($payment);
             }
 
-            // 3. Cancel the payments and create compensating entries
+            // 4. Cancel the payments
             foreach ($relatedPayments as $payment) {
                 $this->cancelPayment($payment, $now, $cancelledBy);
-
-                // 4. Create compensating contributions to reverse income impact on investor balances
-                // This also handles the total calculation via PaymentService
-                $this->createCompensatingContribution($payment, $now);
             }
 
-            // 3. Clear all sale data and reset vehicle to "for sale" state
+            // 3. Clear all sale data and reset vehicle to "for sale" state (like never sold)
             $originalProfit = $vehicle->profit; // Store profit before clearing
             $vehicle->update([
                 'sale_date' => null,
                 'price' => null,
                 'profit' => null,
                 'sale_duration' => null,
-                'cancelled_at' => $now,
-                'cancellation_reason' => $reason,
-                'cancelled_by' => $cancelledBy?->id,
+                'cancelled_at' => null,  // Reset to null so vehicle looks like never sold
+                'cancellation_reason' => null,  // Clear cancellation data
+                'cancelled_by' => null,  // Clear cancellation data
             ]);
 
             // 4. Get final total amount for notification
@@ -277,43 +279,44 @@ class VehicleCancellationService
      */
     protected function createCompensatingContribution(Payment $originalPayment, Carbon $cancelledAt): void
     {
-        // Only create compensating contributions for operations that affect investor balances
-        $contributionOperations = [
-            \App\Enums\OperationType::FIRST->value,
-            \App\Enums\OperationType::CONTRIB->value,
-            \App\Enums\OperationType::WITHDRAW->value,
-            \App\Enums\OperationType::INCOME->value,
-            \App\Enums\OperationType::C_LEASING->value,
-            \App\Enums\OperationType::I_LEASING->value,
-            \App\Enums\OperationType::RECULC->value,
-        ];
-
-        if (!in_array($originalPayment->operation_id, $contributionOperations)) {
-            return; // No contribution needed for non-contribution operations
+        // Only create compensating contributions for INCOME operations
+        // Other operations don't need compensation when unselling vehicles
+        if ($originalPayment->operation_id !== \App\Enums\OperationType::INCOME->value) {
+            return; // No compensation needed for non-income operations
         }
 
-        // Create a compensating payment with negative amount to reverse the contribution
-        // Using RECULC operation type with negative amount because:
-        // 1. Unselling a car triggers a recalculation of investor contributions
-        // 2. RECULC with negative amount properly reverses the original income from the sale
-        // 3. ContributionService will add the negative amount (effectively subtracting)
+        // Create a compensating WITHDRAW payment with positive amount to reverse the INCOME
+        // Using WITHDRAW operation type with positive amount because:
+        // 1. INCOME adds to investor balance (baseAmount + paymentAmount)
+        // 2. WITHDRAW subtracts from investor balance (baseAmount - paymentAmount)
+        // 3. To reverse an INCOME, we need a WITHDRAW with the same positive amount
         $compensatingPaymentData = [
             'user_id' => $originalPayment->user_id,
-            'operation_id' => \App\Enums\OperationType::RECULC->value, // Use RECULC for unsell operations
-            'amount' => -$originalPayment->amount, // NEGATIVE amount to reverse the original income
+            'operation_id' => \App\Enums\OperationType::WITHDRAW->value, // Use WITHDRAW to reverse INCOME
+            'amount' => $originalPayment->amount, // POSITIVE amount - WITHDRAW subtracts this from balance
             'confirmed' => true,
             'created_at' => $cancelledAt,
             'vehicle_id' => $originalPayment->vehicle_id,
             'is_cancelled' => false,
         ];
 
+        \Log::info("Creating compensating WITHDRAW payment for unsold vehicle", [
+            'original_payment_id' => $originalPayment->id,
+            'original_amount' => $originalPayment->amount,
+            'original_operation' => $originalPayment->operation_id,
+            'user_id' => $originalPayment->user_id,
+            'vehicle_id' => $originalPayment->vehicle_id,
+        ]);
+
         // Use PaymentService to create the payment (ensures contributions are handled correctly)
+        // Use addIncome = false so that contribution percentages are recalculated for all investors
         $paymentService = app(\App\Services\PaymentService::class);
-        $compensatingPayment = $paymentService->createPayment($compensatingPaymentData, true);
+        $compensatingPayment = $paymentService->createPayment($compensatingPaymentData, false);
         
-        // Explicitly create the Total for this compensating payment to update the pool balance
-        $totalService = app(\App\Services\TotalService::class);
-        $totalService->createTotal($compensatingPayment);
+        \Log::info("Created compensating WITHDRAW payment", [
+            'compensating_payment_id' => $compensatingPayment->id,
+            'amount' => $compensatingPayment->amount,
+        ]);
     }
 
     /**

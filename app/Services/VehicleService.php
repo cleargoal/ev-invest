@@ -105,7 +105,7 @@ class VehicleService
     /**
      * Company commissions add to Payment
      * @param Vehicle $vehicle
-     * @return Payment
+     * @return Payment|null Returns null if vehicle has zero or negative profit
      */
 
     public function companyCommissions(Vehicle $vehicle): ?Payment
