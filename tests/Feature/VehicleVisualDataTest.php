@@ -271,8 +271,11 @@ class VehicleVisualDataTest extends TestCase
         
         $this->assertGreaterThan($totalPaymentsBefore, $totalPaymentsAfter);
         
-        // Find compensating payments
-        $compensatingPayments = Payment::where('created_at', '>=', $vehicle->cancelled_at)->get();
+        // Find compensating payments - since cancelled_at is now null, look for WITHDRAW payments for this vehicle
+        $compensatingPayments = Payment::where('vehicle_id', $vehicle->id)
+            ->where('operation_id', \App\Enums\OperationType::WITHDRAW->value)
+            ->where('is_cancelled', false)
+            ->get();
         $this->assertGreaterThan(0, $compensatingPayments->count());
 
         echo "\n=== PAYMENT LINKING AND CANCELLATION TEST ===\n";
