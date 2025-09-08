@@ -116,4 +116,116 @@ class WidgetGeneralChartsService
 
         return collect($runningTotal);
     }
+
+    /**
+     * Get number of cars sold per month
+     * @return array
+     */
+    public function getCarsSoldPerMonth(): array
+    {
+        $soldVehicles = Vehicle::whereNotNull('sale_date')
+            ->orderBy('sale_date', 'asc')
+            ->get();
+
+        if ($soldVehicles->isEmpty()) {
+            return [
+                'labels' => [],
+                'data' => [],
+            ];
+        }
+
+        // Find the first sale date
+        $firstSaleDate = Carbon::parse($soldVehicles->first()->sale_date);
+        $currentDate = now();
+
+        $salesByMonth = $soldVehicles->groupBy(function ($vehicle) {
+            return Carbon::parse($vehicle->sale_date)->format('Y-m');
+        });
+
+        // Create months range from first sale to current month
+        $months = collect();
+        $tempDate = $firstSaleDate->copy()->startOfMonth();
+
+        while ($tempDate <= $currentDate->copy()->startOfMonth()) {
+            $month = $tempDate->format('Y-m');
+            if (!$months->contains($month)) {
+                $months->push($month);
+            }
+            $tempDate->addMonth();
+        }
+
+        $labels = $months->map(function ($month) {
+            return Carbon::createFromFormat('Y-m', $month)->format('M Y');
+        });
+
+        $data = $months->map(function ($month) use ($salesByMonth) {
+            return $salesByMonth->has($month) ? $salesByMonth[$month]->count() : 0;
+        });
+
+        return [
+            'labels' => $labels->toArray(),
+            'data' => $data->toArray(),
+        ];
+    }
+
+    /**
+     * Get number of cars sold per week
+     * @return array
+     */
+    public function getCarsSoldPerWeek(): array
+    {
+        $soldVehicles = Vehicle::whereNotNull('sale_date')
+            ->orderBy('sale_date', 'asc')
+            ->get();
+
+        if ($soldVehicles->isEmpty()) {
+            return [
+                'labels' => [],
+                'data' => [],
+            ];
+        }
+
+        // Find the first sale date
+        $firstSaleDate = Carbon::parse($soldVehicles->first()->sale_date);
+        $currentDate = now();
+
+        $salesByWeek = $soldVehicles->groupBy(function ($vehicle) {
+            $saleDate = Carbon::parse($vehicle->sale_date);
+            // Get the start of the week (Monday) for grouping
+            return $saleDate->startOfWeek()->format('Y-m-d');
+        });
+
+        // Create weeks range from first sale week to current week
+        $weeks = collect();
+        $tempDate = $firstSaleDate->copy()->startOfWeek();
+
+        while ($tempDate <= $currentDate->copy()->startOfWeek()) {
+            $week = $tempDate->format('Y-m-d');
+            if (!$weeks->contains($week)) {
+                $weeks->push($week);
+            }
+            $tempDate->addWeek();
+        }
+
+        $labels = $weeks->map(function ($week) {
+            $startOfWeek = Carbon::createFromFormat('Y-m-d', $week);
+            $endOfWeek = $startOfWeek->copy()->endOfWeek();
+            
+            // Format as "May 13-19" or "Dec 30-Jan 5" for cross-month weeks
+            if ($startOfWeek->month === $endOfWeek->month) {
+                return $startOfWeek->format('M j') . '-' . $endOfWeek->format('j');
+            } else {
+                return $startOfWeek->format('M j') . '-' . $endOfWeek->format('M j');
+            }
+        });
+
+        $data = $weeks->map(function ($week) use ($salesByWeek) {
+            return $salesByWeek->has($week) ? $salesByWeek[$week]->count() : 0;
+        });
+
+        return [
+            'labels' => $labels->toArray(),
+            'data' => $data->toArray(),
+        ];
+    }
 }

@@ -86,6 +86,21 @@
         </div>
     </x-filament::section>
 
+    <x-filament::section
+        collapsed
+        collapsible
+        persist-collapsed
+        id="dashboard-cars-charts-widget"
+    >
+        <x-slot name="heading">Графіки автівок</x-slot>
+        <div class="w-full">
+            @livewire(App\Filament\Investor\Widgets\CarsSoldPerMonthChart::class)
+        </div>
+        <div class="w-full mt-8">
+            @livewire(App\Filament\Investor\Widgets\CarsSoldPerWeekChart::class)
+        </div>
+    </x-filament::section>
+
     @if(auth()->user()->hasRole('company'))
         <x-filament::section
             collapsed
