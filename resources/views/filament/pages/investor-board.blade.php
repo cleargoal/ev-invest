@@ -55,6 +55,9 @@
         <div class="w-full mt-8">
             @livewire(App\Filament\Investor\Widgets\UserIncomeChart::class)
         </div>
+        <div class="w-full mt-8">
+            @livewire(App\Filament\Investor\Widgets\UserIncomePerMonthChart::class)
+        </div>
     </x-filament::section>
 
     <x-filament::section

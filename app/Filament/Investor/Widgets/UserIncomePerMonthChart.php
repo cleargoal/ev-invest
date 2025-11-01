@@ -5,9 +5,9 @@ namespace App\Filament\Investor\Widgets;
 use App\Services\WidgetPersonalChartsService;
 use Filament\Widgets\ChartWidget;
 
-class UserBalanceChart extends ChartWidget
+class UserIncomePerMonthChart extends ChartWidget
 {
-    protected static ?string $heading = 'Баланс інвестора';
+    protected static ?string $heading = 'Доход інвестора помісячно';
     protected static ?string $maxHeight = '300px';
     protected static ?array $options = [
         'plugins' => [
@@ -19,15 +19,14 @@ class UserBalanceChart extends ChartWidget
 
     protected function getData(): array
     {
-        $data = app(WidgetPersonalChartsService::class)->collectUserPayments();
+        $data = app(WidgetPersonalChartsService::class)->getUserIncomePerMonth();
 
         return [
             'datasets' => [
                 [
-                    'label' => "",
-                    'data' => $data['allTotals'],
-                    'backgroundColor' => '#36A2EB22',
-                    'borderColor' => '#9BD0F5',
+                    'data' => $data['data'],
+                    'backgroundColor' => '#f59e0b22',
+                    'borderColor' => '#f59e0b',
                     'fill' => true,
                     'tension' => 0.3,
                     'borderWidth' => 2,

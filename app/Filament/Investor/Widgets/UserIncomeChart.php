@@ -7,7 +7,7 @@ use Filament\Widgets\ChartWidget;
 
 class UserIncomeChart extends ChartWidget
 {
-    protected static ?string $heading = 'Доходи користувача';
+    protected static ?string $heading = 'Доход інвестора сумарно';
     protected static ?string $maxHeight = '300px';
     protected static ?array $options = [
         'plugins' => [
