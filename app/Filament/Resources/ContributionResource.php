@@ -48,7 +48,7 @@ class ContributionResource extends Resource
                 Tables\Columns\TextColumn::make('payment.id')->sortable()->label('Payment ID'),
                 Tables\Columns\TextColumn::make('payment.operation.title')->sortable(),
                 Tables\Columns\TextColumn::make('amount')
-                    ->money('USD', divideBy: 100)
+                    ->money('USD')
                     ->sortable(),
                 ViewColumn::make('percents')->view('tables.columns.percents')->width('5rem')->alignment(Alignment::Center),
                 Tables\Columns\TextColumn::make('created_at')

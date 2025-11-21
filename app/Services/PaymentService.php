@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\OperationType;
 use App\Events\TotalChangedEvent;
 use App\Models\Payment;
-use App\Models\User;
-use Illuminate\Support\Facades\Notification;
-use App\Notifications\NewPaymentNotify;
+use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class PaymentService
 {
 
     public function __construct(
         protected ContributionService $contributionService,
-        protected TotalService $totalService
+        protected TotalService $totalService,
+        protected NotificationService $notificationService
     ) {}
 
     /**
@@ -23,6 +24,7 @@ class PaymentService
      * @param array $payData
      * @param bool $addIncome - gets true, when income calculated; in this case 'processing' method run from sellVehicle method
      * @return Payment
+     * @throws Throwable
      */
     public function createPayment(array $payData, bool $addIncome = false): Payment
     {
@@ -30,7 +32,27 @@ class PaymentService
         $newPay->fill($payData);
         $newPay->save();
 
-        if ($payData['operation_id'] !== 7) {
+        // Only create contributions for operations that affect investor balances
+        $contributionOperations = [
+            OperationType::FIRST,
+            OperationType::CONTRIB,
+            OperationType::WITHDRAW,
+            OperationType::INCOME,
+            OperationType::C_LEASING,
+            OperationType::I_LEASING,
+            OperationType::RECULC,
+        ];
+
+        // Handle both enum objects and integer values
+        $operationId = $payData['operation_id'];
+        if ($operationId instanceof OperationType) {
+            $shouldCreateContribution = in_array($operationId, $contributionOperations);
+        } else {
+            $contributionOperationValues = array_map(fn($op) => $op->value, $contributionOperations);
+            $shouldCreateContribution = in_array($operationId, $contributionOperationValues);
+        }
+
+        if ($shouldCreateContribution) {
             $this->manageContributions($newPay, $addIncome);
         }
         return $newPay;
@@ -40,19 +62,22 @@ class PaymentService
      * Process calculation of Total and contributions
      * @param Payment $payment
      * @param bool $addIncome
-     * @return true
+     * @return bool
+     * @throws Throwable
      */
-    public function manageContributions(Payment $payment, bool $addIncome = false): true
+    public function manageContributions(Payment $payment, bool $addIncome = false): bool
     {
-        if ($payment->confirmed) {
-            $this->contributionService->createContribution($payment);
-        }
+        return DB::transaction(function () use ($payment, $addIncome) {
+            if ($payment->confirmed) {
+                $this->contributionService->createContribution($payment);
+            }
 
-        if (!$addIncome && $payment->confirmed) { // IF not add investors income when car sold. Just for operations of investors add or withdrawal
-            $this->contributionService->contributions($payment->id, $payment->created_at);
-        }
+            if (!$addIncome && $payment->confirmed) { // IF not add investors income when car sold. Just for operations of investors add or withdrawal
+                $this->contributionService->contributions($payment->id, $payment->created_at);
+            }
 
-        return true;
+            return true;
+        });
     }
 
     /**
@@ -62,20 +87,21 @@ class PaymentService
      */
     public function paymentConfirmation(Payment $payment): void
     {
-        $this->manageContributions($payment);
-        $totalAmount = $this->totalService->createTotal($payment);
-        TotalChangedEvent::dispatch($totalAmount, 'Внесок інвестора', $payment->amount);
+        DB::transaction(function () use ($payment) {
+            $this->manageContributions($payment);
+            $totalAmount = $this->totalService->createTotal($payment);
+
+            // Events are dispatched after successful transaction
+            TotalChangedEvent::dispatch($totalAmount, 'Внесок інвестора', $payment->amount);
+        });
     }
 
+    /**
+     * Send new payment notification
+     */
     public function notify(): void
     {
-        if (config('app.env') !== 'local') {
-            $users = User::role('company')->get();
-        }
-        else {
-            $users = User::role('admin')->get();
-        }
-        Notification::send($users, new NewPaymentNotify());
+        $this->notificationService->notifyNewPayment();
     }
 
 

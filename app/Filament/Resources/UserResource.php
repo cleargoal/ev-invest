@@ -43,6 +43,12 @@ class UserResource extends Resource
                     ->default('password')
                     ->dehydrated(fn ($state) => filled($state))
                     ->maxLength(255),
+                Forms\Components\TextInput::make('actual_contribution')
+                    ->label('Actual Contribution (USD)')
+                    ->numeric()
+                    ->step(0.01)
+                    ->helperText('Enter amount in dollars (e.g., 4251.69). System will handle conversion.')
+                    ->placeholder('0.00'),
             ]);
     }
 
@@ -58,6 +64,11 @@ class UserResource extends Resource
 //                    ->dateTime()
 //                    ->sortable(),
                 TextColumn::make('roles.name')->label('Role'),
+                Tables\Columns\TextColumn::make('actual_contribution')
+                    ->label('Contribution')
+                    ->money('USD')
+                    ->sortable()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

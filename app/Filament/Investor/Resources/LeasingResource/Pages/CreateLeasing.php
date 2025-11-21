@@ -19,7 +19,7 @@ class CreateLeasing extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['price'] = str_replace(',', '.', $data['price']) * 100;
+        $data['price'] = str_replace(',', '.', $data['price']);
 
         return $data;
     }

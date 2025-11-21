@@ -18,11 +18,11 @@ class PaymentFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => '',
+            'user_id' => \App\Models\User::factory(),
             'operation_id' => 1,
             'amount' => rand(25000, 200000),
             'confirmed' => rand(0, 1),
-            'created_at' => '',
+            'created_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
         ];
     }
 }

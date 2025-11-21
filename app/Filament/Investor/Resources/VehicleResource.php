@@ -21,6 +21,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
 use App\Services\VehicleService;
 use Illuminate\Support\Str;
+use Filament\Support\Enums\FontWeight;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
 
 class VehicleResource extends Resource
 {
@@ -32,7 +35,12 @@ class VehicleResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->where('profit', null);
+        // Show vehicles for sale: never sold OR properly unsold (both sale_date and cancelled_at are null)
+        // Properly unsold vehicles are fully reset to look like never-sold vehicles
+        // Excludes: sold vehicles (with sale_date) and cancelled vehicles (with cancelled_at)
+        return parent::getEloquentQuery()
+            ->whereNull('sale_date')
+            ->whereNull('cancelled_at');
     }
 
 
@@ -65,9 +73,9 @@ class VehicleResource extends Resource
                 TextColumn::make('produced')->label(new HtmlString('Рік <br /> випуску'))->width('4rem')->sortable(),
                 TextColumn::make('mileage')->label('Пробіг')->width('4rem')->sortable(),
                 TextColumn::make('created_at')->date()->label(new HtmlString('Дата<br /> покупки'))->width('4rem')->sortable(),
-                TextColumn::make('cost')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума<br /> покупки'))->sortable(),
-                TextColumn::make('plan_sale')->money('USD', divideBy: 100)->width('4rem')->alignment(Alignment::End)
-                    ->label(new HtmlString('Планова <br />Сума<br /> продажу'))->sortable(),
+                TextColumn::make('cost')->money('USD')->width('4rem')->alignment(Alignment::End)->label(new HtmlString('Сума <br />покупки'))->sortable(),
+                TextColumn::make('plan_sale')->money('USD')->width('4rem')->alignment(Alignment::End)
+                    ->label(new HtmlString('Планова <br />Сума <br />продажу'))->sortable(),
             ])
             ->defaultSort('id', 'desc')
             ->filters([
@@ -76,8 +84,10 @@ class VehicleResource extends Resource
             ->actions([
                 EditAction::make(),
                 Action::make('sell')
+                    ->modalIcon('heroicon-o-truck')
+                    ->modalIconColor('warning')
                     ->modalHeading('Відмітити проданим Авто:')
-                    ->modalDescription(fn(Vehicle $record) => $record->title)
+                    ->modalDescription(fn(Vehicle $record) => new HtmlString('<div class="text-xl font-bold text-violet-800">' . $record->title . '</div>'))
                     ->label('Продаємо')
                     ->authorize('sell')
                     ->button()->color('success')
@@ -86,7 +96,7 @@ class VehicleResource extends Resource
                         DatePicker::make('sale_date')->label('Дата продажу (не обов\'язково)'),
                     ])
                     ->action(function (array $data, Vehicle $record): void {
-                        $record->price = $data['price'] * 100; // $data['price'] is in cents
+                        $record->price = $data['price']; // $data['price'] is in cents
                         $record->save();
                         $vehicleService = app(VehicleService::class);
                         $vehicleService->sellVehicle($record, $record->price);

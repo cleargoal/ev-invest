@@ -1,3 +1,7 @@
 @import '/vendor/filament/filament/resources/css/theme.css';
 
 @config 'tailwind.config.js';
+
+main {
+    max-width: 110% !important;
+}

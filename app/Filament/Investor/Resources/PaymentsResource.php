@@ -2,6 +2,7 @@
 
 namespace App\Filament\Investor\Resources;
 
+use App\Enums\OperationType;
 use App\Filament\Investor\Resources\PaymentsResource\Pages\CreatePayments;
 use App\Filament\Investor\Resources\PaymentsResource\Pages\EditPayments;
 use App\Filament\Investor\Resources\PaymentsResource\Pages\ListPayments;
@@ -38,10 +39,20 @@ class PaymentsResource extends Resource
         return $form
             ->schema([
                 Radio::make('operation_id')->label('Я хочу')->inline()->inlineLabel(false)
-                    ->options([
-                        '4' => 'Додати до внеску',
-                        '5' => 'Замовити вилучення',
-                    ])->live(),
+                    ->options(function () {
+                        $balance = Payment::where('user_id', auth()->id())->sum('amount');
+
+                        if ($balance <= 0) {
+                            return [
+                                OperationType::FIRST->value => 'Внести 1-й внесок',
+                            ];
+                        }
+                        return [
+                            OperationType::CONTRIB->value => 'Внести гроші',
+                            OperationType::WITHDRAW->value => 'Замовити вилучення',
+                        ];
+                    })
+                    ->live(),
                 TextInput::make('amount')->visible(fn (Get $get): null|string => $get('operation_id'))
                     ->label('Сума (можна з десятковими знаками)')->extraInputAttributes(['width' => 200]),
             ])->columns(2);
@@ -68,7 +79,7 @@ class PaymentsResource extends Resource
                 TextColumn::make('operation.title')->width('5rem')->label('Сутність операції')->sortable(),
                 TextColumn::make('amount')
                     ->weight(FontWeight::Bold)
-                    ->money('USD', divideBy: 100)->width('5rem')->alignment(Alignment::End)
+                    ->money('USD')->width('5rem')->alignment(Alignment::End)
                     ->label('Сума'),
                 IconColumn::make('confirmed_icon')->label('Зарахування')->width('5rem')->alignment(Alignment::Center)
                     ->state(fn(?Payment $record) => $record->confirmed)

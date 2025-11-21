@@ -55,7 +55,7 @@ class TotalChangedMail extends Mailable
                 'description2' => $this->cause,
                 'amount' => $this->amount,
                 'go_to' => 'Докладніше на сайті',
-                'url' => 'https://ev-invest.segment.best/investor'
+                'url' => url('/investor')
             ],
         );
     }

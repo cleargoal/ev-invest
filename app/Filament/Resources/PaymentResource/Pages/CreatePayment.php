@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PaymentResource\Pages;
 
+use App\Enums\OperationType;
 use App\Filament\Resources\PaymentResource;
 use App\Services\PaymentService;
 use Filament\Resources\Pages\CreateRecord;
@@ -14,8 +15,8 @@ class CreatePayment extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['amount'] = str_replace(',', '.', $data['amount']) * 100;
-        if($data['operation_id'] === 5 || $data['operation_id'] === '5') {
+        $data['amount'] = str_replace(',', '.', $data['amount']);
+        if($data['operation_id'] === OperationType::WITHDRAW) {
             $data['amount'] = $data['amount'] * -1;
         }
 

@@ -16,7 +16,7 @@ class StatsOverviewGeneral extends BaseWidget
         protected function getStats(): array
     {
         $totalModel = Total::orderBy('id', 'desc')->first();
-        $total = $totalModel ? $totalModel->amount / 100 : 0;
+        $total = $totalModel ? $totalModel->amount : 0;
 
         $operatorId = User::whereHas('roles', function ($query) {
             $query->where('name', 'operator');
@@ -30,21 +30,24 @@ class StatsOverviewGeneral extends BaseWidget
 
         $totalInvestAmount = $usersWithLastContributions->sum(function ($user) {
                 return $user->lastContribution ? $user->lastContribution->amount : 0;
-            }) / 100;
+            });
 
-        $totalPercents = round($usersWithLastContributions->sum(function ($user) {
+        $totalMinorPercents = round($usersWithLastContributions->sum(function ($user) {
                 return $user->lastContribution ? $user->lastContribution->percents : 0;
             }) / 10000, 2);
 
-        $vehicles = Vehicle::where('sale_date', null)->get()->sum('cost') / 100;
+        // Get vehicles and sum their costs
+        // Note: sum() on database bypasses MoneyCast, so we get raw cents values
+        $vehiclesCents = Vehicle::where('sale_date', null)->sum('cost');
+        $vehicles = $vehiclesCents / 100; // Convert cents to dollars manually
 
 
         return [
-            Stat::make('Актуальна сума пулу, $$', Number::format($total, locale: 'sv'))->color('success'),
-            Stat::make('Сума вартості автівок у закупівлі, $$', Number::format($vehicles, locale: 'sv')),
-            Stat::make('Резерв пулу - доступний для закупівлі, $$', Number::format($total - $vehicles, locale: 'sv')),
-            Stat::make('Загальна сума інвестицій без Мажор-інвестора, $$', Number::format($totalInvestAmount, locale: 'sv')),
-            Stat::make('Спільна доля міноритарних інвестицій у пулі (%)', $totalPercents)
+            Stat::make('Актуальна сума пулу, $$', Number::format($total, 2, locale: 'sv'))->color('success'),
+            Stat::make('Сума вартості автівок у закупівлі, $$', Number::format($vehicles, 2, locale: 'sv')),
+            Stat::make('Резерв пулу - доступний для закупівлі, $$', Number::format($total - $vehicles, 2, locale: 'sv')),
+            Stat::make('Загальна сума міноритарних інвестицій у пулі, $$', Number::format($totalInvestAmount, 2, locale: 'sv')),
+            Stat::make('Спільна доля міноритарних інвестицій у пулі (%)', Number::format($totalMinorPercents, 2, locale: 'sv'))
                 ->extraAttributes([
                     'class' => 'cursor-pointer',
                     'onclick' => "window.location.href='investor/users'",

@@ -4,19 +4,25 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\OperationType;
 use App\Events\BoughtAutoEvent;
 use App\Events\TotalChangedEvent;
 use App\Models\Payment;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\Traits\HandlesInvestmentCalculations;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class VehicleService
 {
+    use HandlesInvestmentCalculations;
 
     public function __construct(
         protected PaymentService $paymentService,
         protected TotalService $totalService,
+        protected VehicleCancellationService $cancellationService,
         protected Vehicle $vehicle
     ) {}
 
@@ -51,14 +57,29 @@ class VehicleService
      */
     public function sellVehicle(Vehicle $vehicle, int $actualPrice, Carbon $saleDate = null): Vehicle
     {
-        $vehicle = $this->updateVehicleWhenSold($vehicle, $actualPrice, $saleDate);
+        return DB::transaction(function () use ($vehicle, $actualPrice, $saleDate) {
+            $vehicle = $this->updateVehicleWhenSold($vehicle, $actualPrice, $saleDate);
 
-        $payment = $this->companyCommissions($vehicle);
-        $totalAmount = $this->totalService->createTotal($payment);
-        $this->investIncome($vehicle);
-        TotalChangedEvent::dispatch($totalAmount, 'Продано авто. Прибуток:', $vehicle->profit);
+            $payment = $this->companyCommissions($vehicle);
+            $totalAmount = null;
 
-        return $vehicle;
+            // Only create total if there's a commission payment (positive profit)
+            if ($payment) {
+                $totalAmount = $this->totalService->createTotal($payment);
+            }
+
+            $this->investIncome($vehicle);
+
+            // Events are dispatched after successful transaction
+            $profitAmount = $vehicle->profit ?? 0;
+            if ($totalAmount) {
+                TotalChangedEvent::dispatch($totalAmount, 'Продано авто. Прибуток:', $profitAmount);
+            } else {
+                TotalChangedEvent::dispatch(0, 'Продано авто без прибутку:', $profitAmount);
+            }
+
+            return $vehicle;
+        });
     }
 
     /**
@@ -74,7 +95,7 @@ class VehicleService
         $createdAt = Carbon::parse($vehicle->created_at);
         $duration = $createdAt->diffInDays($soldDate); // sale duration in days
 
-        $vehicle->sale_date ??= $soldDate;
+        $vehicle->sale_date = $soldDate;
         $vehicle->price = $actualPrice;
         $vehicle->profit = $vehicle->price - $vehicle->cost;
         $vehicle->sale_duration = $duration;
@@ -85,21 +106,29 @@ class VehicleService
     /**
      * Company commissions add to Payment
      * @param Vehicle $vehicle
-     * @return Payment
+     * @return Payment|null Returns null if vehicle has zero or negative profit
      */
-    public function companyCommissions(Vehicle $vehicle): Payment
-    {
-        $companyId = User::role('company')->first()->id;
-        $commissions = $vehicle->profit / 2; // 1/2 of profit is company's commissions
-        $payData = [
-            'user_id' => $companyId,
-            'operation_id' => 7, // company commissions
-            'amount' => $commissions,
-            'confirmed' => true,
-            'created_at' => $vehicle->sale_date,
-        ];
 
-        return $this->paymentService->createPayment((array)$payData, true); // true prevents to change the Total until all data have been stored
+    public function companyCommissions(Vehicle $vehicle): ?Payment
+    {
+        if (!$vehicle->profit || $vehicle->profit <= 0) {
+            Log::warning('Vehicle sold with zero or negative profit, skipping commission calculation', [
+                'vehicle_id' => $vehicle->id,
+                'profit' => $vehicle->profit,
+                'cost' => $vehicle->cost,
+                'price' => $vehicle->price,
+                'user_id' => auth()->id()
+            ]);
+            return null;
+        }
+
+        return $this->createCompanyCommissionPayment(
+            $vehicle->profit,
+            OperationType::REVENUE,
+            $vehicle->sale_date,
+            $this->paymentService,
+            $vehicle->id
+        );
     }
 
     /**
@@ -109,21 +138,41 @@ class VehicleService
      */
     public function investIncome(Vehicle $vehicle): int
     {
-        $profitForShare = $vehicle->profit / 2; // 1/2 of profit is company's commissions
-        $investors = User::with('lastContribution')->get();
-        foreach ($investors as $investor) {
-            if (isset($investor->lastContribution)) {
-                $payData = [
-                    'user_id' => $investor->lastContribution->user_id,
-                    'operation_id' => 6,
-                    'amount' => $profitForShare * $investor->lastContribution->percents / 1000000,
-                    'confirmed' => true,
-                    'created_at' => $vehicle->sale_date,
-                ];
-                $this->paymentService->createPayment((array)$payData, true); // true prevents to change the Total until all data have been stored
-            }
-        }
-        return $investors->count();
+        return $this->distributeIncomeToInvestors(
+            $vehicle->profit ?? 0,
+            OperationType::INCOME,
+            $vehicle->sale_date,
+            $this->paymentService,
+            $vehicle->id
+        );
+    }
+
+    /**
+     * Unsell a vehicle (clear sale data and return to "for sale" state)
+     * This is a high-level wrapper around the cancellation service
+     *
+     * @param Vehicle $vehicle
+     * @param string|null $reason
+     * @return bool
+     * @throws \Throwable
+     */
+    public function unsellVehicle(Vehicle $vehicle, ?string $reason = null): bool
+    {
+        $cancelledBy = auth()->user();
+
+        return $this->cancellationService->unsellVehicle($vehicle, $reason, $cancelledBy);
+    }
+
+    /**
+     * Restore a cancelled vehicle sale
+     *
+     * @param Vehicle $vehicle
+     * @return bool
+     * @throws \Throwable
+     */
+    public function restoreVehicleSale(Vehicle $vehicle): bool
+    {
+        return $this->cancellationService->restoreVehicleSale($vehicle);
     }
 
 }

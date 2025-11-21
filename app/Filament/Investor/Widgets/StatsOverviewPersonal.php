@@ -2,9 +2,9 @@
 
 namespace App\Filament\Investor\Widgets;
 
-use App\Models\Contribution;
+use App\Constants\FinancialConstants;
+use App\Enums\OperationType;
 use App\Models\Payment;
-use App\Models\Total;
 use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -21,80 +21,114 @@ class StatsOverviewPersonal extends BaseWidget
     protected function getStats(): array
     {
         $commonTotal = (int) Payment::whereHas('user.roles', function ($query) {
-            $query->where('name', '!=', 'company');
-        })->where('confirmed', true)->sum('amount');
+            $query->where('name', 'investor');
+        })->active()->sum('amount'); // Use active scope to exclude cancelled payments
 
-        $myActualContributionAmount = (int) Payment::where('user_id', auth()->user()->id)->where('confirmed', true)->sum('amount');
-        $myActualContributionPercents = (int) round($myActualContributionAmount/$commonTotal * 1000000);
+        $myActualContributionAmount = Payment::where('user_id', auth()->user()->id)->active()->sum('amount'); // Use active scope to exclude cancelled payments
+        $myActualContributionPercents = round($myActualContributionAmount * FinancialConstants::PERCENTAGE_PRECISION /$commonTotal);
 
-        $myFirstContribution = Payment::where('user_id', auth()->user()->id)
-            ->whereHas('operation', function ($query) {
-                $query->where('key', 'first');
-            })
-            ->first();
-//        dd($myFirstContribution);
+        $myFirstContribution = Payment::where('user_id', auth()->user()->id)->where('operation_id', OperationType::FIRST)->first();
 
-        $myPaymentsTotal = Payment::where('user_id', auth()->user()->id)->where('confirmed', true)->whereIn('operation_id', [1,4,5])->sum('amount');
-        $myTotalIncome = Payment::where('user_id', auth()->user()->id)->whereIn('operation_id', [6,9])->sum('amount');
-        $myTotalGrow = $myFirstContribution ? ($myTotalIncome * 100) / $myFirstContribution->amount * 100 : 0;
-        $myLastYearIncome = Payment::where('user_id', auth()->user()->id)->where('operation_id', 6)->whereYear('created_at', '>=', now()->subDays(365))->sum('amount');
-        $myLastYearGrow = $myFirstContribution ? ($myLastYearIncome * 100) / $myFirstContribution->amount * 100 : 0;
+        $myPaymentsTotal = Payment::where('user_id', auth()->user()->id)->active()->whereIn('operation_id',
+            [OperationType::FIRST,OperationType::CONTRIB,OperationType::WITHDRAW])
+            ->sum('amount');
+
+        $myTotalIncome = Payment::where('user_id', auth()->user()->id)->notCancelled()->whereIn('operation_id', [OperationType::INCOME,OperationType::I_LEASING,])->sum('amount');
+        $myTotalGrow = $myFirstContribution ? $myTotalIncome / $myFirstContribution->amount : 0;
+
+        $myLastYearIncome = Payment::where('user_id', auth()->user()->id)
+            ->notCancelled()
+            ->whereIn('operation_id', [OperationType::INCOME,OperationType::I_LEASING,])
+            ->where('created_at', '>=', now()->subDays(FinancialConstants::DAYS_IN_YEAR))
+            ->sum('amount');
+        $myLastYearGrow = $myFirstContribution ? $myLastYearIncome / $myFirstContribution->amount  : 0;
+
+        $myCurrentYearIncome = Payment::where('user_id', auth()->user()->id)
+            ->notCancelled()
+            ->whereIn('operation_id', [OperationType::INCOME,OperationType::I_LEASING,])
+            ->whereYear('created_at', now()->year)
+            ->sum('amount');
+            $myCurrentYearGrow = $myFirstContribution ? $myCurrentYearIncome / $myFirstContribution->amount  : 0;
+
         $operatorId = User::whereHas('roles', function ($query) {
             $query->where('name', 'operator');
         })->first()->id;
+
         $company = User::where('id', auth()->user()->id)
             ->whereHas('roles', function ($query) {
-            $query->where('name', 'company');
-        })->first();
+                $query->where('name', 'company');
+            })->first();
 
         return [
-            Stat::make('Мій поточний баланс, $', Number::format($myActualContributionAmount ? $myActualContributionAmount / 100 : 0, locale: 'sv'))
+            Stat::make('Мій поточний баланс, $',
+                Number::format($myActualContributionAmount ? $myActualContributionAmount / FinancialConstants::CENTS_PER_DOLLAR: 0, FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : '',
                 ]),
-            Stat::make('Моя доля у сумі пулу (%)', $myActualContributionPercents ? round($myActualContributionPercents / 10000, 2) : 0)
-                ->extraAttributes([
-                'class' => $company ? 'hidden' : '',
-            ]),
             Stat::make('Мій початковий внесок, $',
-                Number::format($myFirstContribution ? $myFirstContribution->amount / 100 : 0, locale: 'sv'))
+                Number::format($myFirstContribution ? $myFirstContribution->amount: 0, FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
                 ->description($myFirstContribution ? $myFirstContribution->created_at : '')
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : '',
                 ]),
             Stat::make('Сума всіх моїх внесків, $',
-                Number::format($myPaymentsTotal ? $myPaymentsTotal / 100 : 0, locale: 'sv'))
+                Number::format($myPaymentsTotal ? $myPaymentsTotal / FinancialConstants::CENTS_PER_DOLLAR: 0, FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
                 ->description('Враховуються тільки внесення та вилучення грошей, без інвест-доходу')
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : '',
                 ]),
+            Stat::make('Моя доля у сумі пулу (%)',
+                $myActualContributionPercents ?
+                    Number::format(round($myActualContributionPercents / FinancialConstants::PERCENTAGE_DISPLAY_DIVISOR, FinancialConstants::DECIMAL_PRECISION), FinancialConstants::DECIMAL_PRECISION, locale: 'sv') : 0)
+                ->extraAttributes([
+                    'class' => $company ? 'hidden' : '',
+                ]),
 
-
-            Stat::make('Мій дохід за весь час, $$', Number::format($myTotalIncome / 100, locale: 'sv'))
+            // 2d row
+            Stat::make('Мій дохід за весь час, $$',
+                Number::format(round($myTotalIncome / FinancialConstants::CENTS_PER_DOLLAR, FinancialConstants::DECIMAL_PRECISION), FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : 'cursor-pointer',
                     'onclick' => "window.location.href='investor/payments'",
                 ]),
-            Stat::make('Мій дохід за весь час, %%', round($myTotalGrow / 100, 2))
+            Stat::make('Мій дохід за весь час, %%',
+                Number::format(round($myTotalGrow, FinancialConstants::DECIMAL_PRECISION), FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
                 ->extraAttributes([
                     'class' => $company ? 'hidden' : 'cursor-pointer',
                     'onclick' => "window.location.href='investor/payments'",
                 ]),
 
-            // TODO will be actual after May 2025
-// Last Year income widgets;
-//            Stat::make('Мій дохід за останній рік, $$', Number::format($myLastYearIncome / 100, locale: 'sv'))
-//                ->description('За 365 днів враховуючи сьогодні')
-//                ->extraAttributes([
-//                    'class' => $company ? 'hidden' : 'cursor-pointer',
-//                    'onclick' => "window.location.href='investor/payments'",
-//                ]),
-//            Stat::make('Мій дохід за останній рік, %%', Number::format($myLastYearGrow / 100, locale: 'sv'))
-//                ->description('За 365 днів враховуючи сьогодні')
-//                ->extraAttributes([
-//                    'class' => $company ? 'hidden' : 'cursor-pointer',
-//                    'onclick' => "window.location.href='investor/payments'",
-//                ]),
+            // Last Year income widgets;
+            Stat::make('Мій дохід за останній рік, $$',
+                Number::format($myLastYearIncome / FinancialConstants::CENTS_PER_DOLLAR, FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
+                ->description('За 365 днів враховуючи сьогодні')
+                ->extraAttributes([
+                    'class' => $company ? 'hidden' : 'cursor-pointer',
+                    'onclick' => "window.location.href='investor/payments'",
+                ]),
+            Stat::make('Мій дохід за останній рік, %%',
+                Number::format($myLastYearGrow, FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
+                ->description('За 365 днів враховуючи сьогодні')
+                ->extraAttributes([
+                    'class' => $company ? 'hidden' : 'cursor-pointer',
+                    'onclick' => "window.location.href='investor/payments'",
+                ]),
+
+            // Current Year income widgets;
+            Stat::make('Мій дохід за поточний рік, $$',
+                Number::format($myCurrentYearIncome / FinancialConstants::CENTS_PER_DOLLAR, FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
+                ->description('З 1-го Січня до сьогодні')
+                ->extraAttributes([
+                    'class' => $company ? 'hidden' : 'cursor-pointer',
+                    'onclick' => "window.location.href='investor/payments'",
+                ]),
+            Stat::make('Мій дохід за поточний рік, %%',
+                Number::format($myCurrentYearGrow, FinancialConstants::DECIMAL_PRECISION, locale: 'sv'))
+                ->description('З 1-го Січня до сьогодні')
+                ->extraAttributes([
+                    'class' => $company ? 'hidden' : 'cursor-pointer',
+                    'onclick' => "window.location.href='investor/payments'",
+                ]),
 
         ];
     }
