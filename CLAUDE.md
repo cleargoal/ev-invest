@@ -141,10 +141,14 @@ For realistic test data, run seeders in this order:
 
 ### Database Backups
 **Event-Driven Strategy** (automatic backups on critical operations):
-- Backups trigger after: vehicle purchase, vehicle sale, vehicle unselling, payment confirmation
-- Storage: `storage/app/backups/` with format `backup-YYYY-MM-DD_HH-ii-ss.sql`
-- Auto-rotation: Keeps 10 most recent backups by default (customizable)
-- See `docs/BACKUP_STRATEGY.md` for full details
+- **Triggers**: Vehicle purchase, vehicle sale, vehicle unselling, payment confirmation
+- **Storage**: `storage/app/backups/` with format `db_backup-YYYY-MM-DD_HH-ii-ss.sql`
+- **Execution**: Background process using `nohup` to prevent blocking web requests
+- **Rotation**: Keeps 10 most recent backups by default (customizable with `--keep`)
+- **Production Setup**:
+  - Fix permissions: `sudo chown -R www-data:www-data storage/ && sudo chmod -R 775 storage/`
+  - Test manually: `php artisan db:backup`
+- See `docs/BACKUP_STRATEGY.md` for details
 
 ### Important Notes
 - **Percentage Recalculation**: Only happens on contribution operations (FIRST/CONTRIB/WITHDRAW), NOT on income distribution (INCOME/REVENUE)

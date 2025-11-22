@@ -53,7 +53,15 @@ php artisan db:backup --keep=20
 
 All backups stored at: `storage/app/backups/`
 
-Filename format: `backup-YYYY-MM-DD_HH-ii-ss.sql`
+Filename format: `db_backup-YYYY-MM-DD_HH-ii-ss.sql`
+
+## Technical Implementation
+
+Backups run in the background using `nohup` to prevent blocking web requests:
+- Uses `exec("nohup /usr/bin/php artisan db:backup >> backup.log 2>&1 &")`
+- This allows critical operations (vehicle sales, payment confirmations) to complete quickly
+- Backup process continues even after the web request finishes
+- Logs output to `storage/logs/backup.log` for troubleshooting
 
 ## Why Event-Driven?
 
@@ -72,8 +80,16 @@ Filename format: `backup-YYYY-MM-DD_HH-ii-ss.sql`
 
 To restore from backup:
 ```bash
-mysql -u username -p database_name < storage/app/backups/backup-YYYY-MM-DD_HH-ii-ss.sql
+mysql -u username -p database_name < storage/app/backups/db_backup-YYYY-MM-DD_HH-ii-ss.sql
 ```
+
+## Production Deployment
+
+After deploying to production, ensure proper setup:
+1. Fix storage permissions: `sudo chown -R www-data:www-data storage/ && sudo chmod -R 775 storage/`
+2. Test backup manually: `php artisan db:backup`
+3. Verify backup file created: `ls -lth storage/app/backups/ | head -3`
+4. Check backup log if issues: `tail -20 storage/logs/backup.log`
 
 ## Monitoring
 
