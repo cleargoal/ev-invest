@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Traits\HandlesInvestmentCalculations;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -31,6 +32,9 @@ class VehicleService
         $vehData['created_at'] = isset($vehData['created_at']) && $vehData['created_at'] !== null ? $vehData['created_at'] : Carbon::now();
         $vehicle = $this->createVehicle($vehData);
         BoughtAutoEvent::dispatch('Придбано авто:', $vehicle);
+
+        // Trigger database backup in background (non-blocking)
+        $this->runBackupInBackground();
 
         return $vehicle;
     }
@@ -77,6 +81,9 @@ class VehicleService
             } else {
                 TotalChangedEvent::dispatch(0, 'Продано авто без прибутку:', $profitAmount);
             }
+
+            // Trigger database backup in background (non-blocking)
+            $this->runBackupInBackground();
 
             return $vehicle;
         });
@@ -160,7 +167,14 @@ class VehicleService
     {
         $cancelledBy = auth()->user();
 
-        return $this->cancellationService->unsellVehicle($vehicle, $reason, $cancelledBy);
+        $result = $this->cancellationService->unsellVehicle($vehicle, $reason, $cancelledBy);
+
+        // Trigger database backup in background (non-blocking)
+        if ($result) {
+            $this->runBackupInBackground();
+        }
+
+        return $result;
     }
 
     /**
@@ -173,6 +187,17 @@ class VehicleService
     public function restoreVehicleSale(Vehicle $vehicle): bool
     {
         return $this->cancellationService->restoreVehicleSale($vehicle);
+    }
+
+    /**
+     * Run database backup in background (non-blocking)
+     */
+    protected function runBackupInBackground(): void
+    {
+        // Run backup command in background using nohup to prevent termination
+        $basePath = base_path();
+        $logFile = storage_path('logs/backup.log');
+        exec("nohup /usr/bin/php $basePath/artisan db:backup >> $logFile 2>&1 &");
     }
 
 }
