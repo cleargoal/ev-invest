@@ -282,9 +282,10 @@ class VehicleCancellationService
         ];
 
         // Use PaymentService to create the payment (ensures contributions are handled correctly)
-        // Use addIncome = false so that contribution percentages are recalculated for all investors
+        // Use addIncome = true so that contribution percentages are NOT recalculated
+        // (unselling reverses amounts only, like selling distributes amounts without recalculation)
         $paymentService = app(\App\Services\PaymentService::class);
-        $compensatingPayment = $paymentService->createPayment($compensatingPaymentData, false);
+        $compensatingPayment = $paymentService->createPayment($compensatingPaymentData, true);
     }
 
     /**

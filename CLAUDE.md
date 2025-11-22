@@ -17,8 +17,10 @@ This is a Laravel 11 application with Filament admin panels for managing an inve
 - `composer install` - Install PHP dependencies
 - `vendor/bin/pint` - Run Laravel Pint code formatter
 
-### Custom Diagnostic Commands
-- `php artisan diagnose:missing-contributions --investors=1,7` - Diagnose missing contribution records for specific investors
+### Custom Commands
+- `php artisan diagnose:missing-contributions --investors=1,7` - Diagnose missing contribution records
+- `php artisan db:backup` - Create database backup (automatic rotation keeps 10 most recent)
+- `php artisan db:backup --keep=20` - Create backup and keep 20 most recent backups
 
 ### Frontend Commands  
 - `npm run dev` - Start Vite development server with hot reload
@@ -62,12 +64,12 @@ Key services handle business logic:
 - Panel access controlled in `User::canAccessPanel()`
 
 ### Business Logic Flow
-1. **Investment Process**: Investors make payments (FIRST/CONTRIB operations) through the system
-2. **Payment Confirmation**: Operators confirm/validate payments when funds are received  
-3. **Contribution Tracking**: System creates contribution records and calculates user percentages
-4. **Vehicle Operations**: Company buys vehicles (BUY_CAR), sells them (SELL_CAR), or unsells them
-5. **Profit Distribution**: Vehicle sales trigger automatic income distribution to investors and company revenue
-6. **Pool Management**: Running totals track available investment pool balance
+1. **Investment Process**: Investors make payments (FIRST/CONTRIB operations)
+2. **Payment Confirmation**: Operators confirm payments → creates contributions → **recalculates ALL percentages**
+3. **Vehicle Purchase**: Company buys vehicles → **auto backup**
+4. **Vehicle Sale**: Distributes profit using **existing percentages** (no recalc) → **auto backup**
+5. **Vehicle Unselling**: Reverses income using **existing percentages** (no recalc) → **auto backup**
+6. **Percentage Logic**: Only contribution operations (FIRST/CONTRIB/WITHDRAW) recalculate percentages; income operations (INCOME/REVENUE) use existing percentages
 
 ### Operation Types & Money Flow
 - **FIRST/CONTRIB** (Positive): Initial investments and additional contributions
@@ -137,23 +139,19 @@ For realistic test data, run seeders in this order:
 3. `PaymentSeeder` - Creates vehicle purchase payments + investor payments
 4. `TotalSeeder` - Calculates running pool totals
 
-### Important Notes
-- **Contribution Percentages**: After seeding investor payments, manually set contribution percentages in the admin interface for profit distribution to work
-- **Vehicle Unselling Logic**: When vehicles are unsold, they are completely reset to look like never-sold vehicles (all fields set to null)
-- **Vehicle State Management**: 
-  - For-sale vehicles: `sale_date IS NULL AND cancelled_at IS NULL`
-  - Sold vehicles: `sale_date IS NOT NULL AND cancelled_at IS NULL`
-  - Cancelled vehicles: `sale_date IS NOT NULL AND cancelled_at IS NOT NULL`
-  - Unsold vehicles: Reset to for-sale state (all null values)
-- **VehicleResource Filtering**: Uses AND logic to show only truly available vehicles
-- **Zero-Profit Vehicle Sales**: Application gracefully handles vehicles sold with zero or negative profit (no crash, proper logging)
-- **Money Display**: Always check widget calculations handle cents→dollars conversion for database sum() operations
+### Database Backups
+**Event-Driven Strategy** (automatic backups on critical operations):
+- **Triggers**: Vehicle purchase, vehicle sale, vehicle unselling, payment confirmation
+- **Storage**: `storage/app/backups/` with format `db_backup-YYYY-MM-DD_HH-ii-ss.sql`
+- **Execution**: Background process using `nohup` to prevent blocking web requests
+- **Rotation**: Keeps 10 most recent backups by default (customizable with `--keep`)
+- **Production Setup**:
+  - Fix permissions: `sudo chown -R www-data:www-data storage/ && sudo chmod -R 775 storage/`
+  - Test manually: `php artisan db:backup`
+- See `docs/BACKUP_STRATEGY.md` for details
 
-## Recent Fixes Applied
-- Fixed production crash when selling vehicles with zero/negative profit
-- Corrected vehicle unselling logic to completely reset vehicle state
-- Updated VehicleResource query filtering for proper business logic
-- Resolved database configuration issues (SQLite → MySQL for testing)
-- Fixed multiple MoneyCast conversion issues in tests
-- Updated PaymentFactory to generate proper default values
-- Fixed foreign key constraint violations in tests
+### Important Notes
+- **Percentage Recalculation**: Only happens on contribution operations (FIRST/CONTRIB/WITHDRAW), NOT on income distribution (INCOME/REVENUE)
+- **Vehicle Unselling**: Completely resets vehicle to for-sale state (all sale fields set to null), reverses contributions using existing percentages
+- **Zero-Profit Sales**: Gracefully handled with logging, no crash
+- **Money Display**: Widget calculations must handle cents→dollars conversion for database sum() operations

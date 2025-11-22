@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\OperationType;
 use App\Events\TotalChangedEvent;
 use App\Models\Payment;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -93,6 +94,9 @@ class PaymentService
 
             // Events are dispatched after successful transaction
             TotalChangedEvent::dispatch($totalAmount, 'Внесок інвестора', $payment->amount);
+
+            // Trigger database backup in background (non-blocking)
+            $this->runBackupInBackground();
         });
     }
 
@@ -104,5 +108,15 @@ class PaymentService
         $this->notificationService->notifyNewPayment();
     }
 
+    /**
+     * Run database backup in background (non-blocking)
+     */
+    protected function runBackupInBackground(): void
+    {
+        // Run backup command in background using nohup to prevent termination
+        $basePath = base_path();
+        $logFile = storage_path('logs/backup.log');
+        exec("nohup /usr/bin/php $basePath/artisan db:backup >> $logFile 2>&1 &");
+    }
 
 }
