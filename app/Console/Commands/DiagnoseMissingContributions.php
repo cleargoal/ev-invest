@@ -59,7 +59,9 @@ class DiagnoseMissingContributions extends Command
 
                 $this->info("User: {$user->name}");
                 $this->info("Email: {$user->email}");
-                $this->info("Actual Contribution: \${$user->actual_contribution}");
+                $lastContribution = $user->lastContribution;
+                $contributionAmount = $lastContribution ? $lastContribution->amount : 0;
+                $this->info("Last Contribution: \${$contributionAmount}");
 
                 // Check contributions
                 $contributionCount = Contribution::where('user_id', $investorId)->count();
@@ -183,10 +185,11 @@ class DiagnoseMissingContributions extends Command
                     $this->warn("Investor {$investorId}: {$contribsWithoutPayments} contributions without payment_id");
                 }
 
-                // Check actual_contribution vs latest contribution amount
+                // Data integrity check - user's lastContribution relationship consistency
                 $latestContrib = Contribution::where('user_id', $investorId)->orderBy('id', 'desc')->first();
-                if ($latestContrib && abs($user->actual_contribution - $latestContrib->amount) > 0.01) {
-                    $this->warn("Investor {$investorId}: actual_contribution (\${$user->actual_contribution}) != latest contribution (\${$latestContrib->amount})");
+                $user->load('lastContribution');
+                if ($latestContrib && $user->lastContribution && $latestContrib->id !== $user->lastContribution->id) {
+                    $this->warn("Investor {$investorId}: lastContribution relationship mismatch");
                 }
             }
 
@@ -235,7 +238,7 @@ class DiagnoseMissingContributions extends Command
 
             foreach ($investorIds as $investorId) {
                 $this->info("-- Investor {$investorId} Investigation --");
-                $this->line("SELECT id, name, email, actual_contribution FROM users WHERE id = {$investorId};");
+                $this->line("SELECT id, name, email FROM users WHERE id = {$investorId};");
                 $this->line("SELECT COUNT(*) as total_contributions FROM contributions WHERE user_id = {$investorId};");
                 $this->line("SELECT id, amount, percents, created_at FROM contributions WHERE user_id = {$investorId} ORDER BY id DESC LIMIT 5;");
                 $this->line("SELECT COUNT(*) as recent_contributions FROM contributions WHERE user_id = {$investorId} AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR);");

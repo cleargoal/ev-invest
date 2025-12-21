@@ -35,41 +35,52 @@ class ContributionService
         $newContribution->user_id = $payment->user_id;
         $newContribution->percents = $lastContrib ? $lastContrib->percents : 0;
 
-        // Handle different operation types correctly
+        // Calculate new contribution amount
+        // Since WITHDRAW payments are stored as negative values, we can simply add
         $baseAmount = $lastContrib ? $lastContrib->amount : 0;
-
-        // WITHDRAW operations should subtract from the contribution amount
-        if ($payment->operation_id === \App\Enums\OperationType::WITHDRAW->value) {
-            $newContribution->amount = $baseAmount - $payment->amount;
-        } else {
-            // All other operations add to the contribution amount
-            $newContribution->amount = $baseAmount + $payment->amount;
-        }
+        $newContribution->amount = $baseAmount + $payment->amount;
 
         $newContribution->save();
-
-        // Update user's actual contribution
-        // Both newContribution->amount and actual_contribution use MoneyCast, so we can assign directly
-        $user->update(['actual_contribution' => $newContribution->amount]);
 
         return $newContribution;
     }
 
     /**
      * Calculate contributions of all investors
-     * @param int $paymentId
+     * @param Payment $payment
      * @param Carbon $createdAt
      * @return int
      */
-    public function contributions(int $paymentId, Carbon $createdAt): int
+    public function contributions(Payment $payment, Carbon $createdAt): int
     {
-        // Only load users who actually have contributions for better performance
+        // Check if payment owner has any contributions yet
+        $paymentOwnerHasContributions = Contribution::where('user_id', $payment->user_id)->exists();
+
+        // If this is their first payment, create their initial contribution
+        if (!$paymentOwnerHasContributions) {
+            $firstContribution = new Contribution();
+            $firstContribution->payment_id = $payment->id;
+            $firstContribution->user_id = $payment->user_id;
+            $firstContribution->amount = $payment->amount;
+            $firstContribution->percents = 0; // Will be calculated below
+            $firstContribution->created_at = $createdAt;
+            $firstContribution->updated_at = $createdAt;
+            $firstContribution->save();
+        }
+
+        // Load all users who have contributions
         $usersWithLastContributions = User::whereHas('contributions')
             ->with('lastContribution')
             ->get();
 
-        $totalAmount = $usersWithLastContributions->sum(function ($user) {
-            return optional($user->lastContribution)->amount ?? 0;
+        // Calculate total amount including the current payment's effect
+        $totalAmount = $usersWithLastContributions->sum(function ($user) use ($payment, $paymentOwnerHasContributions) {
+            $lastAmount = optional($user->lastContribution)->amount ?? 0;
+            // If this user is the payment owner AND they had contributions before, add the payment amount
+            if ($user->id === $payment->user_id && $paymentOwnerHasContributions) {
+                return $lastAmount + $payment->amount;
+            }
+            return $lastAmount;
         });
 
 
@@ -94,12 +105,18 @@ class ContributionService
                     ]);
                 }
 
-                $userContributionPercent = ($lastContribution->amount / $totalAmount) * FinancialConstants::PERCENTAGE_PRECISION;
+                // Calculate the user's current amount (including payment if this is the payment owner)
+                $currentAmount = $lastContribution->amount;
+                if ($user->id === $payment->user_id && $paymentOwnerHasContributions) {
+                    $currentAmount += $payment->amount;
+                }
+
+                $userContributionPercent = ($currentAmount / $totalAmount) * FinancialConstants::PERCENTAGE_PRECISION;
                 $contributionsData[] = [
-                    'user_id' => $user->id, // Fixed: Use the user ID from the loop, not from lastContribution
-                    'payment_id' => $paymentId,
+                    'user_id' => $user->id,
+                    'payment_id' => $payment->id,
                     'percents' => $userContributionPercent,
-                    'amount' => (int) round($lastContribution->amount * FinancialConstants::CENTS_PER_DOLLAR), // Convert dollar amount back to cents for bulk insert
+                    'amount' => (int) round($currentAmount * FinancialConstants::CENTS_PER_DOLLAR), // Convert dollar amount back to cents for bulk insert
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
@@ -116,16 +133,6 @@ class ContributionService
         // Single bulk insert operation instead of N individual saves
         if (!empty($contributionsData)) {
             Contribution::insert($contributionsData);
-
-            // Update actual_contribution for all affected users
-            // contributionsData contains amounts in cents, but MoneyCast expects dollars and converts to cents
-            // So we need to convert back to dollars for the MoneyCast to work correctly
-            foreach ($contributionsData as $contributionData) {
-                $userId = $contributionData['user_id'];
-                $newAmountInDollars = $contributionData['amount'] / FinancialConstants::CENTS_PER_DOLLAR;
-
-                User::where('id', $userId)->update(['actual_contribution' => $newAmountInDollars]);
-            }
         }
 
         return (int) round($totalAmount * FinancialConstants::CENTS_PER_DOLLAR); // Convert total to cents for consistency

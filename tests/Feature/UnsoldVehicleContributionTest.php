@@ -49,10 +49,7 @@ class UnsoldVehicleContributionTest extends TestCase
             'percents' => 1000000, // 100% for simplicity
             'amount' => 100000,
         ]);
-        
-        // Update user's actual contribution
-        $this->investorUser->update(['actual_contribution' => 100000]);
-        
+
         // Create operations
         \App\Models\Operation::factory()->create(['id' => OperationType::CONTRIB->value, 'title' => 'Contribution', 'key' => 'contrib', 'description' => 'Investor contribution']);
         \App\Models\Operation::factory()->create(['id' => OperationType::REVENUE->value, 'title' => 'Revenue', 'key' => 'revenue', 'description' => 'Company revenue']);
@@ -74,7 +71,7 @@ class UnsoldVehicleContributionTest extends TestCase
 
         // Check initial state
         $initialContributions = Contribution::where('user_id', $this->investorUser->id)->count();
-        $initialBalance = $this->investorUser->actual_contribution;
+        $initialBalance = $this->investorUser->lastContribution->amount;
         
         echo "Initial state:\n";
         echo "  Investor contributions: {$initialContributions}\n";
@@ -87,7 +84,7 @@ class UnsoldVehicleContributionTest extends TestCase
         // Check state after selling
         $afterSaleContributions = Contribution::where('user_id', $this->investorUser->id)->count();
         $this->investorUser->refresh();
-        $afterSaleBalance = $this->investorUser->actual_contribution;
+        $afterSaleBalance = $this->investorUser->lastContribution->amount;
         
         echo "\nAfter selling vehicle:\n";
         echo "  Investor contributions: {$afterSaleContributions}\n";
@@ -116,7 +113,7 @@ class UnsoldVehicleContributionTest extends TestCase
         // Check state after unselling
         $afterUnsellContributions = Contribution::where('user_id', $this->investorUser->id)->count();
         $this->investorUser->refresh();
-        $afterUnsellBalance = $this->investorUser->actual_contribution;
+        $afterUnsellBalance = $this->investorUser->lastContribution->amount;
         
         echo "\nAfter unselling vehicle:\n";
         echo "  Investor contributions: {$afterUnsellContributions}\n";
@@ -165,16 +162,14 @@ class UnsoldVehicleContributionTest extends TestCase
             'percents' => 333333, // ~33%
             'amount' => 50000,
         ]);
-        
-        $secondInvestor->update(['actual_contribution' => 50000]);
-        
+
         // Update first investor's percentage to ~67% (100000 / 150000)
         $lastContrib = Contribution::where('user_id', $this->investorUser->id)->latest()->first();
         $lastContrib->update(['percents' => 666667]);
         
         echo "Setup: Two investors with different contribution percentages\n";
-        echo "  Investor 1: \${$this->investorUser->actual_contribution} (~67%)\n";
-        echo "  Investor 2: \${$secondInvestor->actual_contribution} (~33%)\n";
+        echo "  Investor 1: \${$this->investorUser->lastContribution->amount} (~67%)\n";
+        echo "  Investor 2: \${$secondInvestor->lastContribution->amount} (~33%)\n";
         
         // Create vehicle and sell it
         $vehicle = Vehicle::factory()->create([
@@ -185,8 +180,8 @@ class UnsoldVehicleContributionTest extends TestCase
         ]);
         
         // Record initial balances
-        $initialBalance1 = $this->investorUser->actual_contribution;
-        $initialBalance2 = $secondInvestor->actual_contribution;
+        $initialBalance1 = $this->investorUser->lastContribution->amount;
+        $initialBalance2 = $secondInvestor->lastContribution->amount;
         
         // Sell vehicle with profit
         $this->vehicleService->sellVehicle($vehicle, 950000); // $9500, profit = $1500
@@ -194,8 +189,8 @@ class UnsoldVehicleContributionTest extends TestCase
         // Check balances after selling
         $this->investorUser->refresh();
         $secondInvestor->refresh();
-        $afterSaleBalance1 = $this->investorUser->actual_contribution;
-        $afterSaleBalance2 = $secondInvestor->actual_contribution;
+        $afterSaleBalance1 = $this->investorUser->lastContribution->amount;
+        $afterSaleBalance2 = $secondInvestor->lastContribution->amount;
         
         echo "\nAfter selling:\n";
         echo "  Investor 1: \${$afterSaleBalance1} (was \${$initialBalance1})\n";
@@ -212,8 +207,8 @@ class UnsoldVehicleContributionTest extends TestCase
         // Check balances after unselling
         $this->investorUser->refresh();
         $secondInvestor->refresh();
-        $afterUnsellBalance1 = $this->investorUser->actual_contribution;
-        $afterUnsellBalance2 = $secondInvestor->actual_contribution;
+        $afterUnsellBalance1 = $this->investorUser->lastContribution->amount;
+        $afterUnsellBalance2 = $secondInvestor->lastContribution->amount;
         
         echo "\nAfter unselling:\n";
         echo "  Investor 1: \${$afterUnsellBalance1} (should be \${$initialBalance1})\n";
@@ -269,7 +264,7 @@ class UnsoldVehicleContributionTest extends TestCase
         
         // Verify that cancelled payments don't count in future contribution calculations
         $this->investorUser->refresh();
-        $finalBalance = $this->investorUser->actual_contribution;
+        $finalBalance = $this->investorUser->lastContribution->amount;
         
         echo "Final investor balance: \${$finalBalance}\n";
         

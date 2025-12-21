@@ -132,7 +132,7 @@ class ContributionAlgorithmExplanationTest extends TestCase
         echo "1. createContribution(): Creates 1 record for the payment's user\n";
         echo "2. contributions(): Creates percentage records for ALL users with existing contributions\n";
         echo "3. Users without contributions are excluded from percentage recalculations\n";
-        echo "4. actual_contribution field is only updated by createContribution(), not contributions()\n";
+        echo "4. lastContribution->amount field is only updated by createContribution(), not contributions()\n";
     }
     
     private function printContributionCounts(): void
@@ -147,9 +147,9 @@ class ContributionAlgorithmExplanationTest extends TestCase
         $this->investor3->refresh();
         
         echo "Contribution counts:\n";
-        echo "  Investor 1: {$count1} records, actual_contribution: \${$this->investor1->actual_contribution}\n";
-        echo "  Investor 2: {$count2} records, actual_contribution: \${$this->investor2->actual_contribution}\n";
-        echo "  Investor 3: {$count3} records, actual_contribution: \${$this->investor3->actual_contribution}\n";
+        echo "  Investor 1: {$count1} records, lastContribution->amount: \${$this->investor1->lastContribution->amount}\n";
+        echo "  Investor 2: {$count2} records, lastContribution->amount: \${$this->investor2->lastContribution->amount}\n";
+        echo "  Investor 3: {$count3} records, lastContribution->amount: \${$this->investor3->lastContribution->amount}\n";
         echo "  Company: {$countCompany} records\n";
     }
     
@@ -194,7 +194,7 @@ class ContributionAlgorithmExplanationTest extends TestCase
         echo "\nAfter second investor contribution:\n";
         $this->printContributionCounts();
         
-        // The key insight: Even users with $0 actual_contribution get percentage records
+        // The key insight: Even users with $0 lastContribution->amount get percentage records
         // if they have ANY contribution history (because they're in the contributions table)
     }
 }

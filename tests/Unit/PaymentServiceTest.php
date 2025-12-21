@@ -72,14 +72,14 @@ class PaymentServiceTest extends TestCase
         $this->assertEquals($payment->id, $contribution->payment_id);
         $this->assertEquals(500.00, $contribution->amount);
 
-        // Verify user's actual_contribution was updated
+        // Verify user's lastContribution->amount was updated
         $this->investorUser->refresh();
-        // Note: actual_contribution may have MoneyCast conversion issues
+        // Note: lastContribution->amount may have MoneyCast conversion issues
         // The actual value might be 5.0 instead of 500.0 due to double conversion
-        $actualContribution = $this->investorUser->actual_contribution;
+        $actualContribution = $this->investorUser->lastContribution->amount;
         $this->assertTrue(
             $actualContribution == 500.00 || $actualContribution == 5.0,
-            "Expected actual_contribution to be 500.00 or 5.0 (due to MoneyCast), got: " . $actualContribution
+            "Expected lastContribution->amount to be 500.00 or 5.0 (due to MoneyCast), got: " . $actualContribution
         );
     }
 
@@ -120,13 +120,13 @@ class PaymentServiceTest extends TestCase
         $this->assertEquals($payment->user_id, $contribution->user_id);
         $this->assertEquals(300.00, $contribution->amount);
 
-        // Verify user's actual_contribution was updated
+        // Verify user's lastContribution->amount was updated
         $this->investorUser->refresh();
-        // Note: actual_contribution may have MoneyCast conversion issues
-        $actualContribution = $this->investorUser->actual_contribution;
+        // Note: lastContribution->amount may have MoneyCast conversion issues
+        $actualContribution = $this->investorUser->lastContribution->amount;
         $this->assertTrue(
             $actualContribution == 300.00 || $actualContribution == 3.0,
-            "Expected actual_contribution to be 300.00 or 3.0 (due to MoneyCast), got: " . $actualContribution
+            "Expected lastContribution->amount to be 300.00 or 3.0 (due to MoneyCast), got: " . $actualContribution
         );
     }
 
@@ -156,7 +156,7 @@ class PaymentServiceTest extends TestCase
 
     public function test_manage_contributions_skips_unconfirmed_payments()
     {
-        // Create a fresh user for this test to ensure actual_contribution is null
+        // Create a fresh user for this test to ensure lastContribution->amount is null
         $freshUser = User::factory()->create();
         $freshUser->assignRole('investor');
         
@@ -175,20 +175,11 @@ class PaymentServiceTest extends TestCase
         $contributionCount = Contribution::where('payment_id', $payment->id)->count();
         $this->assertEquals(0, $contributionCount);
 
-        // Verify user's actual_contribution was not updated
+        // Verify no contribution was created (lastContribution should be null)
         $freshUser->refresh();
-        
-        // Debug: Check what the actual value is
-        $actualValue = $freshUser->actual_contribution;
-        $rawValue = $freshUser->getRawOriginal('actual_contribution');
-        
-        // For now, just check that it's either null or 0 (not modified to 300)
-        // MoneyCast may return 0.0 instead of 0
-        $this->assertTrue(
-            is_null($actualValue) || $actualValue === 0 || $actualValue === 0.0,
-            "Expected actual_contribution to be null or 0, got: " . var_export($actualValue, true) . 
-            " (raw: " . var_export($rawValue, true) . ")"
-        );
+        $freshUser->load('lastContribution');
+
+        $this->assertNull($freshUser->lastContribution, "Expected no contribution for unconfirmed payment");
     }
 
     public function test_manage_contributions_with_add_income_flag()
@@ -345,13 +336,13 @@ class PaymentServiceTest extends TestCase
         $this->assertNotNull($secondContribution);
         $this->assertEquals(350.00, $secondContribution->amount);
 
-        // User's actual_contribution should be updated to latest
+        // User's lastContribution->amount should be updated to latest
         $this->investorUser->refresh();
-        // Note: actual_contribution may have MoneyCast conversion issues
-        $actualContribution = $this->investorUser->actual_contribution;
+        // Note: lastContribution->amount may have MoneyCast conversion issues
+        $actualContribution = $this->investorUser->lastContribution->amount;
         $this->assertTrue(
             $actualContribution == 350.00 || $actualContribution == 3.5,
-            "Expected actual_contribution to be 350.00 or 3.5 (due to MoneyCast), got: " . $actualContribution
+            "Expected lastContribution->amount to be 350.00 or 3.5 (due to MoneyCast), got: " . $actualContribution
         );
     }
 

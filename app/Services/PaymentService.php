@@ -69,12 +69,8 @@ class PaymentService
     public function manageContributions(Payment $payment, bool $addIncome = false): bool
     {
         return DB::transaction(function () use ($payment, $addIncome) {
-            if ($payment->confirmed) {
-                $this->contributionService->createContribution($payment);
-            }
-
             if (!$addIncome && $payment->confirmed) { // IF not add investors income when car sold. Just for operations of investors add or withdrawal
-                $this->contributionService->contributions($payment->id, $payment->created_at);
+                $this->contributionService->contributions($payment, $payment->created_at);
             }
 
             return true;

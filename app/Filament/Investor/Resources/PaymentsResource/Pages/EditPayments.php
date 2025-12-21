@@ -29,7 +29,7 @@ class EditPayments extends EditRecord
     {
         $data['user_id'] = auth()->id();
         $data['amount'] = abs(str_replace(',', '.', $data['amount']));
-        if($data['operation_id'] === OperationType::WITHDRAW) {
+        if((int)$data['operation_id'] === OperationType::WITHDRAW->value) {
             $data['amount'] = $data['amount'] * -1;
         }
 

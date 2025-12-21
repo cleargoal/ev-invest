@@ -87,16 +87,16 @@ class AllOperationsContributionTest extends TestCase
             $this->assertEquals($payment->user_id, $contribution->user_id);
             $this->assertEquals($operation['expected_total'], $contribution->amount);
             
-            // Verify user's actual_contribution was updated
+            // Verify user's lastContribution->amount was updated
             $this->investorUser->refresh();
-            // Note: actual_contribution may have MoneyCast conversion issues
-            $actualContribution = $this->investorUser->actual_contribution;
+            // Note: lastContribution->amount may have MoneyCast conversion issues
+            $actualContribution = $this->investorUser->lastContribution->amount;
             $expectedValue = $operation['expected_total'];
             $convertedValue = $expectedValue / 100; // Potential MoneyCast conversion
             
             $this->assertTrue(
                 $actualContribution == $expectedValue || $actualContribution == $convertedValue,
-                "Expected actual_contribution to be {$expectedValue} or {$convertedValue} (due to MoneyCast), got: " . $actualContribution
+                "Expected lastContribution->amount to be {$expectedValue} or {$convertedValue} (due to MoneyCast), got: " . $actualContribution
             );
             
             echo "✅ {$operation['type']->label()}: Payment created, contribution created, user balance updated to \${$operation['expected_total']}\n";
@@ -190,25 +190,25 @@ class AllOperationsContributionTest extends TestCase
         $this->assertGreaterThanOrEqual(1, $firstContributions->count(), 'First investor should have at least 1 contribution');
         $this->assertGreaterThanOrEqual(1, $secondContributions->count(), 'Second investor should have at least 1 contribution');
         
-        // Verify actual_contribution is updated correctly
+        // Verify lastContribution->amount is updated correctly
         $this->investorUser->refresh();
         $secondInvestor->refresh();
         
-        // Note: actual_contribution may have MoneyCast conversion issues
-        $firstActual = $this->investorUser->actual_contribution;
-        $secondActual = $secondInvestor->actual_contribution;
+        // Note: lastContribution->amount may have MoneyCast conversion issues
+        $firstActual = $this->investorUser->lastContribution->amount;
+        $secondActual = $secondInvestor->lastContribution->amount;
         
         $this->assertTrue(
             $firstActual == 1000.00 || $firstActual == 10.0,
-            "Expected first investor actual_contribution to be 1000.00 or 10.0 (due to MoneyCast), got: " . $firstActual
+            "Expected first investor lastContribution->amount to be 1000.00 or 10.0 (due to MoneyCast), got: " . $firstActual
         );
         $this->assertTrue(
             $secondActual == 500.00 || $secondActual == 5.0,
-            "Expected second investor actual_contribution to be 500.00 or 5.0 (due to MoneyCast), got: " . $secondActual
+            "Expected second investor lastContribution->amount to be 500.00 or 5.0 (due to MoneyCast), got: " . $secondActual
         );
         
         echo "✅ Contributions and percentages calculated correctly\n";
-        echo "   First investor actual_contribution: \${$this->investorUser->actual_contribution}\n";
-        echo "   Second investor actual_contribution: \${$secondInvestor->actual_contribution}\n";
+        echo "   First investor lastContribution->amount: \${$this->investorUser->lastContribution->amount}\n";
+        echo "   Second investor lastContribution->amount: \${$secondInvestor->lastContribution->amount}\n";
     }
 }

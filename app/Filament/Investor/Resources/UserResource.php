@@ -59,7 +59,7 @@ class UserResource extends Resource
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('email')->searchable()->sortable(),
-                TextColumn::make('actual_contribution')
+                TextColumn::make('lastContribution.amount')
                     ->money('USD')->width('5rem')->alignment(Alignment::Center)->label('Розмір внеску')
                     ->sortable(),
                 TextColumn::make('lastContribution.percents')

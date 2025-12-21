@@ -13,7 +13,7 @@ class WidgetPersonalChartsService
     public function collectUserPayments(): array
     {
         $userId = Auth::id();
-        $userPayments = Payment::where('user_id', $userId)->notCancelled()->orderBy('created_at')->get();
+        $userPayments = Payment::where('user_id', $userId)->active()->orderBy('created_at')->get();
         $labels = [];
         $allTotals = [];
         $incomeTotals = [];
@@ -48,7 +48,7 @@ class WidgetPersonalChartsService
         // Get all income payments for the user (INCOME and I_LEASING)
         $incomePayments = Payment::where('user_id', $userId)
             ->whereIn('operation_id', [OperationType::INCOME->value, OperationType::I_LEASING->value])
-            ->notCancelled()
+            ->active()
             ->orderBy('created_at')
             ->get();
 

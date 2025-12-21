@@ -75,11 +75,11 @@ class CompleteUnsoldContributionFlowTest extends TestCase
         $this->investor2->refresh();
         
         echo "Initial balances:\n";
-        echo "  Investor 1: \${$this->investor1->actual_contribution}\n";
-        echo "  Investor 2: \${$this->investor2->actual_contribution}\n";
+        echo "  Investor 1: \${$this->investor1->lastContribution->amount}\n";
+        echo "  Investor 2: \${$this->investor2->lastContribution->amount}\n";
         
-        $initialBalance1 = $this->investor1->actual_contribution;
-        $initialBalance2 = $this->investor2->actual_contribution;
+        $initialBalance1 = $this->investor1->lastContribution->amount;
+        $initialBalance2 = $this->investor2->lastContribution->amount;
         
         // Also get the actual contribution amounts from the contributions table
         $initialContrib1 = Contribution::where('user_id', $this->investor1->id)->orderBy('id', 'desc')->first();
@@ -104,11 +104,11 @@ class CompleteUnsoldContributionFlowTest extends TestCase
         $this->investor2->refresh();
         
         echo "After selling (profit distributed):\n";
-        echo "  Investor 1: \${$this->investor1->actual_contribution} (increase: " . ($this->investor1->actual_contribution - $initialBalance1) . ")\n";
-        echo "  Investor 2: \${$this->investor2->actual_contribution} (increase: " . ($this->investor2->actual_contribution - $initialBalance2) . ")\n";
+        echo "  Investor 1: \${$this->investor1->lastContribution->amount} (increase: " . ($this->investor1->lastContribution->amount - $initialBalance1) . ")\n";
+        echo "  Investor 2: \${$this->investor2->lastContribution->amount} (increase: " . ($this->investor2->lastContribution->amount - $initialBalance2) . ")\n";
         
-        $afterSaleBalance1 = $this->investor1->actual_contribution;
-        $afterSaleBalance2 = $this->investor2->actual_contribution;
+        $afterSaleBalance1 = $this->investor1->lastContribution->amount;
+        $afterSaleBalance2 = $this->investor2->lastContribution->amount;
         
         // Verify that balances increased
         $this->assertGreaterThan($initialBalance1, $afterSaleBalance1);
@@ -155,8 +155,8 @@ class CompleteUnsoldContributionFlowTest extends TestCase
         $this->investor2->refresh();
         
         echo "After unselling (income reversed):\n";
-        echo "  Investor 1: \${$this->investor1->actual_contribution} (should be \${$initialBalance1})\n";
-        echo "  Investor 2: \${$this->investor2->actual_contribution} (should be \${$initialBalance2})\n";
+        echo "  Investor 1: \${$this->investor1->lastContribution->amount} (should be \${$initialBalance1})\n";
+        echo "  Investor 2: \${$this->investor2->lastContribution->amount} (should be \${$initialBalance2})\n";
         
         // Step 5: Verify complete reversal
         echo "\n--- Step 5: Verification ---\n";
@@ -213,8 +213,8 @@ class CompleteUnsoldContributionFlowTest extends TestCase
         echo "  Cancelled income payments for Investor 2: {$cancelledIncome2}\n";
         
         // Assertions - handle MoneyCast conversion issues
-        $actualBalance1 = $this->investor1->actual_contribution;
-        $actualBalance2 = $this->investor2->actual_contribution;
+        $actualBalance1 = $this->investor1->lastContribution->amount;
+        $actualBalance2 = $this->investor2->lastContribution->amount;
         
         // The balances should return to their initial state (before the vehicle sale)
         // Use the captured initial values as the expected final values

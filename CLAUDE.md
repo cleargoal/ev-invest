@@ -86,7 +86,7 @@ Key services handle business logic:
 - Relationships managed through Eloquent models with proper foreign keys
 
 ### Money Handling & Casts
-- **MoneyCast**: Used across models (Vehicle, Payment, Contribution, Total, User.actual_contribution)
+- **MoneyCast**: Used across models (Vehicle, Payment, Contribution, Total)
 - **Database Storage**: All monetary values stored in cents for precision
 - **Application Display**: MoneyCast automatically converts cents ↔ dollars
 - **Important**: Database aggregations (sum/avg) bypass MoneyCast and return raw cents

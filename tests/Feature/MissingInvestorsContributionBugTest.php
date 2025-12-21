@@ -113,13 +113,13 @@ class MissingInvestorsContributionBugTest extends TestCase
             echo "  {$user->name}: Last contribution ID#{$lastId}, Amount:\${$lastAmount}\n";
         }
         
-        // Step 5: Check actual_contribution values
-        echo "\n--- Step 5: Check actual_contribution Values ---\n";
+        // Step 5: Check lastContribution->amount values
+        echo "\n--- Step 5: Check lastContribution->amount Values ---\n";
         
         foreach ($this->investors as $num => $investor) {
             $investor->refresh();
             $contributionCount = Contribution::where('user_id', $investor->id)->count();
-            echo "  Investor {$num}: actual_contribution=\${$investor->actual_contribution}, total_records={$contributionCount}\n";
+            echo "  Investor {$num}: lastContribution->amount=\${$investor->lastContribution->amount}, total_records={$contributionCount}\n";
         }
         
         // Step 6: Identify the problem
@@ -160,7 +160,7 @@ class MissingInvestorsContributionBugTest extends TestCase
         foreach ($this->investors as $num => $investor) {
             $investor->refresh();
             $contributionCount = Contribution::where('user_id', $investor->id)->count();
-            echo "  Investor {$num}: \${$investor->actual_contribution} ({$contributionCount} records)\n";
+            echo "  Investor {$num}: \${$investor->lastContribution->amount} ({$contributionCount} records)\n";
         }
     }
 
@@ -198,8 +198,8 @@ class MissingInvestorsContributionBugTest extends TestCase
         $this->investors[1]->refresh();
         $this->investors[2]->refresh();
         
-        echo "Investor 1 (zero balance): \${$this->investors[1]->actual_contribution}\n";
-        echo "Investor 2 (normal): \${$this->investors[2]->actual_contribution}\n";
+        echo "Investor 1 (zero balance): \${$this->investors[1]->lastContribution->amount}\n";
+        echo "Investor 2 (normal): \${$this->investors[2]->lastContribution->amount}\n";
         
         // Trigger recalculation with income to investor 2
         $this->paymentService->createPayment([

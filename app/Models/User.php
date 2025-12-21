@@ -26,7 +26,6 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
-        'actual_contribution',
     ];
 
     /**
@@ -49,7 +48,6 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'actual_contribution' => MoneyCast::class,
         ];
     }
 
