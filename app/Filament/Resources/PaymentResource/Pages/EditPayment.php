@@ -18,9 +18,17 @@ class EditPayment extends EditRecord
         ];
     }
 
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        // Convert negative withdrawal amounts to positive for display in form
+        $data['amount'] = abs(str_replace(',', '.', $data['amount']));
+
+        return $data;
+    }
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $data['amount'] = str_replace(',', '.', $data['amount']);
+        $data['amount'] = abs(str_replace(',', '.', $data['amount']));
         if((int)$data['operation_id'] === OperationType::WITHDRAW->value) {
             $data['amount'] = $data['amount'] * -1;
         }
