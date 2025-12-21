@@ -5,12 +5,15 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ContributionResource\Pages;
 use App\Filament\Resources\ContributionResource\RelationManagers;
 use App\Models\Contribution;
+use App\Models\Operation;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
 use Filament\Tables;
 use Filament\Tables\Columns\ViewColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -46,7 +49,12 @@ class ContributionResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('user.name')->sortable(),
                 Tables\Columns\TextColumn::make('payment.id')->sortable()->label('Payment ID'),
-                Tables\Columns\TextColumn::make('payment.operation.title')->sortable(),
+                Tables\Columns\TextColumn::make('payment.operation.title')
+                    ->sortable()
+                    ->label('Operation')
+                    ->description(fn (Contribution $record): string =>
+                        'Initiator: ' . ($record->payment->user->name ?? 'N/A')
+                    ),
                 Tables\Columns\TextColumn::make('amount')
                     ->money('USD')
                     ->sortable(),
@@ -57,7 +65,21 @@ class ContributionResource extends Resource
             ])
             ->defaultSort('id', 'desc')
             ->filters([
-                //
+                SelectFilter::make('user_id')
+                    ->label('User')
+                    ->options(fn (): array => User::query()->pluck('name', 'id')->all())
+                    ->searchable(),
+                SelectFilter::make('operation')
+                    ->label('Operation')
+                    ->options(fn (): array => Operation::query()->pluck('title', 'id')->all())
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['value'],
+                            fn (Builder $query, $operationId): Builder =>
+                                $query->whereHas('payment', fn ($q) => $q->where('operation_id', $operationId))
+                        );
+                    })
+                    ->searchable(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
