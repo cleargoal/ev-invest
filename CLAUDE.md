@@ -65,18 +65,18 @@ Key services handle business logic:
 
 ### Business Logic Flow
 1. **Investment Process**: Investors make payments (FIRST/CONTRIB operations)
-2. **Payment Confirmation**: Operators confirm payments → creates contributions → **recalculates ALL percentages**
+2. **Payment Confirmation**: Operators confirm payments → creates **1 contribution per investor** with updated amounts AND percentages
 3. **Vehicle Purchase**: Company buys vehicles → **auto backup**
 4. **Vehicle Sale**: Distributes profit using **existing percentages** (no recalc) → **auto backup**
 5. **Vehicle Unselling**: Reverses income using **existing percentages** (no recalc) → **auto backup**
-6. **Percentage Logic**: Only contribution operations (FIRST/CONTRIB/WITHDRAW) recalculate percentages; income operations (INCOME/REVENUE) use existing percentages
+6. **Contribution Logic**: Each confirmed payment creates ONE contribution record per investor (not duplicate records). Payment owner gets updated amount, all investors get recalculated percentages.
 
 ### Operation Types & Money Flow
 - **FIRST/CONTRIB** (Positive): Initial investments and additional contributions
-- **BUY_CAR** (Positive): Pool money spent on vehicle purchases  
+- **BUY_CAR** (Positive): Pool money spent on vehicle purchases
 - **INCOME** (Positive): Investor share of vehicle sale profits (50% total, distributed by percentage)
 - **REVENUE** (Positive): Company commission from vehicle sales (50%)
-- **WITHDRAW** (Positive): Investor withdrawals (decreases their contribution balance)
+- **WITHDRAW** (Negative): Investor withdrawals stored as negative values (e.g., -$100)
 - **RECULC** (Negative): System reversals for unsold vehicles
 
 ### Database Structure
@@ -151,7 +151,8 @@ For realistic test data, run seeders in this order:
 - See `docs/BACKUP_STRATEGY.md` for details
 
 ### Important Notes
-- **Percentage Recalculation**: Only happens on contribution operations (FIRST/CONTRIB/WITHDRAW), NOT on income distribution (INCOME/REVENUE)
-- **Vehicle Unselling**: Completely resets vehicle to for-sale state (all sale fields set to null), reverses contributions using existing percentages
-- **Zero-Profit Sales**: Gracefully handled with logging, no crash
-- **Money Display**: Widget calculations must handle cents→dollars conversion for database sum() operations
+- **Contribution Creation**: Each payment creates 1 contribution record per investor (unified amount + percentage update)
+- **Withdrawal Handling**: Stored as negative amounts in database, automatically decreases contribution balance
+- **Vehicle Unselling**: Completely resets vehicle to for-sale state, reverses contributions using existing percentages
+- **User Balance**: Use `$user->lastContribution->amount` (no `actual_contribution` field)
+- **Chart Data**: Only shows confirmed payments via `active()` scope (excludes pending/cancelled)
