@@ -33,10 +33,15 @@ class UserResource extends Resource
                     ->required()
                     ->maxLength(255),
 //                Forms\Components\DateTimePicker::make('email_verified_at'),
-                Select::make('roles')
-                    ->multiple()
-                    ->relationship(name: 'roles', titleAttribute: 'name')
-                    ->preload(),
+                Select::make('role')
+                    ->options([
+                        'admin' => 'Admin',
+                        'operator' => 'Operator',
+                        'investor' => 'Investor',
+                        'company' => 'Company',
+                    ])
+                    ->required()
+                    ->default('investor'),
                 Forms\Components\TextInput::make('password')
                     ->password()
                     ->readOnly()
@@ -57,7 +62,16 @@ class UserResource extends Resource
 //                Tables\Columns\TextColumn::make('email_verified_at')
 //                    ->dateTime()
 //                    ->sortable(),
-                TextColumn::make('roles.name')->label('Role'),
+                TextColumn::make('role')
+                    ->label('Role')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'admin' => 'danger',
+                        'operator' => 'warning',
+                        'company' => 'success',
+                        'investor' => 'info',
+                        default => 'gray',
+                    }),
                 Tables\Columns\TextColumn::make('lastContribution.amount')
                     ->label('Contribution')
                     ->money('USD')

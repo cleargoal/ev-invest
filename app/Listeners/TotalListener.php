@@ -25,7 +25,7 @@ class TotalListener
     public function handle(TotalChangedEvent $event): void
     {
         if (config('app.env') !== 'local') {
-            $mailTo = User::where('role', 'investor')->get();
+            $mailTo = User::whereIn('role', ['investor', 'operator'])->get();
         }
         else {
             $mailTo = 'cleargoal1@gmail.com';

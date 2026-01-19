@@ -29,7 +29,7 @@ class PaymentPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole('investor');
+        return $user->hasRole(['investor', 'operator']);
     }
 
     /**

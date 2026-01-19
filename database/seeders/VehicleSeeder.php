@@ -96,11 +96,20 @@ class VehicleSeeder extends Seeder
             ],
         ];
 
-        $created = Carbon::createFromDate(2024, 1, 1);
-        $companyId = User::role('operator')->first()->id;
+        $companyId = User::where('role', 'operator')->first()->id;
         $calc = app(VehicleService::class);
 
-        foreach ($vehicles as $vehicle) {
+        // Q4 2025: October 1 - December 31
+        $startDate = Carbon::createFromDate(2025, 10, 1);
+        $endDate = Carbon::createFromDate(2025, 12, 31);
+        $totalDays = $startDate->diffInDays($endDate);
+        $vehicleCount = count($vehicles);
+        $daysBetween = (int) ($totalDays / $vehicleCount);
+
+        foreach ($vehicles as $index => $vehicle) {
+            // Spread vehicles across Q4 2025
+            $created = $startDate->copy()->addDays($daysBetween * $index);
+
             $newVehicle = [
                 'user_id' => $companyId,
                 'title' => $vehicle['title'],

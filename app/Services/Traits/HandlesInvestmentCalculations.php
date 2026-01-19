@@ -34,8 +34,8 @@ trait HandlesInvestmentCalculations
      */
     protected function getInvestorsWithContributions(): Collection
     {
-        return User::where('role', 'investor')
-            ->whereHas('contributions') // Only investors with contributions
+        return User::whereIn('role', ['investor', 'operator'])
+            ->whereHas('contributions') // Only investors and operator with contributions
             ->with('lastContribution')
             ->get();
     }

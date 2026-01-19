@@ -137,8 +137,8 @@ class VehicleCancellationService
                 -($originalProfit ?? 0) // Negative profit to show reversal
             );
 
-            // 6. Send vehicle unsell notification to investors
-            $investors = User::where('role', 'investor')->get();
+            // 6. Send vehicle unsell notification to investors and operator
+            $investors = User::whereIn('role', ['investor', 'operator'])->get();
             Notification::send($investors, new VehicleUnsoldNotification($vehicle, $reason));
 
             return true;
