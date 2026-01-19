@@ -33,5 +33,7 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <!-- Disable parallel test execution to prevent database deadlocks -->
+        <env name="LARAVEL_PARALLEL_TESTING" value="false"/>
     </php>
 </phpunit>

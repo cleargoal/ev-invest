@@ -103,7 +103,7 @@ trait HandlesInvestmentCalculations
                     }
 
                     // Use PaymentService to ensure contributions are created
-                    $paymentService->createPayment($paymentData, true);
+                    $paymentService->createPayment($paymentData, false);
                     $processedInvestors++;
                 } else {
                     Log::info('Income amount too small, skipping', [

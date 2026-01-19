@@ -28,8 +28,8 @@ class FilamentVehicleDisplayTest extends TestCase
         $this->vehicleService = app(VehicleService::class);
         
         // Create roles
-        \Spatie\Permission\Models\Role::create(['name' => 'company']);
-        \Spatie\Permission\Models\Role::create(['name' => 'investor']);
+        $this->createRoleIfNotExists('company');
+        $this->createRoleIfNotExists('investor');
         
         // Create users
         $this->companyUser = User::factory()->create(['name' => 'Company User']);

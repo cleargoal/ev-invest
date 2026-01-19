@@ -24,9 +24,9 @@ class StatsOverviewPersonalTest extends TestCase
         parent::setUp();
         
         // Create roles
-        Role::create(['name' => 'investor']);
-        Role::create(['name' => 'operator']);
-        Role::create(['name' => 'admin']);
+        $this->createRoleIfNotExists('investor');
+        $this->createRoleIfNotExists('operator');
+        $this->createRoleIfNotExists('admin');
 
         // Create test users
         $this->testUser = User::factory()->create();

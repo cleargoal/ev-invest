@@ -24,8 +24,8 @@ class AllOperationsContributionTest extends TestCase
         $this->paymentService = app(PaymentService::class);
         
         // Create roles
-        \Spatie\Permission\Models\Role::create(['name' => 'investor']);
-        \Spatie\Permission\Models\Role::create(['name' => 'company']);
+        $this->createRoleIfNotExists('investor');
+        $this->createRoleIfNotExists('company');
         
         // Create users
         $this->investorUser = User::factory()->create(['name' => 'Test Investor']);
@@ -57,7 +57,7 @@ class AllOperationsContributionTest extends TestCase
             ['type' => OperationType::FIRST, 'amount' => 1000.00, 'expected_total' => 1000.00],
             ['type' => OperationType::CONTRIB, 'amount' => 500.00, 'expected_total' => 1500.00],
             ['type' => OperationType::INCOME, 'amount' => 100.00, 'expected_total' => 1600.00],
-            ['type' => OperationType::WITHDRAW, 'amount' => 200.00, 'expected_total' => 1400.00], // Subtracted
+            ['type' => OperationType::WITHDRAW, 'amount' => -200.00, 'expected_total' => 1400.00], // WITHDRAW amounts must be negative
             ['type' => OperationType::C_LEASING, 'amount' => 50.00, 'expected_total' => 1450.00],
             ['type' => OperationType::I_LEASING, 'amount' => 25.00, 'expected_total' => 1475.00],
             ['type' => OperationType::RECULC, 'amount' => 75.00, 'expected_total' => 1550.00],
