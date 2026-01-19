@@ -36,7 +36,7 @@ class PayConfirmWidget extends BaseWidget
                     ->money('USD')->width('5rem')->alignment(Alignment::End)
                     ->label('Сума'),
                 ToggleColumn::make('confirmed')->label('Підтвердження')->width('5rem')->alignment(Alignment::Center)
-                    ->visible(auth()->user()->roles->contains('name', 'company'))
+                    ->visible(auth()->user()->hasRole('company'))
                     ->afterStateUpdated(function ($record, $state) {
                         $paymentService = app(PaymentService::class);
                         $paymentService->paymentConfirmation($record);
