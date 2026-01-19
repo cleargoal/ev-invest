@@ -17,18 +17,22 @@ class UserSeeder extends Seeder
             [
                 'name' => config('services.users.user_admin.name'),
                 'email' => config('services.users.user_admin.email'),
+                'role' => 'admin',
             ],
             [
                 'name' => config('services.users.user_operator.name'),
                 'email' => config('services.users.user_operator.email'),
+                'role' => 'operator',
             ],
             [
                 'name' => config('services.users.user_investor.name'),
                 'email' => config('services.users.user_investor.email'),
+                'role' => 'investor',
             ],
             [
                 'name' => config('services.users.user_company.name'),
                 'email' => config('services.users.user_company.email'),
+                'role' => 'company',
             ],
         ];
 
@@ -36,6 +40,7 @@ class UserSeeder extends Seeder
             User::factory()->create([
                 'name' => $user['name'],
                 'email' => $user['email'],
+                'role' => $user['role'],
             ]);
         }
     }

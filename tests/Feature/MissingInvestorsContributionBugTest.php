@@ -23,8 +23,6 @@ class MissingInvestorsContributionBugTest extends TestCase
         $this->paymentService = app(PaymentService::class);
         
         // Create roles
-        $this->createRoleIfNotExists('investor');
-        $this->createRoleIfNotExists('company');
         
         // Create 7 investors to match your scenario
         for ($i = 1; $i <= 7; $i++) {

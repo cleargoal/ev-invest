@@ -39,9 +39,9 @@ class NotificationService
     private function getNotificationTargetUsers(): \Illuminate\Database\Eloquent\Collection
     {
         if (config('app.env') !== 'local') {
-            return User::role('company')->get();
+            return User::where('role', 'company')->get();
         }
-        
-        return User::role('admin')->get();
+
+        return User::where('role', 'admin')->get();
     }
 }

@@ -9,13 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Casts\MoneyCast;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable implements FilamentUser
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -26,6 +25,7 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -49,6 +49,43 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Check if user has a specific role or one of the given roles
+     *
+     * @param string|array $roles
+     * @return bool
+     */
+    public function hasRole(string|array $roles): bool
+    {
+        if (is_array($roles)) {
+            return in_array($this->role, $roles, true);
+        }
+        return $this->role === $roles;
+    }
+
+    /**
+     * Assign a role to the user
+     *
+     * @param string $role
+     * @return void
+     */
+    public function assignRole(string $role): void
+    {
+        $this->role = $role;
+        $this->save();
+    }
+
+    /**
+     * Get the user's role (with default fallback)
+     *
+     * @param mixed $value
+     * @return string
+     */
+    public function getRoleAttribute($value): string
+    {
+        return $value ?? 'investor';
     }
 
     public function canAccessPanel(Panel $panel): bool

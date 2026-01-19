@@ -138,7 +138,7 @@ class VehicleCancellationService
             );
 
             // 6. Send vehicle unsell notification to investors
-            $investors = User::role('investor')->get();
+            $investors = User::where('role', 'investor')->get();
             Notification::send($investors, new VehicleUnsoldNotification($vehicle, $reason));
 
             return true;

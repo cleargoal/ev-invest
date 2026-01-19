@@ -25,7 +25,7 @@ class VehicleListener
     public function handle(BoughtAutoEvent $event): void
     {
         if (config('app.env') !== 'local') {
-            $mailTo = User::role('investor')->get();
+            $mailTo = User::where('role', 'investor')->get();
         }
         else {
             $mailTo = 'cleargoal1@gmail.com';

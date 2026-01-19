@@ -24,8 +24,6 @@ class AllOperationsContributionTest extends TestCase
         $this->paymentService = app(PaymentService::class);
         
         // Create roles
-        $this->createRoleIfNotExists('investor');
-        $this->createRoleIfNotExists('company');
         
         // Create users
         $this->investorUser = User::factory()->create(['name' => 'Test Investor']);

@@ -29,9 +29,6 @@ class LeasingServiceTest extends TestCase
         parent::setUp();
         
         // Create roles
-        $this->createRoleIfNotExists('company');
-        $this->createRoleIfNotExists('investor');
-        $this->createRoleIfNotExists('admin');
 
         // Create users
         $this->companyUser = User::factory()->create();

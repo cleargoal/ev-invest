@@ -20,8 +20,8 @@ class StatsOverviewPersonal extends BaseWidget
 
     protected function getStats(): array
     {
-        $commonTotal = (int) Payment::whereHas('user.roles', function ($query) {
-            $query->where('name', 'investor');
+        $commonTotal = (int) Payment::whereHas('user', function ($query) {
+            $query->where('role', 'investor');
         })->active()->sum('amount'); // Use active scope to exclude cancelled payments
 
         $myActualContributionAmount = Payment::where('user_id', auth()->user()->id)->active()->sum('amount'); // Use active scope to exclude cancelled payments
@@ -50,14 +50,11 @@ class StatsOverviewPersonal extends BaseWidget
             ->sum('amount');
             $myCurrentYearGrow = $myFirstContribution ? $myCurrentYearIncome / $myFirstContribution->amount  : 0;
 
-        $operatorId = User::whereHas('roles', function ($query) {
-            $query->where('name', 'operator');
-        })->first()->id;
+        $operatorId = User::where('role', 'operator')->first()->id;
 
         $company = User::where('id', auth()->user()->id)
-            ->whereHas('roles', function ($query) {
-                $query->where('name', 'company');
-            })->first();
+            ->where('role', 'company')
+            ->first();
 
         return [
             Stat::make('Мій поточний баланс, $',

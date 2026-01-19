@@ -20,17 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('Users');
         $this->call(UserSeeder::class);
 
-        $this->command->info('Roles');
-        $this->call(RoleSeeder::class);
-
-        $this->command->info('Permissions');
-        $this->call(PermissionSeeder::class);
-
-        $this->command->info('Role - Perms');
-        $this->call(RolePermissionSeeder::class);
-
-        $this->command->info('User Roles');
-        $this->call(UserRolesSeeder::class);
+        // Spatie Permission seeders removed - roles now stored directly in users table
 
         $this->command->info('Vehicles');
         $this->call(VehicleSeeder::class);

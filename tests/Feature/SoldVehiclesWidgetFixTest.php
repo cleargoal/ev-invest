@@ -27,8 +27,6 @@ class SoldVehiclesWidgetFixTest extends TestCase
         $this->cancellationService = app(VehicleCancellationService::class);
         
         // Create roles
-        $this->createRoleIfNotExists('company');
-        $this->createRoleIfNotExists('investor');
         
         // Create users
         $this->companyUser = User::factory()->create(['name' => 'Company User']);

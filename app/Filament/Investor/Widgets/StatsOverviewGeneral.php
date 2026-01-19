@@ -18,13 +18,10 @@ class StatsOverviewGeneral extends BaseWidget
         $totalModel = Total::orderBy('id', 'desc')->first();
         $total = $totalModel ? $totalModel->amount : 0;
 
-        $operatorId = User::whereHas('roles', function ($query) {
-            $query->where('name', 'operator');
-        })->first()->id;
+        $operatorId = User::where('role', 'operator')->first()->id;
         $company = User::where('id', auth()->user()->id)
-            ->whereHas('roles', function ($query) {
-            $query->where('name', 'company');
-        })->first();
+            ->where('role', 'company')
+            ->first();
 
         $usersWithLastContributions = User::whereNot('id', $operatorId)->with('lastContribution')->get();
 

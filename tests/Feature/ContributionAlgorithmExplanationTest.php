@@ -26,8 +26,6 @@ class ContributionAlgorithmExplanationTest extends TestCase
         $this->paymentService = app(PaymentService::class);
         
         // Create roles
-        $this->createRoleIfNotExists('investor');
-        $this->createRoleIfNotExists('company');
         
         // Create users
         $this->investor1 = User::factory()->create(['name' => 'Investor 1']);

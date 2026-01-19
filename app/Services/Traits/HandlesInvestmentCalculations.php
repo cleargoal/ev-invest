@@ -22,7 +22,7 @@ trait HandlesInvestmentCalculations
      */
     protected function getCompanyUser(): User
     {
-        $companyUser = User::role('company')->first();
+        $companyUser = User::where('role', 'company')->first();
         if (!$companyUser) {
             throw new \InvalidArgumentException('Company user not found. Please ensure a user with "company" role exists.');
         }
@@ -34,9 +34,7 @@ trait HandlesInvestmentCalculations
      */
     protected function getInvestorsWithContributions(): Collection
     {
-        return User::whereHas('roles', function ($query) {
-                $query->where('name', 'investor');
-            })
+        return User::where('role', 'investor')
             ->whereHas('contributions') // Only investors with contributions
             ->with('lastContribution')
             ->get();

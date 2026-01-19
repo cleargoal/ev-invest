@@ -31,9 +31,6 @@ class PaymentServiceTest extends TestCase
         parent::setUp();
         
         // Create roles
-        $this->createRoleIfNotExists('investor');
-        $this->createRoleIfNotExists('company');
-        $this->createRoleIfNotExists('admin');
 
         // Create users
         $this->investorUser = User::factory()->create();

@@ -26,8 +26,6 @@ class VehicleUnsellingTest extends TestCase
         $this->vehicleService = app(VehicleService::class);
         
         // Create roles
-        $this->createRoleIfNotExists('company');
-        $this->createRoleIfNotExists('investor');
         
         // Create users
         $this->companyUser = User::factory()->create();

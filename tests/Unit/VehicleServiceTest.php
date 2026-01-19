@@ -30,9 +30,6 @@ class VehicleServiceTest extends TestCase
         parent::setUp();
         
         // Create roles
-        $this->createRoleIfNotExists('company');
-        $this->createRoleIfNotExists('investor');
-        $this->createRoleIfNotExists('operator');
 
         // Create users
         $this->companyUser = User::factory()->create();
