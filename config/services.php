@@ -33,20 +33,20 @@ return [
 
     'users' => [
         'user_admin' => [
-            'name' => env('ADMIN_NAME'),
-            'email' => env('ADMIN_EMAIL'),
+            'name' => env('ADMIN_NAME', 'Admin'),
+            'email' => env('ADMIN_EMAIL', 'admin@mail.org'),
         ],
         'user_operator' => [
-            'name' => env('OPERATOR_NAME'),
-            'email' => env('OPERATOR_EMAIL'),
+            'name' => env('OPERATOR_NAME', 'Operator'),
+            'email' => env('OPERATOR_EMAIL', 'operator@mail.org'),
         ],
         'user_investor' => [
-            'name' => env('INVESTOR_NAME'),
-            'email' => env('INVESTOR_EMAIL'),
+            'name' => env('INVESTOR_NAME', 'Investor'),
+            'email' => env('INVESTOR_EMAIL', 'investor@mail.org'),
         ],
         'user_company' => [
-            'name' => env('COMPANY_NAME'),
-            'email' => env('COMPANY_EMAIL'),
+            'name' => env('COMPANY_NAME', 'Company'),
+            'email' => env('COMPANY_EMAIL', 'company@mail.com'),
         ],
     ],
 ];

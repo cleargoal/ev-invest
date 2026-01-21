@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
@@ -36,12 +37,30 @@ class UserSeeder extends Seeder
             ],
         ];
 
-        foreach ($users as $user) {
-            User::factory()->create([
-                'name' => $user['name'],
-                'email' => $user['email'],
-                'role' => $user['role'],
-            ]);
+        foreach ($users as $userData) {
+            // Check if user exists
+            $existingUser = User::where('email', $userData['email'])->first();
+
+            $data = [
+                'name' => $userData['name'],
+                'role' => $userData['role'],
+            ];
+
+            // Only set password for new users
+            if (!$existingUser) {
+                $data['password'] = Hash::make('password');
+            }
+
+            $user = User::updateOrCreate(
+                ['email' => $userData['email']],
+                $data
+            );
+
+            $this->command->info(
+                $existingUser
+                    ? "Updated: {$userData['email']} (ID: {$user->id})"
+                    : "Created: {$userData['email']} (ID: {$user->id})"
+            );
         }
     }
 }

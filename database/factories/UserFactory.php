@@ -2,12 +2,13 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
+ * @extends Factory<User>
  */
 class UserFactory extends Factory
 {
@@ -40,5 +41,47 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    /**
+     * Create user with specific role
+     */
+    public function role(string $role): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => $role,
+        ]);
+    }
+
+    /**
+     * Create admin user
+     */
+    public function admin(): static
+    {
+        return $this->role('admin');
+    }
+
+    /**
+     * Create operator user
+     */
+    public function operator(): static
+    {
+        return $this->role('operator');
+    }
+
+    /**
+     * Create investor user
+     */
+    public function investor(): static
+    {
+        return $this->role('investor');
+    }
+
+    /**
+     * Create company user
+     */
+    public function company(): static
+    {
+        return $this->role('company');
     }
 }

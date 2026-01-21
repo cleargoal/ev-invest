@@ -47,21 +47,47 @@ class ContributionResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')->sortable(),
-                Tables\Columns\TextColumn::make('payment.id')->sortable()->label('Payment ID'),
-                Tables\Columns\TextColumn::make('payment.operation.title')
+                Tables\Columns\TextColumn::make('payment.created_at')
+                    ->label('Payment Date')
+                    ->date('d.m.Y')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('Investor')
                     ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('payment.user.name')
+                    ->label('Initiator')
+                    ->description(fn ($record) => $record->payment->operation->title)
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('payment.operation.title')
                     ->label('Operation')
-                    ->description(fn (Contribution $record): string =>
-                        'Initiator: ' . ($record->payment->user->name ?? 'N/A')
-                    ),
-                Tables\Columns\TextColumn::make('amount')
+                    ->badge()
+                    ->color(fn ($record) => match($record->payment->operation_id) {
+                        1 => 'info',      // FIRST - blue
+                        2 => 'success',   // CONTRIB - green
+                        3 => 'purple',    // BUY_CAR - purple
+                        4 => 'warning',   // INCOME - yellow
+                        5 => 'orange',    // REVENUE - orange
+                        6 => 'gray',      // WITHDRAW - gray
+                        7 => 'indigo',    // RECALC - indigo
+                        default => 'gray',
+                    })
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('payment.amount')
+                    ->label('Payment Amount')
                     ->money('USD')
                     ->sortable(),
-                ViewColumn::make('percents')->view('tables.columns.percents')->width('5rem')->alignment(Alignment::Center),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
+                Tables\Columns\TextColumn::make('amount')
+                    ->label('Investor Balance')
+                    ->money('USD')
+                    ->description('Cumulative total')
                     ->sortable(),
+                ViewColumn::make('percents')
+                    ->label('Pool Share %')
+                    ->view('tables.columns.percents')
+                    ->width('5rem')
+                    ->alignment(Alignment::Center),
             ])
             ->defaultSort('id', 'desc')
             ->filters([
@@ -80,6 +106,22 @@ class ContributionResource extends Resource
                         );
                     })
                     ->searchable(),
+                Tables\Filters\Filter::make('payment_date')
+                    ->form([
+                        Forms\Components\DatePicker::make('from')->label('From Date'),
+                        Forms\Components\DatePicker::make('until')->label('Until Date'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['from'],
+                                fn (Builder $query, $date): Builder => $query->whereHas('payment', fn ($q) => $q->whereDate('created_at', '>=', $date)),
+                            )
+                            ->when(
+                                $data['until'],
+                                fn (Builder $query, $date): Builder => $query->whereHas('payment', fn ($q) => $q->whereDate('created_at', '<=', $date)),
+                            );
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

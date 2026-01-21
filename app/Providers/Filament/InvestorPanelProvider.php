@@ -20,6 +20,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Support\Facades\FilamentColor;
 
 class InvestorPanelProvider extends PanelProvider
 {
@@ -65,6 +66,13 @@ class InvestorPanelProvider extends PanelProvider
             ->profile(isSimple: false)
             ->brandLogo(asset('images/ev-logo.webp'))
             ->brandLogoHeight('4rem')
+            ->colors([
+                'indigo' => Color::Indigo,
+                'fuchsia' => Color::Fuchsia,
+                'purple' => Color::Purple,
+                'sky' => Color::Sky,
+                'emerald' => Color::Emerald,
+            ])
 //            ->navigationItems([
 //                NavigationItem::make('Analytics')->hidden(fn(): bool => ! auth()->user()->can('view-analytics'))])
             ;

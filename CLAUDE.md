@@ -18,6 +18,10 @@ This is a Laravel 11 application with Filament admin panels for managing an inve
 - `vendor/bin/pint` - Run Laravel Pint code formatter
 
 ### Custom Commands
+- `php artisan user:ensure-admin` - Create or upgrade admin user
+  - Interactive mode: prompts for details
+  - Non-interactive: use --email, --name, --password, --force flags
+  - Safe to run multiple times, preserves existing data
 - `php artisan diagnose:missing-contributions --investors=1,7` - Diagnose missing contribution records
 - `php artisan db:backup` - Create database backup (automatic rotation keeps 10 most recent)
 - `php artisan db:backup --keep=20` - Create backup and keep 20 most recent backups
@@ -39,8 +43,8 @@ The project uses Laravel Sail with custom ports to avoid conflicts:
 - **Investor Panel** (`/investor`) - Investor-specific interface (open access with role-based features)
 
 ### Key Models & Relationships
-- **User** - Investors/operators with role-based permissions (using Spatie Laravel Permission)
-- **Payment** - Investment payments made by users  
+- **User** - Investors/operators with simple custom role system (`role` column)
+- **Payment** - Investment payments made by users
 - **Total** - Running total calculations of the investment pool
 - **Vehicle** - Investment vehicles that can be bought/sold
 - **Contribution** - User contribution records with first/last relationships
@@ -59,9 +63,12 @@ Key services handle business logic:
 
 ### Authentication & Authorization
 - Uses Laravel Breeze for basic authentication
-- Spatie Laravel Permission for role-based access control
-- Roles: admin, operator, investor, company
+- Simple custom role system with single `role` column in users table
+- Roles: `admin`, `operator`, `investor`, `company`
+- **Operator Role**: Major investor who receives income and notifications but separated in statistics
 - Panel access controlled in `User::canAccessPanel()`
+- Role checking via custom `User::hasRole()` method
+- See `docs/ROLES.md` for detailed role behavior
 
 ### Business Logic Flow
 1. **Investment Process**: Investors make payments (FIRST/CONTRIB operations)
@@ -110,10 +117,12 @@ Key services handle business logic:
 
 ### User Roles & Access
 Default test accounts (password: 'password'):
-- admin@mail.org (admin)
-- operator@mail.org (operator)  
-- investor@mail.org (investor)
-- company@mail.com (company)
+- admin@mail.org (admin) - Full administrative access
+- operator@mail.org (operator) - Major investor + operations management
+- investor@mail.org (investor) - Regular minority investor
+- company@mail.com (company) - Company commissions only
+
+**Note**: Operator receives investment income and notifications. See `docs/ROLES.md` for role details.
 
 ### Key Directories
 - `app/Filament/` - Filament admin panel configurations (separate Admin/Investor directories)
@@ -134,10 +143,11 @@ Filament widgets for dashboard analytics:
 
 ### Data Seeding Order
 For realistic test data, run seeders in this order:
-1. `UserSeeder` - Creates users with roles
-2. `VehicleSeeder` - Creates test vehicles  
-3. `PaymentSeeder` - Creates vehicle purchase payments + investor payments
-4. `TotalSeeder` - Calculates running pool totals
+1. `UserSeeder` - Creates/updates users with roles (uses `updateOrCreate()` to preserve existing users)
+2. `AdminSeeder` - (Optional) Quick admin user creation/restore for production
+3. `VehicleSeeder` - Creates test vehicles
+4. `PaymentSeeder` - Creates vehicle purchase payments + investor payments
+5. `TotalSeeder` - Calculates running pool totals
 
 ### Database Backups
 **Event-Driven Strategy** (automatic backups on critical operations):
@@ -152,7 +162,9 @@ For realistic test data, run seeders in this order:
 
 ### Important Notes
 - **Contribution Creation**: Each payment creates 1 contribution record per investor (unified amount + percentage update)
+- **Contribution Resource**: Displayed as "Історія зміни Балансу" (Balance History) in investor panel, filtered to logged-in user only
 - **Withdrawal Handling**: Stored as negative amounts in database, automatically decreases contribution balance
 - **Vehicle Unselling**: Completely resets vehicle to for-sale state, reverses contributions using existing percentages
 - **User Balance**: Use `$user->lastContribution->amount` (no `actual_contribution` field)
 - **Chart Data**: Only shows confirmed payments via `active()` scope (excludes pending/cancelled)
+- **Seeder Safety**: UserSeeder uses `updateOrCreate()` - safe to run multiple times, preserves existing user IDs and passwords
