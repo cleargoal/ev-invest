@@ -112,7 +112,7 @@ class PaymentService
         // Run backup command in background using nohup to prevent termination
         $basePath = base_path();
         $logFile = storage_path('logs/backup.log');
-        exec("nohup /usr/bin/php $basePath/artisan db:backup >> $logFile 2>&1 &");
+        \exec("nohup /usr/bin/php $basePath/artisan db:backup >> $logFile 2>&1 &");
     }
 
 }

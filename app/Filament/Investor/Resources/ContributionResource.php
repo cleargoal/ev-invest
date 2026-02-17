@@ -24,7 +24,7 @@ class ContributionResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return !auth()->user()->hasRole('company');
+        return !auth()->user()?->hasRole('company');
     }
 
     public static function form(Form $form): Form
@@ -39,7 +39,7 @@ class ContributionResource extends Resource
     {
         $query = parent::getEloquentQuery();
 
-        if (! auth()->user()->hasRole('viewer')) {
+        if (! auth()->user()?->hasRole('viewer')) {
             $query
                 ->where('user_id', auth()->id())
                 ->whereHas('payment', function (Builder $query) {

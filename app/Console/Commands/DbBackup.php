@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 
 class DbBackup extends Command
 {
-    protected $signature = 'db:backup {--keep=10 : Number of recent backups to keep}';
+    protected $signature = 'db:backup {--keep=4 : Number of recent backups to keep}';
     protected $description = 'Dump MySQL database to storage and rotate old backups';
 
     public function handle(): int
@@ -61,7 +61,7 @@ class DbBackup extends Command
             return;
         }
 
-        $backups = glob($backupDir . '/backup-*.sql');
+        $backups = glob($backupDir . '/db_backup-*.sql');
 
         if (count($backups) <= $keepCount) {
             return;
