@@ -23,8 +23,8 @@ This is a Laravel 11 application with Filament admin panels for managing an inve
   - Non-interactive: use --email, --name, --password, --force flags
   - Safe to run multiple times, preserves existing data
 - `php artisan diagnose:missing-contributions --investors=1,7` - Diagnose missing contribution records
-- `php artisan db:backup` - Create database backup (automatic rotation keeps 10 most recent)
-- `php artisan db:backup --keep=20` - Create backup and keep 20 most recent backups
+- `php artisan db:backup` - Create database backup (automatic rotation keeps 4 most recent)
+- `php artisan db:backup --keep=10` - Create backup and keep 10 most recent backups
 
 ### Frontend Commands  
 - `npm run dev` - Start Vite development server with hot reload
@@ -154,7 +154,8 @@ For realistic test data, run seeders in this order:
 - **Triggers**: Vehicle purchase, vehicle sale, vehicle unselling, payment confirmation
 - **Storage**: `storage/app/backups/` with format `db_backup-YYYY-MM-DD_HH-ii-ss.sql`
 - **Execution**: Background process using `nohup` to prevent blocking web requests
-- **Rotation**: Keeps 10 most recent backups by default (customizable with `--keep`)
+- **Rotation**: Keeps 4 most recent backups by default (customizable with `--keep`)
+- **Failure**: On failure, only logs to `storage/logs/backup.log` — no email notification yet (TODO)
 - **Production Setup**:
   - Fix permissions: `sudo chown -R www-data:www-data storage/ && sudo chmod -R 775 storage/`
   - Test manually: `php artisan db:backup`
