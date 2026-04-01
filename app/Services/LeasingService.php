@@ -33,9 +33,12 @@ class LeasingService
             $totalAmount = $this->totalService->createTotal($payment);
             $this->investIncome($leasing);
 
+            // Trigger database backup in background (non-blocking)
+            $this->runBackupInBackground();
+
             // Notifications are sent after successful transaction
             $this->notify();
-            
+
             return $leasing;
         });
     }
@@ -84,6 +87,17 @@ class LeasingService
             $leasing->created_at,
             $this->paymentService
         );
+    }
+
+    /**
+     * Run database backup in background (non-blocking)
+     */
+    protected function runBackupInBackground(): void
+    {
+        // Run backup command in background using nohup to prevent termination
+        $basePath = base_path();
+        $logFile = storage_path('logs/backup.log');
+        \exec("nohup /usr/bin/php $basePath/artisan db:backup >> $logFile 2>&1 &");
     }
 
 }

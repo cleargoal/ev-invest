@@ -63,10 +63,8 @@ class LeasingServiceTest extends TestCase
         ]);
 
         $leasingData = [
-            'vehicle_id' => 1,
-            'start_date' => '2024-01-01',
-            'end_date' => '2024-12-31',
-            'duration' => 365,
+            'month' => 3, // March
+            'year' => 2024,
             'price' => 200.00, // $200 leasing income
         ];
 
@@ -74,7 +72,8 @@ class LeasingServiceTest extends TestCase
 
         // Verify leasing record was created
         $this->assertInstanceOf(Leasing::class, $result);
-        $this->assertEquals(1, $result->vehicle_id);
+        $this->assertEquals(3, $result->month);
+        $this->assertEquals(2024, $result->year);
         $this->assertEquals(200.00, $result->price);
         $this->assertNotNull($result->created_at);
 
@@ -126,10 +125,8 @@ class LeasingServiceTest extends TestCase
         $this->companyUser->delete();
 
         $leasingData = [
-            'vehicle_id' => 1,
-            'start_date' => '2024-01-01',
-            'end_date' => '2024-12-31',
-            'duration' => 365,
+            'month' => 3,
+            'year' => 2024,
             'price' => 200.00,
         ];
 
@@ -158,10 +155,8 @@ class LeasingServiceTest extends TestCase
     public function test_company_commissions_calculation()
     {
         $leasing = Leasing::create([
-            'vehicle_id' => 1,
-            'start_date' => '2024-01-01',
-            'end_date' => '2024-12-31',
-            'duration' => 365,
+            'month' => 3,
+            'year' => 2024,
             'price' => 400.00,
             'created_at' => now(),
         ]);
@@ -213,10 +208,8 @@ class LeasingServiceTest extends TestCase
         ]);
 
         $leasing = Leasing::create([
-            'vehicle_id' => 1,
-            'start_date' => '2024-01-01',
-            'end_date' => '2024-12-31',
-            'duration' => 365,
+            'month' => 3,
+            'year' => 2024,
             'price' => 1000.00,
             'created_at' => now(),
         ]);
@@ -264,10 +257,8 @@ class LeasingServiceTest extends TestCase
 
         $customDate = Carbon::create(2024, 1, 15, 10, 30, 0);
         $leasingData = [
-            'vehicle_id' => 1,
-            'start_date' => '2024-01-01',
-            'end_date' => '2024-12-31',
-            'duration' => 365,
+            'month' => 1,
+            'year' => 2024,
             'price' => 300.00,
             'created_at' => $customDate,
         ];
@@ -310,10 +301,8 @@ class LeasingServiceTest extends TestCase
         ]);
 
         $leasingData = [
-            'vehicle_id' => 1,
-            'start_date' => '2024-01-01',
-            'end_date' => '2024-12-31',
-            'duration' => 365,
+            'month' => 1,
+            'year' => 2024,
             'price' => 100.00,
         ];
 
@@ -330,17 +319,15 @@ class LeasingServiceTest extends TestCase
         config(['app.env' => 'local']); // Set environment for notification target
 
         $leasingData = [
-            'vehicle_id' => 1,
-            'start_date' => '2024-01-01',
-            'end_date' => '2024-12-31',
-            'duration' => 365,
+            'month' => 1,
+            'year' => 2024,
             'price' => 150.00,
         ];
 
         $result = $this->leasingService->getLeasing($leasingData);
 
         // Should still work, just no investor payments created
-        $this->assertEquals(1, $result->vehicle_id);
+        $this->assertEquals(1, $result->month);
         
         // Verify company payment was created
         $companyPayment = Payment::where('user_id', $this->companyUser->id)->first();
@@ -378,10 +365,8 @@ class LeasingServiceTest extends TestCase
         ]);
 
         $leasing = Leasing::create([
-            'vehicle_id' => 1,
-            'start_date' => '2024-01-01',
-            'end_date' => '2024-12-31',
-            'duration' => 365,
+            'month' => 1,
+            'year' => 2024,
             'price' => 200.00,
         ]);
 
