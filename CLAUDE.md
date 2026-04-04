@@ -150,16 +150,12 @@ For realistic test data, run seeders in this order:
 5. `TotalSeeder` - Calculates running pool totals
 
 ### Database Backups
-**Event-Driven Strategy** (automatic backups on critical operations):
-- **Triggers**: Vehicle purchase, vehicle sale, vehicle unselling, payment confirmation
-- **Storage**: `storage/app/backups/` with format `db_backup-YYYY-MM-DD_HH-ii-ss.sql`
-- **Execution**: Background process using `nohup` to prevent blocking web requests
-- **Rotation**: Keeps 4 most recent backups by default (customizable with `--keep`)
-- **Failure**: On failure, only logs to `storage/logs/backup.log` — no email notification yet (TODO)
-- **Production Setup**:
-  - Fix permissions: `sudo chown -R www-data:www-data storage/ && sudo chmod -R 775 storage/`
-  - Test manually: `php artisan db:backup`
-- See `docs/BACKUP_STRATEGY.md` for details
+- **Strategy**: Event-driven automatic backups using Laravel Jobs (BackupDatabaseJob)
+- **Triggers**: Vehicle purchase, sale, unselling, payment confirmation
+- **Execution**: Dispatched after HTTP response via `dispatch()->afterResponse()`
+- **Storage**: `storage/app/backups/` with auto-rotation (keeps 4 most recent)
+- **Logging**: Success/failure logged to Laravel logs
+- See `docs/BACKUP_STRATEGY.md` for implementation details
 
 ### Important Notes
 - **Contribution Creation**: Each payment creates 1 contribution record per investor (unified amount + percentage update)
@@ -169,3 +165,5 @@ For realistic test data, run seeders in this order:
 - **User Balance**: Use `$user->lastContribution->amount` (no `actual_contribution` field)
 - **Chart Data**: Only shows confirmed payments via `active()` scope (excludes pending/cancelled)
 - **Seeder Safety**: UserSeeder uses `updateOrCreate()` - safe to run multiple times, preserves existing user IDs and passwords
+- **Session Expiry**: CSRF 419 errors handled gracefully in `bootstrap/app.php` - redirects to login with message
+- **Log Permissions**: Log files created with 0664 permissions for proper write access (config/logging.php)

@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\OperationType;
+use App\Jobs\BackupDatabaseJob;
 use App\Models\Leasing;
 use App\Models\Payment;
 use App\Services\Traits\HandlesInvestmentCalculations;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class LeasingService
 {
@@ -94,10 +96,15 @@ class LeasingService
      */
     protected function runBackupInBackground(): void
     {
-        // Run backup command in background using nohup to prevent termination
-        $basePath = base_path();
-        $logFile = storage_path('logs/backup.log');
-        \exec("nohup /usr/bin/php $basePath/artisan db:backup >> $logFile 2>&1 &");
+        try {
+            // Dispatch backup job to run after the HTTP response is sent
+            dispatch(new BackupDatabaseJob())->afterResponse();
+        } catch (\Throwable $e) {
+            // Log error but don't fail the main operation
+            Log::error('Failed to dispatch background backup job', [
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
 }

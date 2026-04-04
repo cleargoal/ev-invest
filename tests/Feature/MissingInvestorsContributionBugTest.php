@@ -113,11 +113,12 @@ class MissingInvestorsContributionBugTest extends TestCase
         
         // Step 5: Check lastContribution->amount values
         echo "\n--- Step 5: Check lastContribution->amount Values ---\n";
-        
+
         foreach ($this->investors as $num => $investor) {
             $investor->refresh();
             $contributionCount = Contribution::where('user_id', $investor->id)->count();
-            echo "  Investor {$num}: lastContribution->amount=\${$investor->lastContribution->amount}, total_records={$contributionCount}\n";
+            $amount = $investor->lastContribution->amount ?? 'N/A';
+            echo "  Investor {$num}: lastContribution->amount=\${$amount}, total_records={$contributionCount}\n";
         }
         
         // Step 6: Identify the problem
@@ -158,7 +159,8 @@ class MissingInvestorsContributionBugTest extends TestCase
         foreach ($this->investors as $num => $investor) {
             $investor->refresh();
             $contributionCount = Contribution::where('user_id', $investor->id)->count();
-            echo "  Investor {$num}: \${$investor->lastContribution->amount} ({$contributionCount} records)\n";
+            $amount = $investor->lastContribution->amount ?? 'N/A';
+            echo "  Investor {$num}: \${$amount} ({$contributionCount} records)\n";
         }
     }
 

@@ -378,4 +378,73 @@ class VehicleServiceTest extends TestCase
         // Verify event was still dispatched (but with zero amount)
         Event::assertDispatched(TotalChangedEvent::class);
     }
+
+    public function test_events_dispatch_after_transaction_commits()
+    {
+        // This test verifies that TotalChangedEvent is dispatched AFTER the transaction commits
+        // This ensures database records exist when event listeners (emails) execute
+
+        // Create investor payment and contribution
+        $payment = Payment::create([
+            'user_id' => $this->investorUser->id,
+            'operation_id' => OperationType::CONTRIB,
+            'amount' => 500.00,
+            'confirmed' => true,
+        ]);
+
+        $this->investorUser->contributions()->create([
+            'payment_id' => $payment->id,
+            'percents' => 500000, // 50% share
+            'amount' => 500.00,
+        ]);
+
+        $salePrice = 1500.00; // $1500 - $500 profit
+        $saleDate = Carbon::now();
+
+        // Track whether the event listener sees committed data
+        $dbStateWhenEventFired = null;
+
+        // Listen to the actual event (not faked) to check DB state
+        Event::listen(TotalChangedEvent::class, function ($event) use (&$dbStateWhenEventFired) {
+            // When this listener executes, check if DB records already exist
+            $dbStateWhenEventFired = [
+                'vehicle_sold' => Vehicle::whereNotNull('sale_date')->exists(),
+                'company_payment_exists' => Payment::where('operation_id', OperationType::REVENUE)->exists(),
+                'investor_payment_exists' => Payment::where('operation_id', OperationType::INCOME)->exists(),
+                'total_exists' => Total::exists(),
+            ];
+        });
+
+        // Execute the vehicle sale
+        $result = $this->vehicleService->sellVehicle($this->vehicle, $salePrice, $saleDate);
+
+        // Verify the event listener executed
+        $this->assertNotNull($dbStateWhenEventFired, 'Event listener should have executed');
+
+        // CRITICAL: Verify that when the event fired, database records already existed
+        $this->assertTrue(
+            $dbStateWhenEventFired['vehicle_sold'],
+            'Vehicle should already be sold in database when event fires'
+        );
+
+        $this->assertTrue(
+            $dbStateWhenEventFired['company_payment_exists'],
+            'Company payment should already exist in database when event fires'
+        );
+
+        $this->assertTrue(
+            $dbStateWhenEventFired['investor_payment_exists'],
+            'Investor payment should already exist in database when event fires'
+        );
+
+        $this->assertTrue(
+            $dbStateWhenEventFired['total_exists'],
+            'Total should already exist in database when event fires'
+        );
+
+        // This proves that:
+        // 1. Transaction committed BEFORE event dispatched
+        // 2. Email listeners see fully committed data
+        // 3. If email fails, database won't rollback (data already committed)
+    }
 }

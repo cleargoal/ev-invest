@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\OperationType;
 use App\Events\BoughtAutoEvent;
 use App\Events\TotalChangedEvent;
+use App\Jobs\BackupDatabaseJob;
 use App\Models\Payment;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -194,10 +195,15 @@ class VehicleService
      */
     protected function runBackupInBackground(): void
     {
-        // Run backup command in background using nohup to prevent termination
-        $basePath = base_path();
-        $logFile = storage_path('logs/backup.log');
-        \exec("nohup /usr/bin/php $basePath/artisan db:backup >> $logFile 2>&1 &");
+        try {
+            // Dispatch backup job to run after the HTTP response is sent
+            dispatch(new BackupDatabaseJob())->afterResponse();
+        } catch (\Throwable $e) {
+            // Log error but don't fail the main operation
+            Log::error('Failed to dispatch background backup job', [
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
 }

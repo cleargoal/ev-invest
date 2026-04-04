@@ -143,11 +143,11 @@ class ContributionAlgorithmExplanationTest extends TestCase
         $this->investor1->refresh();
         $this->investor2->refresh();
         $this->investor3->refresh();
-        
+
         echo "Contribution counts:\n";
-        echo "  Investor 1: {$count1} records, lastContribution->amount: \${$this->investor1->lastContribution->amount}\n";
-        echo "  Investor 2: {$count2} records, lastContribution->amount: \${$this->investor2->lastContribution->amount}\n";
-        echo "  Investor 3: {$count3} records, lastContribution->amount: \${$this->investor3->lastContribution->amount}\n";
+        echo "  Investor 1: {$count1} records, lastContribution->amount: \$" . ($this->investor1->lastContribution->amount ?? 'N/A') . "\n";
+        echo "  Investor 2: {$count2} records, lastContribution->amount: \$" . ($this->investor2->lastContribution->amount ?? 'N/A') . "\n";
+        echo "  Investor 3: {$count3} records, lastContribution->amount: \$" . ($this->investor3->lastContribution->amount ?? 'N/A') . "\n";
         echo "  Company: {$countCompany} records\n";
     }
     

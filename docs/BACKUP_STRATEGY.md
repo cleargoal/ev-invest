@@ -33,7 +33,7 @@ Backups are automatically created after:
 ## Backup Rotation
 
 The backup system automatically manages storage:
-- **Default retention**: 10 most recent backups
+- **Default retention**: 4 most recent backups
 - **Automatic cleanup**: Old backups deleted automatically
 - **Customizable**: Use `--keep` option to adjust retention
 
@@ -57,11 +57,14 @@ Filename format: `db_backup-YYYY-MM-DD_HH-ii-ss.sql`
 
 ## Technical Implementation
 
-Backups run in the background using `nohup` to prevent blocking web requests:
-- Uses `exec("nohup /usr/bin/php artisan db:backup >> backup.log 2>&1 &")`
-- This allows critical operations (vehicle sales, payment confirmations) to complete quickly
-- Backup process continues even after the web request finishes
-- Logs output to `storage/logs/backup.log` for troubleshooting
+Backups run asynchronously using **Laravel Jobs** (`BackupDatabaseJob`):
+- **Job Class**: `app/Jobs/BackupDatabaseJob.php`
+- **Dispatch Method**: `dispatch(new BackupDatabaseJob())->afterResponse()`
+- **Execution**: Runs after HTTP response is sent to user (non-blocking)
+- **Queue Connection**: Uses `sync` driver (no queue worker needed)
+- **Retry Logic**: 3 attempts with 60-second backoff
+- **Logging**: Success/failure logged to `storage/logs/laravel.log`
+- **No exec() dependency**: Works even if shell functions are disabled in php.ini
 
 ## Why Event-Driven?
 
@@ -89,7 +92,7 @@ After deploying to production, ensure proper setup:
 1. Fix storage permissions: `sudo chown -R www-data:www-data storage/ && sudo chmod -R 775 storage/`
 2. Test backup manually: `php artisan db:backup`
 3. Verify backup file created: `ls -lth storage/app/backups/ | head -3`
-4. Check backup log if issues: `tail -20 storage/logs/backup.log`
+4. Check backup log if issues: `tail -50 storage/logs/laravel.log | grep -i backup`
 
 ## Monitoring
 
