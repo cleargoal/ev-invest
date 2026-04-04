@@ -29,6 +29,8 @@ class InvestorPanelProvider extends PanelProvider
         return $panel
             ->id('investor')
             ->path('investor')
+            ->login()
+            ->passwordReset()
             ->collapsibleNavigationGroups(false)
             ->sidebarCollapsibleOnDesktop()
             ->colors([
